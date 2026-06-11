@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: infinito_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Dr0pT@ble_Dr0pMyW1ll2L1v3!_99
+      POSTGRES_DB: infinito_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - infinito_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d infinito_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: infinito_redis_dev
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - infinito_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image:  minio/minio:latest
+    container_name: infinito_minio_dev
+    ports:
+      - "9000:9000" # API Port
+      - "9001:9001" # Web Console Port
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_admin_password
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - infinito_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio-init-bucket:
+    image: minio/mc:RELEASE.2024-05-09T17-04-24Z
+    container_name: infinito_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local_minio http://minio:9000 minio_admin minio_admin_password;
+      if ! mc ls local_minio/infinito-assets > /dev/null 2>&1; then
+        mc mb local_minio/infinito-assets;
+        mc anonymous set public local_minio/infinito-assets;
+        echo 'Bucket infinito-assets created successfully with public read permissions.';
+      else
+        echo 'Bucket infinito-assets already exists.';
+      fi
+      "
+    networks:
+      - infinito_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  infinito_network:
+    driver: bridge
