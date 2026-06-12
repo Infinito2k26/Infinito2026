@@ -4,17 +4,17 @@ This directory contains reusable operating instructions for AI-assisted developm
 
 ## What This Scaffold Does
 
-- Keeps project rules in `ANTIGRAVITY.md`.
-- Keeps durable technical context in `reference/`.
+- Keeps project rules in `CONSTITUTION.md`.
+- Keeps durable technical context in `.claude/reference/`.
 - Turns features into GitHub issues, implementation plans, reviewed PRs, and verified merges.
 - Gives agents repeatable commands for priming, planning, execution, testing, and commit preparation.
 
 ## Directory Structure
 
 ```text
-.antigravity/
+.claude/
   README.md
-  ANTIGRAVITY-template.md
+  CONSTITUTION-template.md
   commands/
     prime.md
     create-rules.md
@@ -34,12 +34,17 @@ This directory contains reusable operating instructions for AI-assisted developm
       database-template.md
       testing-template.md
   plans/
+  reference/
+    architecture.md
+    api.md
+    database.md
+    testing.md
 ```
 
 ## Daily Workflow
 
 ```text
-Start session      -> read ANTIGRAVITY.md and run prime workflow
+Start session      -> read CONSTITUTION.md and run prime workflow
 Pick work          -> select a GitHub issue from Ready/In Progress
 Plan               -> create a feature plan for non-trivial work
 Implement          -> execute the plan with narrow edits
@@ -62,16 +67,16 @@ The `.github/` folder in this repo contains issue forms and a PR template aligne
 
 ## When To Use Each Command
 
-| Command             | Use it when                                         |
-| ------------------- | --------------------------------------------------- |
-| `prime.md`          | Starting a new session or switching context         |
-| `create-rules.md`   | Rebuilding `ANTIGRAVITY.md` from a changed codebase |
-| `create-prd.md`     | Turning product decisions into a durable PRD        |
-| `plan-feature.md`   | Breaking a GitHub issue into implementation steps   |
-| `execute.md`        | Implementing a prepared plan                        |
-| `commit.md`         | Packaging changes into an atomic commit             |
-| `init-workspace.md` | Installing this workflow scaffold into another repo |
+| Command             | Use it when                                          |
+| ------------------- | ---------------------------------------------------- |
+| `prime.md`          | Starting a new session or switching context          |
+| `create-rules.md`   | Rebuilding `CONSTITUTION.md` from a changed codebase |
+| `create-prd.md`     | Turning product decisions into a durable PRD         |
+| `plan-feature.md`   | Breaking a GitHub issue into implementation steps    |
+| `execute.md`        | Implementing a prepared plan                         |
+| `commit.md`         | Packaging changes into an atomic commit              |
+| `init-workspace.md` | Installing this workflow scaffold into another repo  |
 
 ## Core Principle
 
-Do not let knowledge live only in one developer's head. If a decision changes how the project should be built, update an issue, PR, `ANTIGRAVITY.md`, or the relevant `reference/` file.
+Do not let knowledge live only in one developer's head. If a decision changes how the project should be built, update an issue, PR, `CONSTITUTION.md`, or the relevant `.claude/reference/` file.

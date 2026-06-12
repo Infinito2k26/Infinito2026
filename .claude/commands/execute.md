@@ -12,7 +12,7 @@ Implement the plan passed by the user, keeping changes scoped and reviewable.
 4. Implement tasks in order.
 5. Run the validation command attached to each task.
 6. Add or update tests for behavior changes.
-7. Update `reference/` docs when architecture, API, database, or testing contracts change.
+7. Update `.claude/reference/` docs when architecture, API, database, or testing contracts change.
 8. Prepare PR notes with commands run and any known gaps.
 
 ## Editing Rules

@@ -15,12 +15,12 @@ Build enough context to work safely in the Infinito repository without guessing.
    ```
 
 2. Read durable context:
-   - `ANTIGRAVITY.md`
+   - `CONSTITUTION.md`
    - `PRD.md`
-   - `reference/architecture.md`
-   - `reference/api.md`
-   - `reference/database.md`
-   - `reference/testing.md`
+   - `.claude/reference/architecture.md`
+   - `.claude/reference/api.md`
+   - `.claude/reference/database.md`
+   - `.claude/reference/testing.md`
 
 3. Inspect the repo shape:
 

@@ -93,4 +93,4 @@ flowchart TD
 - Every deliverable must map to a GitHub issue.
 - Every issue needs owner, priority, acceptance criteria, and track.
 - Every PR must link its issue and include validation output.
-- Architecture/API/database changes must update `reference/`.
+- Architecture/API/database changes must update `.claude/reference/`.

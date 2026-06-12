@@ -1,4 +1,4 @@
-# ANTIGRAVITY.md
+# CONSTITUTION.md
 
 This file is the project constitution for AI agents and human contributors.
 
@@ -41,7 +41,7 @@ Describe the intended architecture, main services/apps, data flow, and non-negot
 ```text
 apps/
 packages/
-reference/
+.claude/reference/
 .github/
 ```
 

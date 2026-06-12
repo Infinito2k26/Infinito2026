@@ -17,8 +17,8 @@ The API workspace has Prisma installed, a PostgreSQL datasource configured, an i
 
 - Local infrastructure exists in `docker-compose.yml` with PostgreSQL on `localhost:5432`.
 - `apps/api` is a minimal NestJS app with no Prisma dependency yet.
-- `reference/database.md` defines the MVP entity model and required constraints.
-- Issue body references Section 6 of the architecture roadmap, but the repo-local source of truth should now be `reference/database.md`.
+- `.claude/reference/database.md` defines the MVP entity model and required constraints.
+- Issue body references Section 6 of the architecture roadmap, but the repo-local source of truth should now be `.claude/reference/database.md`.
 
 ## Scope
 
@@ -27,7 +27,7 @@ In scope:
 - Add Prisma to `apps/api`.
 - Create `apps/api/prisma/schema.prisma`.
 - Configure PostgreSQL datasource through `DATABASE_URL`.
-- Implement MVP enums and models from `reference/database.md`.
+- Implement MVP enums and models from `.claude/reference/database.md`.
 - Add seed script with realistic local data.
 - Add package scripts for generate, migrate, and seed.
 - Document local database commands in API README or root docs if needed.
@@ -41,8 +41,8 @@ Out of scope:
 
 ## Files to Read First
 
-- `reference/database.md`
-- `reference/architecture.md`
+- `.claude/reference/database.md`
+- `.claude/reference/architecture.md`
 - `docker-compose.yml`
 - `apps/api/package.json`
 - `apps/api/tsconfig.json`
@@ -104,7 +104,7 @@ Out of scope:
    - `Credential`
    - `ScanLog`
 
-7. Add constraints and indexes from `reference/database.md`.
+7. Add constraints and indexes from `.claude/reference/database.md`.
 
 8. Create a seed script that inserts:
    - one super admin

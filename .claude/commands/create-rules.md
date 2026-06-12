@@ -1,4 +1,4 @@
-# Create Rules: Generate or Refresh ANTIGRAVITY.md
+# Create Rules: Generate or Refresh CONSTITUTION.md
 
 ## Objective
 
@@ -8,7 +8,7 @@ Refresh the project constitution from the current codebase and durable docs.
 
 - Existing source code.
 - `PRD.md`, if present.
-- `reference/` specs, if present.
+- `.claude/reference/` specs, if present.
 - GitHub workflow expectations.
 
 ## Process
@@ -39,7 +39,7 @@ Refresh the project constitution from the current codebase and durable docs.
    - GitHub workflow.
    - Validation gate.
 
-5. Update `ANTIGRAVITY.md` with concrete guidance, not placeholders.
+5. Update `CONSTITUTION.md` with concrete guidance, not placeholders.
 
 ## Output
 

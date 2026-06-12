@@ -34,5 +34,5 @@ Use a different path only if the user asks.
 - Prefer concrete acceptance criteria over broad descriptions.
 - Separate MVP from later phases.
 - Include Mermaid diagrams only when they clarify flow or architecture.
-- Update `reference/` files when the PRD changes architecture, API, database, or testing strategy.
+- Update `.claude/reference/` files when the PRD changes architecture, API, database, or testing strategy.
 - Keep the document useful for issue creation and sprint planning.

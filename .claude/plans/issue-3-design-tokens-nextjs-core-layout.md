@@ -41,8 +41,8 @@ Out of scope:
 
 ## Files to Read First
 
-- `ANTIGRAVITY.md`
-- `reference/architecture.md`
+- `CONSTITUTION.md`
+- `.claude/reference/architecture.md`
 - `apps/web/package.json`
 - `apps/web/app/layout.tsx`
 - `apps/web/app/page.tsx`

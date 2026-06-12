@@ -1,14 +1,14 @@
 # CLAUDE.md — Claude Code Session Bootstrap
 
-This file is Claude Code's fast-boot instructions for this repository. It is intentionally thin — the full project constitution lives in `ANTIGRAVITY.md`.
+This file is Claude Code's fast-boot instructions for this repository. It is intentionally thin — the full project constitution lives in `CONSTITUTION.md`.
 
 ## Start Every Session By Reading
 
-1. `ANTIGRAVITY.md` — project constitution, architecture rules, GitHub workflow, team model
-2. `reference/architecture.md` — module boundaries and runtime diagram
-3. `reference/api.md` — envelope contract and endpoint map
-4. `reference/database.md` — schema and indexing rules
-5. Relevant `.antigravity/plans/<issue>.md` for the active issue
+1. `CONSTITUTION.md` — project constitution, architecture rules, GitHub workflow, team model
+2. `.claude/reference/architecture.md` — module boundaries and runtime diagram
+3. `.claude/reference/api.md` — envelope contract and endpoint map
+4. `.claude/reference/database.md` — schema and indexing rules
+5. Relevant `.claude/plans/<issue>.md` for the active issue
 
 Then run:
 ```bash
@@ -44,17 +44,17 @@ npm run test:e2e --workspace=api
 - [ ] Tests pass
 - [ ] No secrets committed
 - [ ] Scope matches the issue — nothing more
-- [ ] `reference/` docs updated if architecture/API/schema changed
+- [ ] `.claude/reference/` docs updated if architecture/API/schema changed
 
 ## Agent Rules (Summary)
 
-Full rules are in `ANTIGRAVITY.md`. The non-negotiables:
+Full rules are in `CONSTITUTION.md`. The non-negotiables:
 
 - Controllers are thin. Business logic lives in services.
 - No cross-module service imports — use EventEmitter2 or queues.
 - Payments, email, QR, notifications are always async (BullMQ).
 - Money and registration ops use `prisma.$transaction` and are idempotent.
-- Every response uses the envelope defined in `reference/api.md`.
+- Every response uses the envelope defined in `.claude/reference/api.md`.
 
 ## Current Sprint
 

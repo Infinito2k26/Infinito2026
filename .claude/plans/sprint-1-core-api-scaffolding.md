@@ -40,10 +40,10 @@ Out of scope:
 
 ## Files to Read First
 
-- `ANTIGRAVITY.md`
-- `reference/api.md`
-- `reference/architecture.md`
-- `reference/database.md`
+- `CONSTITUTION.md`
+- `.claude/reference/api.md`
+- `.claude/reference/architecture.md`
+- `.claude/reference/database.md`
 - `apps/api/src/main.ts`
 - `apps/api/src/app.module.ts`
 - `apps/api/package.json`
@@ -75,7 +75,7 @@ apps/api/src/prisma/
 apps/api/test/app.e2e-spec.ts
 apps/api/package.json
 package-lock.json
-reference/api.md
+.claude/reference/api.md
 ```
 
 ## Implementation Steps
@@ -115,7 +115,7 @@ reference/api.md
 7. Create `GlobalExceptionFilter`:
    - catches `HttpException`
    - catches unexpected errors as `INTERNAL_SERVER_ERROR`
-   - returns `reference/api.md` error envelope
+   - returns `.claude/reference/api.md` error envelope
 
 8. Create `ResponseEnvelopeInterceptor`:
    - wraps successful controller responses
@@ -159,7 +159,7 @@ reference/api.md
 - [ ] `GET /health` exists.
 - [ ] `main.ts` no longer has the floating promise warning.
 - [ ] API lint, unit tests, e2e tests, and build pass.
-- [ ] `reference/api.md` remains aligned with implementation.
+- [ ] `.claude/reference/api.md` remains aligned with implementation.
 
 ## Coordination Notes
 

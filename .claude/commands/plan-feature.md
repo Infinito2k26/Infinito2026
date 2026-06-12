@@ -16,7 +16,7 @@ If GitHub access is unavailable, create a local plan and state that issue/projec
 
 ## Planning Process
 
-1. Read `ANTIGRAVITY.md` and the relevant `reference/` files.
+1. Read `CONSTITUTION.md` and the relevant `.claude/reference/` files.
 2. Inspect nearby code and existing patterns.
 3. Identify affected modules, routes, pages, packages, and schema.
 4. Identify dependencies and docs that must be checked.
@@ -28,7 +28,7 @@ If GitHub access is unavailable, create a local plan and state that issue/projec
 Write plans to:
 
 ```text
-.antigravity/plans/<issue-number>-<kebab-case-title>.md
+.claude/plans/<issue-number>-<kebab-case-title>.md
 ```
 
 ## Plan Template

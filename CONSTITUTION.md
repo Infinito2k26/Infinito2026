@@ -1,4 +1,4 @@
-# ANTIGRAVITY.md
+# CONSTITUTION.md
 
 This file is the working constitution for AI agents and human contributors in the Infinito 2K26 repository. Follow it before writing code, creating issues, reviewing PRs, or changing architecture.
 
@@ -87,13 +87,10 @@ packages/
   types/                  Shared cross-app TypeScript contracts
   eslint-config/          Shared lint configuration
   typescript-config/      Shared TypeScript configuration
-reference/
-  architecture.md         System boundaries and module rules
-  api.md                  API contracts and envelope standards
-  database.md             Data model and indexing plan
-  testing.md              Verification strategy
-.antigravity/
+.claude/
+  reference/              Living reference docs (architecture, API, database, testing)
   commands/               Agent operating playbooks
+  plans/                  Feature implementation plans
   templates/              Reusable project scaffolds
   skills/                 Specialized local workflows
 .github/
@@ -130,7 +127,7 @@ Initial NestJS modules should be created in this order:
 
 ## API Standards
 
-- API responses use the envelope defined in `reference/api.md`.
+- API responses use the envelope defined in `.claude/reference/api.md`.
 - Global validation must run with whitelist and forbidden non-whitelisted fields.
 - Auth access tokens are short-lived. Refresh tokens are HttpOnly cookies with rotation.
 - Rate limit auth and payment-adjacent endpoints.
@@ -235,16 +232,16 @@ Rules:
 - No unassigned work.
 - No issue without acceptance criteria.
 - No PR without verification notes.
-- No architectural change without updating `reference/architecture.md`.
-- No API shape change without updating `reference/api.md`.
-- No schema migration without updating `reference/database.md`.
+- No architectural change without updating `.claude/reference/architecture.md`.
+- No API shape change without updating `.claude/reference/api.md`.
+- No schema migration without updating `.claude/reference/database.md`.
 
 ## Agent Operating Rules
 
 Before coding:
 
-1. Read `ANTIGRAVITY.md`.
-2. Read relevant files in `reference/`.
+1. Read `CONSTITUTION.md`.
+2. Read relevant files in `.claude/reference/`.
 3. Check `git status`.
 4. Identify the GitHub issue or create a local plan if GitHub access is unavailable.
 5. Read nearby implementation patterns before editing.
