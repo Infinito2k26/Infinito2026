@@ -1,0 +1,102 @@
+# Infinito 2K26 Architecture Specification
+
+## 1. System Shape
+
+Infinito uses a Turborepo monorepo with a Next.js frontend and NestJS backend. The backend is a modular monolith: one deployable API with strong internal module boundaries.
+
+```text
+apps/web       Next.js App Router frontend
+apps/api       NestJS API and future worker entrypoints
+packages/ui    Shared UI primitives
+packages/types Shared TypeScript contracts
+reference/     Durable architecture, API, database, testing docs
+```
+
+## 2. Runtime Architecture
+
+```mermaid
+flowchart TD
+  Browser[Browser / Mobile PWA] --> Web[Next.js Web App]
+  Web --> API[NestJS API]
+  API --> Postgres[(PostgreSQL 16)]
+  API --> Redis[(Redis 7)]
+  API --> MinIO[(MinIO / S3)]
+  API --> Queues[BullMQ Queues]
+  Queues --> Workers[NestJS Workers]
+  Workers --> Postgres
+  Workers --> MinIO
+```
+
+## 3. Backend Modules
+
+| Module        | Responsibility                                      |
+| ------------- | --------------------------------------------------- |
+| Config        | Validate env and expose typed config                |
+| Prisma        | Database client lifecycle and transactions          |
+| Common        | response envelope, exceptions, logging, request IDs |
+| Health        | readiness checks for API, DB, Redis, storage        |
+| Auth          | register, login, refresh, logout, guards, RBAC      |
+| Users         | profiles, roles, audit metadata                     |
+| Events        | event catalog and admin event management            |
+| Registration  | teams, participants, registration status            |
+| Payments      | Razorpay orders, webhooks, reconciliation           |
+| Identity      | signed QR credential generation and validation      |
+| Notifications | email, push, in-app notifications                   |
+| Schedule      | fixtures, venues, match timelines                   |
+| Leaderboard   | standings, scores, live updates                     |
+| Admin         | operational dashboards and admin-only workflows     |
+
+## 4. Boundary Rules
+
+- Controllers do not contain business logic.
+- DTOs validate shape, not domain behavior.
+- Services own domain behavior.
+- Repositories/data access stays behind module services.
+- Modules do not reach into another module's internals.
+- Cross-module side effects use domain events or queues.
+- Payments, QR generation, email, and notifications run asynchronously.
+
+## 5. Critical Flows
+
+### Registration
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Web
+  participant API
+  participant DB
+  participant Queue
+
+  User->>Web: Submit registration
+  Web->>API: POST /registrations
+  API->>DB: transaction: registration + payment intent
+  API-->>Web: pending payment response
+  Web->>API: payment callback
+  API->>DB: mark verification pending
+  API->>Queue: enqueue payment verification
+  Queue->>DB: confirm idempotently
+  Queue->>Queue: enqueue QR generation
+```
+
+### QR Check-In
+
+```mermaid
+sequenceDiagram
+  participant Volunteer
+  participant Scanner
+  participant API
+  participant DB
+
+  Volunteer->>Scanner: Scan QR
+  Scanner->>Scanner: Verify signature offline when possible
+  Scanner->>API: POST /identity/scan
+  API->>DB: Record scan event
+  API-->>Scanner: Participant and registration status
+```
+
+## 6. Deployment Assumptions
+
+- Local development uses Docker Compose for PostgreSQL, Redis, and MinIO.
+- Production should use managed PostgreSQL, managed Redis, S3-compatible storage, HTTPS, and environment-level secrets.
+- CI should run lint, typecheck, build, tests, and migration checks before merge.

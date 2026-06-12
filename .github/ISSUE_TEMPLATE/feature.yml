@@ -1,0 +1,60 @@
+name: Feature
+description: Plan a user-facing or internal product capability.
+title: "[Feature]: "
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What should be true when this ships?
+      placeholder: "Participants can..."
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - web
+        - api
+        - database
+        - infra
+        - auth
+        - events
+        - registration
+        - payments
+        - identity
+        - admin
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Use checkboxes. A reviewer should be able to verify each item.
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Notes
+      description: Mention affected modules, pages, endpoints, schema changes, or references.
+    validations:
+      required: false
+
