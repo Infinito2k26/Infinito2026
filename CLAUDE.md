@@ -56,12 +56,31 @@ Full rules are in `CONSTITUTION.md`. The non-negotiables:
 - Money and registration ops use `prisma.$transaction` and are idempotent.
 - Every response uses the envelope defined in `.claude/reference/api.md`.
 
+## Team Roster
+
+| Role | GitHub Handle |
+|------|--------------|
+| Lead / Architect | mdminhaj-2106 |
+| Senior Backend | Saad-Manda |
+| Junior Backend | ansariowais669-hub |
+| Junior Backend | Mahendra-seervi |
+| Senior Frontend | Anjney-Lawaniya |
+| Junior Frontend / Design | jamanrao-beep |
+| Junior Frontend | Himanshi-05 |
+
 ## Current Sprint
 
 | Issue | Track | Assignee | Branch |
 |-------|-------|----------|--------|
 | #5 Core API Scaffolding | Lead/API | mdminhaj-2106 | `feature/core-api-scaffolding` |
-| #2 Prisma Schema + Seed | Backend/DB | ansariowais669-hub | `feature/database-baseline` |
-| #3 Design Tokens + Layout | Frontend | Anjney-Lawaniya | `feature/ui-shell` |
+| #2 Prisma Schema + Seed | Backend/DB | ansariowais669-hub (review: Saad-Manda) | `feature/database-baseline` |
+| #3 Design Tokens + Layout | Frontend | Anjney-Lawaniya + jamanrao-beep + Himanshi-05 | `feature/ui-shell` |
 
 Sprint board: **Infinito Atlas** GitHub Project.
+
+## GitHub Workflow Status
+
+- **CI:** `.github/workflows/ci.yml` — lint, typecheck, build, API tests on every PR
+- **CODEOWNERS:** `.github/CODEOWNERS` — lead auto-requested on all PRs; sensitive paths require lead approval
+- **Branch protection:** Requires GitHub Team plan (org is on free tier). Enforce the PR-first rule through team discipline until upgraded.
+- **Labels:** Full label set from CONSTITUTION is provisioned on the repo

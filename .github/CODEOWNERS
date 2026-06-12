@@ -1,0 +1,30 @@
+# CODEOWNERS — Infinito 2K26
+#
+# GitHub auto-requests review from these owners when a PR touches these paths.
+# Sensitive paths (auth, payments, identity, migrations, config docs) require
+# the lead to review regardless of who else approves.
+
+# Lead reviews everything by default
+*                                    @mdminhaj-2106
+
+# Auth, payments, identity, and registration are high-risk — lead review required
+apps/api/src/auth/                   @mdminhaj-2106
+apps/api/src/payments/               @mdminhaj-2106
+apps/api/src/identity/               @mdminhaj-2106
+apps/api/src/registration/           @mdminhaj-2106
+
+# Schema migrations are high-risk — lead review required
+apps/api/prisma/                     @mdminhaj-2106
+
+# Architecture config documents — lead keeps these accurate
+.claude/reference/                   @mdminhaj-2106
+CONSTITUTION.md                      @mdminhaj-2106
+CLAUDE.md                            @mdminhaj-2106
+
+# Frontend — senior frontend owns it with lead as fallback
+apps/web/                            @Anjney-Lawaniya @mdminhaj-2106
+packages/ui/                         @Anjney-Lawaniya @mdminhaj-2106
+
+# Infra and CI — lead owns
+.github/                             @mdminhaj-2106
+docker-compose.yml                   @mdminhaj-2106
