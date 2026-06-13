@@ -1,0 +1,30 @@
+/* --- PUBLIC LAYOUT --- */
+.publicShell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.publicMain {
+  flex: 1;
+}
+
+/* --- DASHBOARD LAYOUT --- */
+.dashboardShell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
+.dashboardMain {
+  flex: 1;
+}
+
+/* Desktop: Side-by-side (Sidebar + Main Content) */
+@media (min-width: 768px) {
+  .dashboardShell {
+    flex-direction: row;
+    padding-bottom: 0;
+  }
+}
