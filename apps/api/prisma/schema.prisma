@@ -1,0 +1,464 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EVENT_MANAGER
+  VOLUNTEER
+  CAMPUS_AMBASSADOR
+  TEAM_CAPTAIN
+  PARTICIPANT
+}
+
+enum EventCategory {
+  OUTDOOR_SPORTS   // Football, Cricket, Athletics
+  INDOOR_SPORTS    // Badminton, Table Tennis, Chess
+  ESPORTS          // FIFA, BGMI, Valorant
+  CULTURAL         // Pro Night support events
+}
+
+enum RegistrationStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+  RECONCILIATION_PENDING
+}
+
+
+model Organization {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  contactEmail String
+  tier         String   @default("FREE") // FREE or PRO
+  events       Event[]  @relation("OrgEvents")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Event {
+  id               String        @id @default(uuid())
+  name             String        @unique
+  slug             String        @unique   // "basketball-men", "chess-open"
+  category         EventCategory
+  description      String?
+  rules            String?       // Markdown-formatted rules
+
+  organizationId String?
+  organization   Organization? @relation("OrgEvents", fields: [organizationId], references: [id])
+
+  // Team configuration — eliminates per-sport schema anti-pattern
+  isTeamEvent      Boolean       @default(true)
+  teamSizeMin      Int           @default(1)
+  teamSizeMax      Int           @default(1)
+
+  // Scheduling
+  venueId          String?
+  venue            Venue?        @relation(fields: [venueId], references: [id])
+  startDate        DateTime?
+  endDate          DateTime?
+
+  // Registration
+  registrationFee  Float         @default(0)
+  maxTeams         Int?          // null = unlimited
+  isRegistrationOpen Boolean     @default(false)
+
+  // Relations
+  registrations    Registration[]
+  matches          Match[]
+  leaderboard      Leaderboard?
+  tickets Ticket[]
+  ticketTiers TicketTier[]
+  staffAssignments StaffAssignment[]
+  groups Group[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([isRegistrationOpen])
+}
+
+model TicketTier {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String   // e.g., "VIP", "General Pass"
+  price     Float
+  capacity  Int
+  soldCount Int      @default(0)
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  phone            String?       @unique
+  passwordHash     String
+  role             UserRole      @default(PARTICIPANT)
+  isEmailVerified  Boolean       @default(false)
+  isApproved       Boolean       @default(true)  // false for roles needing approval
+  college          String?
+  state            String?
+  profilePicUrl    String?
+  emergencyContact String?
+
+  // Relations
+  profile          Profile? @relation("UserProfile")
+  qrIdentity       QRIdentity?
+  teamsLed         Team[]        @relation("TeamLeader")
+  teamMemberships  TeamMember[]
+  registrations    Registration[]
+  caProfile        CAProfile? @relation("UserCA")
+  volunteerProfile VolunteerProfile? @relation("UserVolunteer")
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+  consents         Consent[]
+  tickets Ticket[]
+  groupsLed Group[] @relation("GroupLeader")
+  credentialTokens CredentialToken[]
+  staffAssignments StaffAssignment[]
+  accommodation Accommodation?
+  announcementsCreated Announcement[] @relation("AnnouncementsCreated")
+  scannedQrCodes QRIdentity[] @relation("QRScannedBy")
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  @@index([email])
+  @@index([role])
+  @@index([college])
+}
+
+model StaffAssignment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  leaderId    String
+  leader      User     @relation("GroupLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  name        String
+  inviteToken String   @unique @default(uuid())
+  memberCount Int      @default(1)
+  tickets     Ticket[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([eventId, inviteToken])
+}
+
+model Ticket {
+  id              String           @id @default(uuid())
+  eventId         String
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tierId          String
+  tier            TicketTier       @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  groupId         String?
+  group           Group?           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          RegistrationStatus        @default(PENDING_PAYMENT)
+  referenceCode   String           @unique
+  credentialToken CredentialToken?
+  scanConflicts   ScanConflict[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  transactionId String? @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@unique([eventId, groupId]) // Anti-double-sell unique constraint
+}
+
+model Transaction {
+  id                 String        @id @default(uuid())
+  razorpayOrderId    String        @unique
+  razorpayPaymentId  String?       @unique
+  amount             Float
+  currency           String        @default("INR")
+  status             PaymentStatus @default(INITIATED)
+  webhookVerified    Boolean       @default(false)
+  registrations      Registration[]
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  ticket Ticket?
+
+  @@index([razorpayOrderId])
+  @@index([status])
+}
+
+model CredentialToken {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId      String    @unique
+  ticket        Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  payload       String    @db.Text // Cryptographically signed RS256 JWT
+  qrImageUrl    String?   @db.Text
+  lastScannedAt DateTime?
+  scanCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model WebhookEvent {
+  id          String    @id // Gateway Event ID
+  status      String    // PENDING, PROCESSED, FAILED
+  payload     Json
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+}
+
+model ScanConflict {
+  id                 String   @id @default(uuid())
+  ticketId           String
+  ticket             Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  firstScanDevice    String
+  firstScanTime      DateTime
+  conflictScanDevice String
+  conflictScanTime   DateTime
+  resolved           Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model Team {
+  id               String        @id @default(uuid())
+  name             String
+  collegeName      String
+  leaderId         String
+  leader           User          @relation("TeamLeader", fields: [leaderId], references: [id])
+  members          TeamMember[]
+  registrations    Registration[]
+  inviteCode       String        @unique @default(cuid())  // For team joining link
+
+  matchesAsTeamA Match[] @relation("MatchTeamA")
+  matchesAsTeamB Match[] @relation("MatchTeamB")
+  matchesWon     Match[] @relation("MatchWinner")
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([leaderId])
+  @@index([inviteCode])
+}
+
+model TeamMember {
+  id               String   @id @default(uuid())
+  teamId           String
+  team             Team     @relation(fields: [teamId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  joinedAt         DateTime @default(now())
+
+  @@unique([teamId, userId])  // Prevents duplicate membership
+  @@index([userId])
+}
+
+model Registration {
+  id               String             @id @default(uuid())
+  eventId          String
+  event            Event              @relation(fields: [eventId], references: [id])
+  teamId           String?
+  team             Team?              @relation(fields: [teamId], references: [id])
+  userId           String?            // For individual event registrations
+  user             User?              @relation(fields: [userId], references: [id])
+  status           RegistrationStatus @default(PENDING_PAYMENT)
+  referenceNumber  String             @unique @default(cuid())
+  transactionId    String?
+  transaction      Transaction?       @relation(fields: [transactionId], references: [id])
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([eventId, teamId])  // Anti-duplicate registration
+  @@unique([eventId, userId])
+  @@index([status])
+  @@index([referenceNumber])
+}
+
+model QRIdentity {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  payload          String   @unique  // Signed JWT payload for offline verification
+  qrImageUrl       String?
+  isActive         Boolean  @default(true)
+  lastScannedAt    DateTime?
+  lastScannedById String?
+  lastScannedBy User?     @relation("QRScannedBy", fields: [lastScannedById], references: [id])  // Volunteer userId
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Match {
+  id               String   @id @default(uuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id])
+  round            String   // "Quarter Final", "Semi Final", "Final"
+  teamAId String?
+  teamA   Team? @relation("MatchTeamA", fields: [teamAId], references: [id])
+  teamBId String?
+  teamB   Team? @relation("MatchTeamB", fields: [teamBId], references: [id])
+  winnerId String?
+  winner   Team? @relation("MatchWinner", fields: [winnerId], references: [id])
+  scoreA           Int?
+  scoreB           Int?
+  scheduledAt      DateTime?
+  venueId          String?
+  venue            Venue?   @relation(fields: [venueId], references: [id])
+  status           String   @default("SCHEDULED")  // SCHEDULED, LIVE, COMPLETED, CANCELLED
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([status])
+}
+
+model Accommodation {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+
+  roomNumber       String?
+  checkIn          DateTime?
+  checkOut         DateTime?
+  isConfirmed      Boolean  @default(false)
+  specialRequests  String?
+
+  createdAt        DateTime @default(now())
+}
+
+model Announcement {
+  id               String   @id @default(uuid())
+  title            String
+  body             String
+  isPinned         Boolean  @default(false)
+  isPublished      Boolean  @default(false)
+  targetRole       UserRole? // null = all users
+  publishedAt      DateTime?
+  createdById String // Admin user ID
+  createdBy   User @relation("AnnouncementsCreated", fields: [createdById], references: [id])
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([isPublished, isPinned])
+}
+
+model CAProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  referralCode     String   @unique
+  targetCollege    String
+  referralCount    Int      @default(0)
+  isApproved       Boolean  @default(false)
+  approvedBy       String?
+
+  user   User @relation("UserCA", fields: [userId], references: [id])
+
+  createdAt        DateTime @default(now())
+}
+
+model ActivityLog {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  action           String   // "REGISTRATION_CREATED", "PAYMENT_SUCCESS", "QR_SCANNED"
+  metadata         Json?
+  ipAddress        String?
+  userAgent        String?
+
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Venue {
+  id        String   @id @default(uuid())
+  name      String?
+  location  String?
+  createdAt DateTime @default(now())
+  events Event[]
+  matches Match[]
+}
+
+model Leaderboard {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+  event Event @relation(fields: [eventId], references: [id])
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  bio       String?
+  createdAt DateTime @default(now())
+  user   User @relation("UserProfile", fields: [userId], references: [id])
+}
+
+model VolunteerProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  user   User @relation("UserVolunteer", fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Consent {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  granted   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
