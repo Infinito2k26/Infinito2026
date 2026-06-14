@@ -28,3 +28,168 @@
     padding-bottom: 0;
   }
 }
+
+/* ---- SIDEBAR LAYOUT(For Desktop only) ---- */
+.sidebar {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 228px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: 20px 12px;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+  }
+}
+
+.fest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 28px;
+}
+
+.festMark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.festName {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.sidebarNav {
+  flex: 1;
+}
+
+.sidebarNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.sidebarLink:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebarLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.sidebarLinkActive {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.sidebarLinkActive .sidebarIcon {
+  color: var(--color-primary);
+}
+
+.sidebarIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sidebarLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- BOTTOM NAVBAR (Mobile only) --- */
+.bottomNav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+
+  /* Safe area for iPhone home swipe bar */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .bottomNav {
+    display: none;
+  }
+}
+
+/* Each nav item */
+.bottomNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 0;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 160ms ease;
+}
+
+.bottomNavItem:hover {
+  color: var(--color-text-primary);
+}
+
+.bottomNavItem:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* Active state */
+.bottomNavItemActive {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.bottomNavIcon {
+  display: flex;
+}
+
+.bottomNavLabel {
+  line-height: 1;
+}
