@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EVENT_MANAGER
+  VOLUNTEER
+  CAMPUS_AMBASSADOR
+  TEAM_CAPTAIN
+  PARTICIPANT
+}
+
+enum EventCategory {
+  OUTDOOR_SPORTS
+  INDOOR_SPORTS
+  ESPORTS
+  CULTURAL
+  TECHNICAL
+}
+
+enum TeamMemberRole {
+  CAPTAIN
+  MEMBER
+}
+
+enum RegistrationStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+  RECONCILIATION_PENDING
+}
+
+enum ScanResult {
+  VALID
+  INVALID
+  DUPLICATE
+  EXPIRED
+}
+
+// Models
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  teamMembers   TeamMember[]
+  registrations Registration[]
+  teamsCaptained Team[] @relation("TeamCaptain")
+  credentials   Credential[] @relation("CredentialSubject")
+  scanLogs      ScanLog[] @relation("ScannedBy")
+
+  @@index([email])
+}
+
+model Event {
+  id                String        @id @default(uuid())
+  name              String
+  slug              String        @unique
+  category          EventCategory
+  description       String?
+  teamSizeMin       Int?
+  teamSizeMax       Int?
+  capacity          Int?
+  price             Decimal       @db.Decimal(10, 2)
+  isPublished       Boolean       @default(false)
+  registrationOpen  Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  registrations Registration[]
+
+  @@index([isPublished, registrationOpen])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  captainId   String
+  collegeName String?
+  inviteCode  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  captain      User           @relation("TeamCaptain", fields: [captainId], references: [id])
+  members      TeamMember[]
+  registrations Registration[]
+}
+
+model TeamMember {
+  id     String         @id @default(uuid())
+  teamId String
+  userId String
+  role   TeamMemberRole
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model Registration {
+  id        String             @id @default(uuid())
+  eventId   String
+  userId    String?
+  teamId    String?
+  status    RegistrationStatus @default(PENDING_PAYMENT)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+
+  event   Event  @relation(fields: [eventId], references: [id])
+  user    User?  @relation(fields: [userId], references: [id])
+  team    Team?  @relation(fields: [teamId], references: [id])
+  payments   Payment[]
+  credential Credential?
+
+  @@unique([eventId, teamId])
+  @@unique([eventId, userId])
+  @@index([eventId, status])
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  registrationId   String
+  gatewayOrderId   String        @unique
+  gatewayPaymentId String?       @unique
+  amount           Decimal       @db.Decimal(10, 2)
+  status           PaymentStatus @default(INITIATED)
+  webhookVerified  Boolean       @default(false)
+  idempotencyKey   String        @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Credential {
+  id             String   @id @default(uuid())
+  registrationId String   @unique
+  subjectUserId  String
+  tokenHash      String   @unique
+  qrImageUrl     String?
+  lastScannedAt  DateTime?
+  scanCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+  subjectUser  User         @relation("CredentialSubject", fields: [subjectUserId], references: [id])
+  scanLogs     ScanLog[]
+}
+
+model ScanLog {
+  id           String     @id @default(uuid())
+  credentialId String
+  scannedById  String
+  venue        String?
+  result       ScanResult
+  metadata     Json?
+  createdAt    DateTime   @default(now())
+
+  credential Credential @relation(fields: [credentialId], references: [id])
+  scannedBy  User       @relation("ScannedBy", fields: [scannedById], references: [id])
+
+  @@index([credentialId, createdAt])
+}
