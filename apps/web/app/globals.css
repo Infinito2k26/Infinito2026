@@ -1,29 +1,16 @@
 :root {
-  /* Surface Colors */
-  --color-background: #ffffff;
-  --color-surface: #f4f4f5;
-  --color-surface-hover: #e4e4e7;
-
-  /* Text Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f4f4f5;
+  --color-surface: #ffffff;
+  --color-accent-primary: #27272a;
+  --color-accent-secondary: #52525b;
   --color-text-primary: #18181b;
-  --color-text-secondary: #52525b;
-
-  /* Accent Colors (Grayscale for now) */
-  --color-primary: #27272a;
-  --color-primary-foreground: #ffffff;
-
-  /* Borders */
+  --color-text-secondary: #71717a;
   --color-border: #e4e4e7;
-
-  /* Spacing & Radius */
   --radius-md: 0.5rem;
   --spacing-container: 1rem;
-
-  /* Navbar */
-  --color-text-background-nav: rgb(176, 173, 173);
 }
 
-/* Base mobile-first resets */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -31,7 +18,7 @@
 }
 
 body {
-  background-color: var(--color-background);
+  background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: Arial, Helvetica, sans-serif;
   max-width: 100vw;

@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from "react";
+import Link from "next/link";
 import styles from "./layout.module.css";
 
 const Navbar = () => {
@@ -12,62 +13,15 @@ const Navbar = () => {
         <nav className={styles.navbar}>
             <div className={styles.navbar_inner}>
                 <div className={styles.navbar_list_left}>
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                    >
-                        Home
-                    </a>
-
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                    >
-                        Events
-                    </a>
-
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                    >
-                        Sports
-                    </a>
-
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                    >
-                        About
-                    </a>
+                    <Link href="/" className={styles.navbar_item}>Home</Link>
+                    <Link href="/events" className={styles.navbar_item}>Events</Link>
+                    <Link href="/sports" className={styles.navbar_item}>Sports</Link>
+                    <Link href="/about" className={styles.navbar_item}>About</Link>
                 </div>
 
                 <div className={styles.navbar_list_right}>
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                        style={{ width: "80px" }}
-                    >
-                        Sign Up
-                    </a>
-
-                    <a
-                        href="https://google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.navbar_item}
-                    >
-                        Login
-                    </a>
+                    <Link href="/signup" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Sign Up</Link>
+                    <Link href="/login" className={styles.navbar_item}>Login</Link>
                 </div>
 
                 <button
@@ -83,69 +37,14 @@ const Navbar = () => {
                     <span></span>
                 </button>
             </div>
-            <div
-                id="mobile-menu"
-                className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_active : ""}`}
-            >
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    Home
-                </a>
-
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    Events
-                </a>
-
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    Sports
-                </a>
-
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    About
-                </a>
-
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    Sign Up
-                </a>
-
-                <a
-                    href="https://google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.mobile_menu_item}
-                    onClick={closeMenu}
-                >
-                    Login
-                </a>
+            
+            <div id="mobile-menu" className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_active : ""}`}>
+                <Link href="/" className={styles.mobile_menu_item} onClick={closeMenu}>Home</Link>
+                <Link href="/events" className={styles.mobile_menu_item} onClick={closeMenu}>Events</Link>
+                <Link href="/sports" className={styles.mobile_menu_item} onClick={closeMenu}>Sports</Link>
+                <Link href="/about" className={styles.mobile_menu_item} onClick={closeMenu}>About</Link>
+                <Link href="/signup" className={styles.mobile_menu_item} onClick={closeMenu}>Sign Up</Link>
+                <Link href="/login" className={styles.mobile_menu_item} onClick={closeMenu}>Login</Link>
             </div>
         </nav>
     );
