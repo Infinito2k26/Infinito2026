@@ -193,3 +193,401 @@
 .bottomNavLabel {
   line-height: 1;
 }
+
+/* Main fixed navbar container pinned to the top of the screen */
+.navbar {
+  /* Keeps navbar fixed at the top even while scrolling */
+  position: fixed;
+
+  /* Makes navbar stretch across the entire viewport width */
+  width: 100%;
+
+  /* Pins navbar to the top edge */
+  top: 0;
+
+  /* Ensures navbar stays above most other content */
+  z-index: 100;
+
+  /* Fallback background using your surface variable */
+  background: var(--color-surface);
+
+  /* Adds a thin border line at the top using your theme border color */
+  border-top: 1px solid var(--color-border);
+
+  /* Main navbar background color */
+  background-color: var(--color-text-background-nav);
+
+  /* Adds a soft shadow below navbar for visual separation */
+  box-shadow: 0 4px 32px rgb(2 6 23 / 0.08);
+
+  /* Blurs content behind navbar for glassmorphism effect */
+  backdrop-filter: blur(24px);
+
+  /* Safari support for backdrop blur */
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Inner wrapper that arranges desktop nav and hamburger button */
+.navbar_inner {
+  /* Enables flexbox layout */
+  display: flex;
+
+  /* Vertically centers child items */
+  align-items: center;
+
+  /* Pushes left group and right group apart */
+  justify-content: space-between;
+
+  /* Minimum navbar height */
+  min-height: 56px;
+
+  /* Inner spacing: top/bottom 8px, left/right 16px */
+  padding: 8px 16px;
+
+  /* Space between immediate child elements */
+  gap: 16px;
+}
+
+/* Desktop left navigation section */
+.navbar_list_left {
+  /* Flex layout for nav links */
+  display: flex;
+
+  /* Horizontal spacing between left-side items */
+  gap: 28px;
+
+  /* Vertically center left items */
+  align-items: center;
+
+  /* Allows flex children to shrink properly instead of overflowing */
+  min-width: 0;
+
+  /* Allows wrapping if needed on medium sizes */
+  flex-wrap: wrap;
+}
+
+/* Desktop right navigation section */
+.navbar_list_right {
+  /* Flex layout for right-side links */
+  display: flex;
+
+  /* Horizontal spacing between right-side items */
+  gap: 12px;
+
+  /* Vertically align right-side items */
+  align-items: center;
+
+  /* Push this section to the far right */
+  margin-left: auto;
+}
+
+/* Shared style for each desktop nav item */
+.navbar_item {
+  /* Make anchor behave like flex item for alignment */
+  display: flex;
+
+  /* Center content vertically */
+  align-items: center;
+
+  /* Center content horizontally */
+  justify-content: center;
+
+  /* Small internal gap in case icon + text are added later */
+  gap: 8px;
+
+  /* Font size for desktop nav items */
+  font-size: 16px;
+
+  /* Show hand cursor when hovering */
+  cursor: pointer;
+
+  /* Prevent text from breaking into multiple lines */
+  white-space: nowrap;
+
+  /* Remove default underline from anchor tags */
+  text-decoration: none;
+
+  /* Use inherited text color from parent/theme */
+  color: inherit;
+}
+
+/* Optional hover effect for desktop items */
+.navbar_item:hover {
+  /* Slightly reduce opacity on hover for feedback */
+  opacity: 0.8;
+}
+
+/* Hamburger button hidden by default on desktop */
+.hamburger {
+  /* Hide hamburger on larger screens */
+  display: none;
+
+  /* Minimum touch-friendly width */
+  width: 44px;
+
+  /* Minimum touch-friendly height */
+  height: 44px;
+
+  /* Remove default button border */
+  border: none;
+
+  /* Transparent background so only icon lines show */
+  background: transparent;
+
+  /* Pointer cursor on hover */
+  cursor: pointer;
+
+  /* Remove default button padding */
+  padding: 0;
+
+  /* Stack the 3 lines vertically */
+  flex-direction: column;
+
+  /* Center lines vertically inside button */
+  justify-content: center;
+
+  /* Gap between the hamburger lines */
+  gap: 5px;
+}
+
+/* Style for each line inside hamburger icon */
+.hamburger span {
+  /* Makes each span occupy a block row */
+  display: block;
+
+  /* Width of each hamburger line */
+  width: 24px;
+
+  /* Thickness of each hamburger line */
+  height: 2px;
+
+  /* Centers the line horizontally */
+  margin: 0 auto;
+
+  /* Uses current text color for line color */
+  background-color: currentColor;
+
+  /* Smooth animation for transforms and opacity */
+  transition: 0.25s ease;
+}
+
+/* First line transforms when menu is open */
+.hamburger_active span:nth-child(1) {
+  /* Move down and rotate to form part of X */
+  transform: translateY(7px) rotate(45deg);
+}
+
+/* Middle line disappears when menu is open */
+.hamburger_active span:nth-child(2) {
+  /* Hide the middle bar */
+  opacity: 0;
+}
+
+/* Third line transforms when menu is open */
+.hamburger_active span:nth-child(3) {
+  /* Move up and rotate opposite to form X */
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile menu is hidden by default */
+.mobile_menu {
+  /* Hide mobile menu until activated */
+  display: none;
+}
+
+/* Style for each item inside the mobile dropdown */
+.mobile_menu_item {
+  /* Font size for mobile links */
+  font-size: 16px;
+
+  /* Vertical and horizontal spacing inside each item */
+  padding: 12px 16px;
+
+  /* Show pointer cursor */
+  cursor: pointer;
+
+  /* Add divider line between menu items */
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+
+  /* Remove default underline from anchors */
+  text-decoration: none;
+
+  /* Keep text color from parent/theme */
+  color: inherit;
+
+  /* Use flex for alignment consistency */
+  display: flex;
+
+  /* Vertically center text */
+  align-items: center;
+
+  /* Good tap target height for mobile */
+  min-height: 44px;
+}
+
+/* Hover feedback for mobile items */
+.mobile_menu_item:hover {
+  /* Slightly reduce opacity on hover */
+  opacity: 0.8;
+}
+
+/* Responsive rules for tablets and phones */
+@media (max-width: 768px) {
+
+  /* Reduce inner navbar height slightly on mobile */
+  .navbar_inner {
+    min-height: 52px;
+  }
+
+  /* Hide desktop left nav on mobile */
+  .navbar_list_left {
+    display: none;
+  }
+
+  /* Hide desktop right nav on mobile */
+  .navbar_list_right {
+    display: none;
+  }
+
+  /* Show hamburger on mobile */
+  .hamburger {
+    display: flex;
+
+    /* Push hamburger to the right */
+    margin-left: auto;
+  }
+
+  /* Show the mobile menu only when active class is added */
+  .mobile_menu_active {
+    /* Display dropdown as flex column */
+    display: flex;
+
+    /* Stack mobile items vertically */
+    flex-direction: column;
+
+    /* Use navbar background color */
+    background-color: var(--color-text-background-nav);
+
+    /* Top divider between navbar bar and dropdown */
+    border-top: 1px solid var(--color-border);
+
+    /* Padding around dropdown content */
+    padding: 8px 0 12px;
+  }
+}
+
+/* Main footer wrapper */
+.footer {
+  /* Creates spacing above the footer */
+  margin-top: 48px;
+
+  /* Adds internal space around footer content */
+  padding: 32px 16px 16px;
+
+  /* Uses your themed footer/background surface color */
+  background-color: var(--color-text-background-nav);
+
+  /* Adds a subtle top border to separate footer from page content */
+  border-top: 1px solid var(--color-border);
+}
+
+/* Inner layout container for all footer columns */
+.footer_inner {
+  /* Use grid layout for responsive columns */
+  display: grid;
+
+  /* Mobile first: single column stack */
+  grid-template-columns: 1fr;
+
+  /* Space between stacked footer sections */
+  gap: 24px;
+
+  /* Limit overall content width */
+  max-width: 1200px;
+
+  /* Center the footer content horizontally */
+  margin: 0 auto;
+}
+
+/* Each footer section/column */
+.footer_column {
+  /* Stack title and links vertically */
+  display: flex;
+
+  /* Keep items in a vertical direction */
+  flex-direction: column;
+
+  /* Small spacing between title and links */
+  gap: 10px;
+}
+
+/* Footer section heading */
+.footer_title {
+  /* Slightly larger title text */
+  font-size: 18px;
+
+  /* Make heading stand out */
+  font-weight: 600;
+
+  /* Small space below title for readability */
+  margin-bottom: 4px;
+}
+
+/* Shared style for footer links */
+.footer_link {
+  /* Remove default underline */
+  text-decoration: none;
+
+  /* Use inherited theme text color */
+  color: inherit;
+
+  /* Footer link text size */
+  font-size: 15px;
+
+  /* Make hover changes smooth */
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Hover effect for footer links */
+.footer_link:hover {
+  /* Slight visual fade on hover */
+  opacity: 0.8;
+
+  /* Tiny movement to the right for interaction feedback */
+  transform: translateX(2px);
+}
+
+/* Bottom-most footer area */
+.footer_bottom {
+  /* Constrain width with same layout rhythm */
+  max-width: 1200px;
+
+  /* Center horizontally */
+  margin: 24px auto 0;
+
+  /* Add top divider before copyright row */
+  border-top: 1px solid var(--color-border);
+
+  /* Space above and below copyright line */
+  padding-top: 16px;
+}
+
+/* Text inside footer bottom */
+.footer_bottom_text {
+  /* Slightly smaller muted text */
+  font-size: 14px;
+
+  /* Reduce visual prominence */
+  opacity: 0.75;
+}
+
+/* Desktop / larger tablet layout */
+@media (min-width: 768px) {
+  .footer_inner {
+    /* Create responsive multi-column layout */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    /* Increase gap between desktop columns */
+    gap: 32px;
+  }
+}
