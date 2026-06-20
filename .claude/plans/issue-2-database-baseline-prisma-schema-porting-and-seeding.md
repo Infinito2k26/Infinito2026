@@ -1,7 +1,7 @@
 # Plan: Issue #2 Database Baseline - Prisma Schema Porting and Seeding
 
-> **Revised:** 2026-06-21 — Plan rewritten against `database.md v2.1`. The original plan
-> targeted the v1.0 MVP schema (8 models, 6 enums). v2.1 has **18 models and 14 enums**.
+> **Revised:** 2026-06-21 — Plan rewritten against `database.md v2.2`. The original plan
+> targeted the v1.0 MVP schema (8 models, 6 enums). v2.2 has **20 models and 20 enums**.
 > PR #8 (`feature/database-baseline`) is open and needs a full schema rewrite before it can merge.
 
 ---
@@ -24,10 +24,10 @@ The branch has two commits with a `schema.prisma` built against the old v1.0 spe
 
 **What is wrong:**
 
-| Item | PR #8 (current) | Required (v2.1) |
+| Item | PR #8 (current) | Required (v2.2) |
 |------|----------------|-----------------|
-| Models | 8 | 18 |
-| Enums | 6 | 14 |
+| Models | 8 | 20 |
+| Enums | 6 | 20 |
 | `TeamMember` | present | **deleted** — replaced by `Participant` |
 | `Participant` | missing | required |
 | `EventSubOption` | missing | required |
@@ -54,14 +54,14 @@ The branch has two commits with a `schema.prisma` built against the old v1.0 spe
 
 ## Outcome
 
-The API workspace has a complete, constraint-enforced Prisma schema matching `database.md v2.1`, a passing initial migration against local PostgreSQL, and a deterministic seed script covering all major entity types.
+The API workspace has a complete, constraint-enforced Prisma schema matching `database.md v2.2`, a passing initial migration against local PostgreSQL, and a deterministic seed script covering all major entity types.
 
 ---
 
 ## Scope
 
 **In scope:**
-- Rewrite `apps/api/prisma/schema.prisma` with all 14 enums and 18 models from `database.md v2.1`
+- Rewrite `apps/api/prisma/schema.prisma` with all 20 enums and 20 models from `database.md v2.2`
 - Drop the existing migration, generate a fresh `prisma migrate dev --name init`
 - Update `apps/api/prisma/seed.ts` to cover new entities
 - Keep `apps/api/package.json` Prisma scripts (already added in PR #8, just verify)
@@ -108,7 +108,7 @@ The migration was never applied to any shared database, so dropping it is safe.
 
 ### Step 1 — Rewrite schema.prisma
 
-Use the exact field names, types, and constraints from `database.md v2.1`. Copy-write the full
+Use the exact field names, types, and constraints from `database.md v2.2`. Copy-write the full
 file in one pass — do not try to patch the existing one.
 
 **Enums to implement (20 total — `SocialPlatform` removed, `VerificationLevel` added):**
@@ -148,7 +148,7 @@ ScanLog
 | `registrationId` unique on ReferralConversion | One attribution per registration |
 | `participantId` unique on Credential | One QR per participant |
 | `userId` unique on Credential | One QR per individual |
-| `(caId, platform)` unique on CASocialAccount | One account per platform per CA |
+| `(caId, platformId)` unique on CASocialAccount | One account per platform per CA |
 | `(caId, taskId)` unique on CATaskAssignment | One assignment per CA per task |
 
 **Partial unique index note:** Prisma does not support `WHERE` clauses on `@@unique`. For nullable
