@@ -13,7 +13,7 @@ const Input = ({
     hint,
     className,
     id,
-    children,
+    // children,
     ...rest
 }: InputProps) => {
     const inputId = id ?? rest.name;
