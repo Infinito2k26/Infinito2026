@@ -198,8 +198,8 @@ every record so the script is idempotent (re-runnable without error). Never trun
 
 | Entity | Count | Notes |
 |--------|-------|-------|
-| User (SUPER_ADMIN) | 1 | `email: admin@infinito.in` |
-| User (MODERATOR) | 1 | `email: moderator@infinito.in` |
+| User (SUPER_ADMIN) | 1 | `email: admin@infinito2k26.in` |
+| User (MODERATOR) | 1 | `email: moderator@infinito2k26.in` |
 | User (VOLUNTEER) | 1 | |
 | User (CAMPUS_AMBASSADOR) | 1 | |
 | User (PARTICIPANT, IITP) | 1 | `isIITP: true`, `isIITPVerified: true` |
@@ -231,11 +231,11 @@ every record so the script is idempotent (re-runnable without error). Never trun
 ```typescript
 // Use this pattern throughout — never plain create()
 await prisma.user.upsert({
-  where: { email: 'admin@infinito.in' },
+  where: { email: 'admin@infinito2k26.in' },
   update: {},
   create: {
     id: 'seed-user-admin',          // fixed IDs for stable FK references
-    email: 'admin@infinito.in',
+    email: 'admin@infinito2k26.in',
     name: 'Admin User',
     role: 'SUPER_ADMIN',
     passwordHash: '$2b$10$...',     // bcrypt hash of "Infinito@dev123" — document this
