@@ -7,6 +7,8 @@
   --color-text-primary: #18181b;
   --color-text-secondary: #71717a;
   --color-border: #e4e4e7;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
   --radius-md: 0.5rem;
   --spacing-container: 1rem;
 }
