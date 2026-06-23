@@ -4,10 +4,11 @@ services:
     container_name: infinito_postgres_dev
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Dr0pT@ble_Dr0pMyW1ll2L1v3!_99
+      POSTGRES_PASSWORD: infinito_dev_pwd
       POSTGRES_DB: infinito_dev
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
