@@ -19,10 +19,16 @@ import {
   ProofType,
   TaskStatus,
 } from '@prisma/client';
-import 'dotenv/config' ;
+import 'dotenv/config';
 console.log('DATABASE_URL =', process.env.DATABASE_URL);
 
-const prisma = new PrismaClient();
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
 
 // bcrypt hash of "Infinito@dev123" with 10 salt rounds — FAKE, dev only.
 const DEV_PASSWORD_HASH =
@@ -63,52 +69,52 @@ const IDS = {
   taskReferral:     'f0000000-0000-0000-0000-000000000001',
 
   // CAProfile
-  caProfile:        'g0000000-0000-0000-0000-000000000001',
+  caProfile:        '00000000-0000-0000-0000-000000000001',
 
   // Teams
-  teamFootball:     'h0000000-0000-0000-0000-000000000001',
-  teamBGMI:         'h0000000-0000-0000-0000-000000000002',
+  teamFootball:     '10000000-0000-0000-0000-000000000001',
+  teamBGMI:         '10000000-0000-0000-0000-000000000002',
 
   // Participants — Football (3)
-  partFB1:          'i0000000-0000-0000-0000-000000000001',
-  partFB2:          'i0000000-0000-0000-0000-000000000002',
-  partFB3:          'i0000000-0000-0000-0000-000000000003',
+  partFB1:          '20000000-0000-0000-0000-000000000001',
+  partFB2:          '20000000-0000-0000-0000-000000000002',
+  partFB3:          '20000000-0000-0000-0000-000000000003',
 
   // Participants — BGMI (4)
-  partBG1:          'i0000000-0000-0000-0000-000000000004',
-  partBG2:          'i0000000-0000-0000-0000-000000000005',
-  partBG3:          'i0000000-0000-0000-0000-000000000006',
-  partBG4:          'i0000000-0000-0000-0000-000000000007',
+  partBG1:          '20000000-0000-0000-0000-000000000004',
+  partBG2:          '20000000-0000-0000-0000-000000000005',
+  partBG3:          '20000000-0000-0000-0000-000000000006',
+  partBG4:          '20000000-0000-0000-0000-000000000007',
 
   // Registrations
-  regFootball:      'j0000000-0000-0000-0000-000000000001',
-  regBGMI:          'j0000000-0000-0000-0000-000000000002',
-  regAthletics:     'j0000000-0000-0000-0000-000000000003',
+  regFootball:      '30000000-0000-0000-0000-000000000001',
+  regBGMI:          '30000000-0000-0000-0000-000000000002',
+  regAthletics:     '30000000-0000-0000-0000-000000000003',
 
   // RegistrationSubOptions
-  regSubOpt1:       'k0000000-0000-0000-0000-000000000001',
-  regSubOpt2:       'k0000000-0000-0000-0000-000000000002',
+  regSubOpt1:       '40000000-0000-0000-0000-000000000001',
+  regSubOpt2:       '40000000-0000-0000-0000-000000000002',
 
   // Payment
-  paymentFootball:  'l0000000-0000-0000-0000-000000000001',
+  paymentFootball:  '50000000-0000-0000-0000-000000000001',
 
   // Credentials
-  credFB1:          'm0000000-0000-0000-0000-000000000001',
-  credFB2:          'm0000000-0000-0000-0000-000000000002',
-  credFB3:          'm0000000-0000-0000-0000-000000000003',
-  credIndividual:   'm0000000-0000-0000-0000-000000000004',
+  credFB1:          '60000000-0000-0000-0000-000000000001',
+  credFB2:          '60000000-0000-0000-0000-000000000002',
+  credFB3:          '60000000-0000-0000-0000-000000000003',
+  credIndividual:   '60000000-0000-0000-0000-000000000004',
 
   // CATaskAssignment
-  taskAssignment:   'n0000000-0000-0000-0000-000000000001',
+  taskAssignment:   '70000000-0000-0000-0000-000000000001',
 
   // SocialReferral
-  socialReferral:   'o0000000-0000-0000-0000-000000000001',
+  socialReferral:   '80000000-0000-0000-0000-000000000001',
 
   // ReferralConversion
-  referralConv:     'p0000000-0000-0000-0000-000000000001',
+  referralConv:     '90000000-0000-0000-0000-000000000001',
 
   // ScanLog
-  scanLog:          'q0000000-0000-0000-0000-000000000001',
+  scanLog:          '01000000-0000-0000-0000-000000000001',
 };
 
 // ---------------------------------------------------------------------------
