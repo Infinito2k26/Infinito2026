@@ -1,94 +1,140 @@
-# Plan Feature: GitHub Issue to Implementation Plan
+# Plan Feature: Issue to Implementation Plan
 
 ## Objective
 
-Convert a GitHub issue or feature request into a concrete implementation plan that another developer or agent can execute.
+Convert a GitHub issue, Linear ticket, Jira card, or plain feature description into a concrete, executable implementation plan.
 
-No code is written during planning unless the user explicitly asks for immediate implementation.
+**No code is written during this step.**
 
 ## Required Inputs
 
-- GitHub issue number or clear feature request.
-- Acceptance criteria.
-- Target track: web, api, database, infra, docs, or qa.
+Provide one of:
+- GitHub issue number → `gh issue view <number>`
+- Linear / Jira URL → paste the URL
+- Plain feature description with explicit acceptance criteria
 
-If GitHub access is unavailable, create a local plan and state that issue/project sync is pending.
+Also helpful:
+- Target area: `api | web | mobile | cli | database | infra | docs | qa`
+- Priority and deadline context
+- Any known constraints or dependencies
 
 ## Planning Process
 
-1. Read `CONSTITUTION.md` and the relevant `.claude/reference/` files.
-2. Inspect nearby code and existing patterns.
-3. Identify affected modules, routes, pages, packages, and schema.
-4. Identify dependencies and docs that must be checked.
-5. Break the work into atomic tasks with validation commands.
-6. Record risks, data migrations, API changes, and frontend states.
+### 1. Read project context
 
-## Plan File
+- `CONSTITUTION.md`
+- `.claude/reference/architecture.md`
+- The reference doc for the target area (api, database, etc.)
 
-Write plans to:
+### 2. Fetch the issue
+
+```bash
+gh issue view <number>   # GitHub
+# Or read the provided description
+```
+
+Extract:
+- Acceptance criteria
+- Track / area
+- Priority
+- Dependencies or blockers
+
+### 3. Investigate the codebase
+
+- Find affected files, modules, routes, pages, schemas.
+- Find existing patterns to follow (naming, structure, test style).
+- Find files to read before making any change.
+- Identify external docs, changelogs, or specs to check.
+- Identify data migrations, API contract changes, or breaking changes.
+
+### 4. Design the implementation
+
+- Break work into atomic, independently testable steps.
+- Each step must have: what to do, which files to change, validation command.
+- Identify edge cases: empty state, error state, loading state, unauthorized state.
+- Identify required tests and what they must prove.
+
+### 5. Write the plan
 
 ```text
-.claude/plans/<issue-number>-<kebab-case-title>.md
+.claude/plans/<identifier>-<kebab-case-title>.md
 ```
+
+Examples:
+- `.claude/plans/42-user-auth.md`
+- `.claude/plans/LIN-123-export-csv.md`
+- `.claude/plans/local-add-dark-mode.md`
 
 ## Plan Template
 
-````markdown
-# Plan: <issue-number> <title>
+```markdown
+# Plan: <identifier> — <title>
 
 ## Issue
 
-- GitHub: #<number>
-- Track:
-- Priority:
+- Tracker: GitHub #<n> | Linear <id> | Jira <id> | local
+- Track: api | web | mobile | cli | database | infra | docs | qa
+- Priority: critical | high | medium | low
 - Owner:
 - Reviewer:
+- Target branch:
 
 ## Outcome
 
-What will be true when this ships.
+What will be verifiably true when this ships (testable, not aspirational).
 
 ## Scope
 
-In:
-
+**In:**
 -
 
-Out:
-
+**Out:**
 -
 
 ## Files to Read First
 
-- `path`
+- `path/to/file.ts` — why this matters
 
 ## Files to Change
 
-- `path` - reason
+- `path/to/file.ts` — what changes and why
 
 ## Implementation Steps
 
-1.
-2.
-3.
+### Step 1: <title>
+
+- **What:** 
+- **Files:** 
+- **Validation:** `<command to run>`
+
+### Step 2: <title>
+
+- **What:** 
+- **Files:** 
+- **Validation:** `<command to run>`
 
 ## Tests and Validation
 
 ```bash
-npm run lint
-npm run check-types
-npm run build
+# Validation gate from CONSTITUTION.md
 ```
-````
 
 ## Acceptance Criteria
 
-- [ ]
+- [ ] 
+- [ ] 
 
-## Risks
+## Risks and Notes
 
--
-
+- **Data migration:** none | describe if needed
+- **API contract change:** breaking | additive | none
+- **Performance concern:** none | describe if needed
+- **Unknowns:** list anything not yet clear
 ```
 
-```
+## Rules
+
+- No code during planning.
+- Unknowns go in the Risks section — never paper over them.
+- Scope = the issue, nothing more. Resist the urge to clean up nearby code.
+- If GitHub / issue tracker is unavailable, create the plan locally with `local` as the tracker.

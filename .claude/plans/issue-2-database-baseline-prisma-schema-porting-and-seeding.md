@@ -1,147 +1,344 @@
 # Plan: Issue #2 Database Baseline - Prisma Schema Porting and Seeding
 
+> **Revised:** 2026-06-21 — Plan rewritten against `database.md v2.2`. The original plan
+> targeted the v1.0 MVP schema (8 models, 6 enums). v2.2 has **20 models and 20 enums**.
+> PR #8 (`feature/database-baseline`) is open and needs a full schema rewrite before it can merge.
+
+---
+
 ## Issue
 
 - GitHub: https://github.com/Infinito2k26/Infinito2026/issues/2
 - Owner: `ansariowais669-hub`
+- Reviewer: `Saad-Manda`
 - Track: Backend / Database
-- Priority: P0
+- Priority: P0 — gates every other backend PR
 - Branch: `feature/database-baseline`
 - Target: `develop`
 
+---
+
+## Current State of PR #8
+
+The branch has two commits with a `schema.prisma` built against the old v1.0 spec.
+
+**What is wrong:**
+
+| Item | PR #8 (current) | Required (v2.2) |
+|------|----------------|-----------------|
+| Models | 8 | 20 |
+| Enums | 6 | 20 |
+| `TeamMember` | present | **deleted** — replaced by `Participant` |
+| `Participant` | missing | required |
+| `EventSubOption` | missing | required |
+| `EventRulebook` | missing | required |
+| `CAProfile` | missing | required |
+| `CASocialAccount` | missing | required |
+| `Brand` | missing | required |
+| `CaTask` | missing | required |
+| `CATaskAssignment` | missing | required |
+| `ReferralConversion` | missing | required |
+| `RegistrationSubOption` | missing | required |
+| `UserRole` | has `EVENT_MANAGER`, `TEAM_CAPTAIN` | `MODERATOR` only; no `TEAM_CAPTAIN` |
+| `EventCategory` enum | wrong name | `BroadCategory` |
+| `TeamMemberRole` enum | wrong | replaced by `ParticipantRole` |
+| `Event` fields | bare minimum | +18 fields (fees, IITP, custom, accommodation…) |
+| `Registration` fields | bare | +isIITP, genderDeclared, accommodation, referredById, customData |
+| `Payment` fields | online only | +`mode`, `screenshotUrl`, `transactionId` |
+| `Credential` | tied to `subjectUserId` | `participantId` OR `userId` (per v2.1) |
+| `ScanLog` | has `venue` | needs `gate` + `direction` (ScanDirection enum) |
+
+**Action required:** Drop the existing migration file entirely, rewrite `schema.prisma` from scratch, generate a fresh `init` migration, and update the seed script.
+
+---
+
 ## Outcome
 
-The API workspace has Prisma installed, a PostgreSQL datasource configured, an initial Infinito domain schema committed, Prisma Client generation working from the monorepo, and a deterministic seed script for local development.
+The API workspace has a complete, constraint-enforced Prisma schema matching `database.md v2.2`, a passing initial migration against local PostgreSQL, and a deterministic seed script covering all major entity types.
 
-## Current Context
-
-- Local infrastructure exists in `docker-compose.yml` with PostgreSQL on `localhost:5432`.
-- `apps/api` is a minimal NestJS app with no Prisma dependency yet.
-- `.claude/reference/database.md` defines the MVP entity model and required constraints.
-- Issue body references Section 6 of the architecture roadmap, but the repo-local source of truth should now be `.claude/reference/database.md`.
+---
 
 ## Scope
 
-In scope:
+**In scope:**
+- Rewrite `apps/api/prisma/schema.prisma` with all 20 enums and 20 models from `database.md v2.2`
+- Drop the existing migration, generate a fresh `prisma migrate dev --name init`
+- Update `apps/api/prisma/seed.ts` to cover new entities
+- Keep `apps/api/package.json` Prisma scripts (already added in PR #8, just verify)
 
-- Add Prisma to `apps/api`.
-- Create `apps/api/prisma/schema.prisma`.
-- Configure PostgreSQL datasource through `DATABASE_URL`.
-- Implement MVP enums and models from `.claude/reference/database.md`.
-- Add seed script with realistic local data.
-- Add package scripts for generate, migrate, and seed.
-- Document local database commands in API README or root docs if needed.
+**Out of scope:**
+- `PrismaModule` / `PrismaService` NestJS wiring (lead-owned, Issue #5)
+- Auth service implementation
+- Registration/payment business logic
+- Production deployment migrations
 
-Out of scope:
+---
 
-- NestJS `PrismaModule` wiring. That is lead-owned core scaffolding.
-- Auth service implementation.
-- Registration/payment business logic.
-- Production deployment migrations.
+## Files to Read Before Starting
 
-## Files to Read First
+1. `.claude/reference/database.md` — **the authoritative spec; read every section**
+2. `apps/api/prisma/schema.prisma` — current (wrong) state to be replaced
+3. `apps/api/prisma/seed.ts` — to be updated
+4. `apps/api/package.json` — verify scripts are correct
 
-- `.claude/reference/database.md`
-- `.claude/reference/architecture.md`
-- `docker-compose.yml`
-- `apps/api/package.json`
-- `apps/api/tsconfig.json`
-- `package.json`
+---
 
 ## Files to Change
 
-- `apps/api/package.json`
-- `apps/api/prisma/schema.prisma`
-- `apps/api/prisma/seed.ts`
-- `.env.example` if missing or incomplete
-- `apps/api/README.md` if command documentation is needed
-- `package-lock.json`
+| File | Action |
+|------|--------|
+| `apps/api/prisma/schema.prisma` | Full rewrite |
+| `apps/api/prisma/migrations/` | Delete old migration folder; new one generated by `prisma migrate dev` |
+| `apps/api/prisma/seed.ts` | Full rewrite |
+| `apps/api/.env.example` | Already correct from PR #8 — just verify `DATABASE_URL` is present |
+
+---
 
 ## Implementation Steps
 
-1. Install Prisma dependencies in the API workspace:
-   ```bash
-   npm install @prisma/client --workspace=api
-   npm install prisma --workspace=api --save-dev
-   ```
+### Step 0 — Delete the old migration
 
-2. Add package scripts in `apps/api/package.json`:
-   ```json
-   {
-     "prisma:generate": "prisma generate",
-     "prisma:migrate": "prisma migrate dev",
-     "prisma:studio": "prisma studio",
-     "db:seed": "prisma db seed"
-   }
-   ```
+```bash
+rm -rf apps/api/prisma/migrations/20260614104826_init
+```
 
-3. Add Prisma seed config to `apps/api/package.json`:
-   ```json
-   {
-     "prisma": {
-       "seed": "ts-node prisma/seed.ts"
-     }
-   }
-   ```
+The migration was never applied to any shared database, so dropping it is safe.
 
-4. Create `apps/api/prisma/schema.prisma`.
+---
 
-5. Implement initial enums:
-   - `UserRole`
-   - `EventCategory`
-   - `TeamMemberRole`
-   - `RegistrationStatus`
-   - `PaymentStatus`
-   - `ScanResult`
+### Step 1 — Rewrite schema.prisma
 
-6. Implement MVP models:
-   - `User`
-   - `Event`
-   - `Team`
-   - `TeamMember`
-   - `Registration`
-   - `Payment`
-   - `Credential`
-   - `ScanLog`
+Use the exact field names, types, and constraints from `database.md v2.2`. Copy-write the full
+file in one pass — do not try to patch the existing one.
 
-7. Add constraints and indexes from `.claude/reference/database.md`.
+**Enums to implement (20 total — `SocialPlatform` removed, `VerificationLevel` added):**
 
-8. Create a seed script that inserts:
-   - one super admin
-   - one event manager
-   - two participant users
-   - two events
-   - one team
-   - one pending registration
+```
+UserRole              BroadCategory         EventRegistrationType
+GenderCategory        FeeStructure          CustomFieldType
+CustomFieldScope      SubOptionType         ParticipantRole
+IdentityType          RegistrationStatus    PaymentMode
+PaymentStatus         ScanDirection         ScanResult
+VerificationLevel     TaskSource            TaskCategory
+ProofType             TaskStatus
+```
 
-9. Run local database:
-   ```bash
-   docker compose up -d
-   ```
+> `SocialPlatform` enum is **gone** — replaced by the `SocialPlatformConfig` model.
 
-10. Generate client and run first migration:
-    ```bash
-    npm run prisma:generate --workspace=api
-    npm run prisma:migrate --workspace=api -- --name init
-    npm run db:seed --workspace=api
-    ```
+**Models to implement (20 total):**
+
+```
+User                  Event                 EventSubOption
+EventRulebook         Team                  Participant
+CAProfile             SocialPlatformConfig  CASocialAccount
+Brand                 CaTask                CATaskAssignment
+SocialReferral        Registration          RegistrationSubOption
+ReferralConversion    Payment               Credential
+ScanLog
+```
+
+**Critical constraints to get right (these are DB-level enforced):**
+
+| Constraint | Where |
+|-----------|-------|
+| `teamId` unique (non-null) on Registration | One team = one event |
+| `(eventId, userId)` unique (non-null) on Registration | No duplicate individual per event |
+| CHECK: `teamId IS NOT NULL OR userId IS NOT NULL` on Registration | No phantom rows |
+| CHECK: `participantId IS NOT NULL OR userId IS NOT NULL` on Credential | Must belong to someone |
+| `registrationId` unique on ReferralConversion | One attribution per registration |
+| `participantId` unique on Credential | One QR per participant |
+| `userId` unique on Credential | One QR per individual |
+| `(caId, platformId)` unique on CASocialAccount | One account per platform per CA |
+| `(caId, taskId)` unique on CATaskAssignment | One assignment per CA per task |
+
+**Partial unique index note:** Prisma does not support `WHERE` clauses on `@@unique`. For nullable
+unique constraints (e.g. `teamId` unique but only when not null), use a raw migration SQL block
+after the initial migration, OR use `@unique` and rely on PostgreSQL's behavior that two NULLs
+are not considered equal (they pass a unique constraint). For `Registration.teamId`, mark the
+field `@unique` — Prisma + PostgreSQL handles multiple null rows correctly.
+
+**Key field shapes to verify against database.md:**
+
+- `Event.customFieldsDef Json?` — array of `{ label, inputType, required, scope, options? }`
+- `Participant.customData Json?` — PARTICIPANT-scoped field responses
+- `Registration.customData Json?` — TEAM-scoped field responses
+- `Payment.mode PaymentMode` — ONLINE or MANUAL_SCREENSHOT
+- `ScanLog.gate String` — e.g. "Gate 1", "Gate 2"
+- `ScanLog.direction ScanDirection` — ENTRY or EXIT
+- `Credential.participantId String? @unique` + `Credential.userId String? @unique`
+
+---
+
+### Step 2 — Verify package scripts
+
+`apps/api/package.json` should already have these from PR #8:
+
+```json
+"scripts": {
+  "prisma:generate": "prisma generate",
+  "prisma:migrate": "prisma migrate dev",
+  "prisma:studio": "prisma studio",
+  "db:seed": "prisma db seed"
+},
+"prisma": {
+  "seed": "ts-node prisma/seed.ts"
+}
+```
+
+Confirm they are present. Do not change them.
+
+---
+
+### Step 3 — Rewrite seed.ts
+
+The seed must cover enough entities to validate all FK chains and constraints. Use `upsert` for
+every record so the script is idempotent (re-runnable without error). Never truncate.
+
+**Seed entities (minimum):**
+
+| Entity | Count | Notes |
+|--------|-------|-------|
+| User (SUPER_ADMIN) | 1 | `email: admin@infinito2k26.in` |
+| User (MODERATOR) | 1 | `email: moderator@infinito2k26.in` |
+| User (VOLUNTEER) | 1 | |
+| User (CAMPUS_AMBASSADOR) | 1 | |
+| User (PARTICIPANT, IITP) | 1 | `isIITP: true`, `isIITPVerified: true` |
+| User (PARTICIPANT, external) | 1 | |
+| Event (OUTDOOR, Football Men) | 1 | `feeStructure: FLAT`, `registrationType: TEAM` |
+| Event (ESPORTS, BGMI) | 1 | `feeStructure: FLAT`, PARTICIPANT custom fields for IGN + BGMI ID |
+| Event (INDIVIDUAL, Athletics) | 1 | `registrationType: INDIVIDUAL`, with EventSubOptions |
+| EventSubOption | 2 | For Athletics: "100m" (INDIVIDUAL), "4×100m Relay" (RELAY) |
+| SocialPlatformConfig | 4 | Instagram (BEHAVIORAL), YouTube (API_CONFIRMED), Twitter (API_CONFIRMED), LinkedIn (BEHAVIORAL) |
+| Brand | 1 | |
+| CaTask | 1 | REFERRAL, source MODERATOR, platformId → Instagram |
+| CAProfile | 1 | For the CA user |
+| Team (Football, external) | 1 | |
+| Participant | 3 | Captain + 2 players, each with photoUrl + idType + idNumber |
+| Team (BGMI, IITP) | 1 | `isIITP: true` |
+| Participant (BGMI) | 4 | Each with IGN and BGMI ID in `customData` |
+| Registration (Football team) | 1 | `status: CONFIRMED` |
+| Registration (BGMI team, IITP) | 1 | `isIITP: true`, fee is ₹0 |
+| Registration (individual, Athletics) | 1 | `userId` only |
+| RegistrationSubOption | 2 | For the Athletics registration |
+| Payment | 1 | For the Football registration (MANUAL_SCREENSHOT, SUCCESS) |
+| Credential | 1 | For each of the 3 Football participants + 1 individual |
+| CATaskAssignment | 1 | CA assigned to the referral task |
+| SocialReferral | 1 | BEHAVIORAL verification, Instagram platform, attributed to the CA |
+| ScanLog | 1 | Gate 1 ENTRY scan for one credential |
+
+**Seed pattern:**
+
+```typescript
+// Use this pattern throughout — never plain create()
+await prisma.user.upsert({
+  where: { email: 'admin@infinito2k26.in' },
+  update: {},
+  create: {
+    id: 'seed-user-admin',          // fixed IDs for stable FK references
+    email: 'admin@infinito2k26.in',
+    name: 'Admin User',
+    role: 'SUPER_ADMIN',
+    passwordHash: '$2b$10$...',     // bcrypt hash of "Infinito@dev123" — document this
+  },
+});
+```
+
+Use fixed string IDs prefixed with `seed-` for all seed records so re-runs are idempotent.
+
+---
+
+### Step 4 — Run locally
+
+```bash
+# 1. Start DB
+docker compose up -d
+
+# 2. Generate client (picks up new schema)
+npm run prisma:generate --workspace=api
+
+# 3. Run fresh migration (this creates the new init migration file)
+npm run prisma:migrate --workspace=api -- --name init
+
+# 4. Seed
+npm run db:seed --workspace=api
+```
+
+Verify output — all upserts should succeed. Run the seed a second time to confirm idempotency.
+
+---
+
+### Step 5 — Build check
+
+```bash
+npm run build --workspace=api
+```
+
+Must pass. Fix any TypeScript errors from the generated Prisma client before pushing.
+
+---
 
 ## Acceptance Criteria
 
-- [ ] Prisma installed in `apps/api`.
-- [ ] `schema.prisma` exists with datasource, generator, enums, and MVP models.
-- [ ] Prisma Client generation succeeds.
-- [ ] Initial migration succeeds against local PostgreSQL.
-- [ ] Seed script runs successfully and is deterministic.
-- [ ] Unique constraints prevent duplicate team/event and user/event registrations.
-- [ ] `npm run build --workspace=api` passes.
-- [ ] `npm run test --workspace=api` passes.
+- [ ] All 20 enums from `database.md v2.2` are present with correct values
+- [ ] All 20 models from `database.md v2.2` are present with correct field types
+- [ ] `TeamMember` model does **not** exist — replaced by `Participant`
+- [ ] `EventCategory` enum does **not** exist — replaced by `BroadCategory`
+- [ ] `SocialPlatform` enum does **not** exist — replaced by `SocialPlatformConfig` model
+- [ ] `CASocialAccount.platformId` is a FK to `SocialPlatformConfig`, not an enum field
+- [ ] `SocialPlatformConfig` seed data includes Instagram, YouTube, Twitter, LinkedIn rows
+- [ ] `SocialReferral` has `@@unique([platformId, verifiedUserId])`
+- [ ] All DB-level constraints (unique, check) are modeled per Section 6 of `database.md`
+- [ ] All required indexes from Section 5 of `database.md` are present
+- [ ] `Credential` uses `participantId` OR `userId`, not `subjectUserId`
+- [ ] `ScanLog` has `gate` and `direction` fields
+- [ ] `Payment` has `mode`, `screenshotUrl`, `transactionId` fields
+- [ ] `Registration` has `isIITP`, `genderDeclared`, accommodation fields
+- [ ] Prisma Client generation succeeds (`prisma generate`)
+- [ ] Fresh `init` migration runs clean against local PostgreSQL
+- [ ] Seed script is idempotent — can be run twice without errors
+- [ ] `npm run build --workspace=api` passes
 
-## Review Notes for Lead
+---
+
+## Review Notes for Lead (mdminhaj-2106)
 
 Check especially:
 
-- Whether nullable `teamId` and `userId` uniqueness is modeled correctly for PostgreSQL.
-- Whether enum names match shared `packages/types/src/auth.ts` where relevant.
-- Whether seed credentials are documented but not production-like secrets.
+1. **Partial unique indexes:** Confirm `Registration.teamId @unique` handles nullable correctly.
+   PostgreSQL treats `NULL != NULL` in unique indexes, so multiple null rows are allowed — this is
+   the intended behavior. Prisma's `@unique` maps correctly.
 
+2. **CHECK constraints:** Prisma does not have a built-in CHECK constraint directive. These must
+   be added via `@@map` + a raw migration SQL snippet appended to the init migration SQL after
+   `prisma migrate dev` generates the base SQL:
+   ```sql
+   ALTER TABLE "Registration" ADD CONSTRAINT "registration_team_or_user"
+     CHECK ("teamId" IS NOT NULL OR "userId" IS NOT NULL);
+   ALTER TABLE "Credential" ADD CONSTRAINT "credential_participant_or_user"
+     CHECK ("participantId" IS NOT NULL OR "userId" IS NOT NULL);
+   ```
+   Add these at the bottom of the generated migration SQL before committing.
+
+3. **`Event.customFieldsDef` shape:** It is `Json?` in Prisma. The structure is validated at the
+   service layer, not DB level. Just ensure the field is typed correctly in Prisma.
+
+4. **Seed password hashes:** The seed should document what plaintext `Infinito@dev123` hashes to.
+   Do not use real passwords.
+
+5. **`UserRole` enum:** Should be `MODERATOR`, not `EVENT_MANAGER`. The CA role is
+   `CAMPUS_AMBASSADOR`. No `TEAM_CAPTAIN` role — captaincy is a `ParticipantRole`, not a
+   `UserRole`.
+
+---
+
+## How to Handle the Existing PR #8
+
+The developer should:
+
+1. Rewrite `schema.prisma` and `seed.ts` on the existing branch.
+2. Delete the old migration folder (`migrations/20260614104826_init/`).
+3. Run `prisma migrate dev --name init` to regenerate it.
+4. Push the updated branch. The PR #8 will update automatically.
+5. Request re-review from `Saad-Manda`.
+
+Do NOT close and reopen the PR — just push the updated commits to `feature/database-baseline`.

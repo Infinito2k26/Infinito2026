@@ -1,0 +1,38 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Badge-specific color pairs — no semantic status tokens exist in
+   globals.css yet, so these are scoped to this component only. */
+.default {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+}
+
+.success {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.warning {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.info {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
