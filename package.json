@@ -7,7 +7,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "type-check": "turbo run check-types"
+    "type-check": "turbo run check-types",
+    "db:seed": "tsc prisma/seed.ts --outDir dist && node dist/prisma/seed.js"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
