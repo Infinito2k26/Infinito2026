@@ -586,10 +586,9 @@ ALTER TABLE "ScanLog" ADD CONSTRAINT "ScanLog_credentialId_fkey" FOREIGN KEY ("c
 -- AddForeignKey
 ALTER TABLE "ScanLog" ADD CONSTRAINT "ScanLog_scannedById_fkey" FOREIGN KEY ("scannedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE "Registration"
-  ADD CONSTRAINT "registration_team_or_user_check"
+-- Custom check constraints
+ALTER TABLE "Registration" ADD CONSTRAINT "registration_team_or_user"
   CHECK ("teamId" IS NOT NULL OR "userId" IS NOT NULL);
-
-ALTER TABLE "Credential"
-  ADD CONSTRAINT "credential_participant_or_user_check"
+  
+ALTER TABLE "Credential" ADD CONSTRAINT "credential_participant_or_user"
   CHECK ("participantId" IS NOT NULL OR "userId" IS NOT NULL);
