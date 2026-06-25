@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Button from "./button"
 
 interface NotFoundProps {
     title?: string
@@ -9,10 +10,10 @@ interface NotFoundProps {
 }
 
 export function NotFound({
-    title = "Page not found",
-    description = "The page you're looking for doesn't exist or has been moved.",
-    backHref = "/",
-    backLabel = "Back to home",
+    title = "Not found",
+    description = "The resource you're looking for doesn't exist or has been moved.",
+    backHref,
+    backLabel,
     className,
 }: NotFoundProps) {
     return (
@@ -22,6 +23,8 @@ export function NotFound({
         >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <svg
+                    width="124"
+                    height="124"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -40,12 +43,13 @@ export function NotFound({
                 <h3 className="text-lg font-semibold text-foreground">{title}</h3>
                 <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
             </div>
-            <Link
-                href={backHref}
-                className="mt-2 inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-                {backLabel}
-            </Link>
+            {backHref && backLabel && (
+                <Link href={backHref} tabIndex={-1}>
+                    <Button variant="ghost" className="mt-2" tabIndex={0}>
+                        {backLabel}
+                    </Button>
+                </Link>
+            )}
         </div>
     )
 }

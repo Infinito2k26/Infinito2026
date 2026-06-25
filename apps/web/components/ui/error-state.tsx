@@ -20,6 +20,8 @@ export function ErrorState({
         >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                 <svg
+                    width="124"
+                    height="124"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

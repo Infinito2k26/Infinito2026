@@ -27,6 +27,8 @@ export function EmptyState({
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                 {icon ?? (
                     <svg
+                        width="124"
+                        height="124"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -49,7 +51,7 @@ export function EmptyState({
                 )}
             </div>
             {action && (
-                <Button onClick={action.onClick} size="sm" className="mt-2">
+                <Button variant="primary" onClick={action.onClick} size="sm" className="mt-2">
                     {action.label}
                 </Button>
             )}

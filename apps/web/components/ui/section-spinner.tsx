@@ -1,18 +1,19 @@
 import Spinner from "./spinner"
 
 interface SectionSpinnerProps {
-    label?: string
+    message?: string;
+    minHeight?: string;
     className?: string
 }
 
-export function SectionSpinner({ label, className }: SectionSpinnerProps) {
+export function SectionSpinner({message,minHeight = "200px", className }: SectionSpinnerProps) {
     return (
         <div
-            className={`flex w-full flex-col items-center justify-center gap-2 py-12 ${className ?? ""
-                }`}
+            className={`flex w-full flex-col items-center justify-center gap-2 py-12 ${className ?? ""}`}
+            style={{minHeight}}
         >
-            <Spinner className="h-6 w-6 text-primary" />
-            {label && <p className="text-sm text-muted-foreground">{label}</p>}
+            <Spinner size="md" className="text-primary" />
+            {message && <p className="text-sm text-muted-foreground">{message}</p>}
         </div>
     )
 }

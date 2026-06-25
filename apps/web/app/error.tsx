@@ -16,11 +16,7 @@ export default function Error({
 
     return (
         <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
-            <ErrorState
-                title="Something went wrong"
-                description={error.message || "An unexpected error occurred. Please try again."}
-                onRetry={reset}
-            />
+            <ErrorState onRetry={reset} />
         </div>
     )
 }
