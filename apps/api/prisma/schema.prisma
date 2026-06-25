@@ -1,0 +1,553 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//------- ENUMS ---------
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  VOLUNTEER
+  CAMPUS_AMBASSADOR
+  PARTICIPANT
+}
+
+enum BroadCategory {
+  OUTDOOR
+  INDOOR
+  ESPORTS
+  CULTURAL
+  TECHNICAL
+}
+
+enum EventRegistrationType {
+  INDIVIDUAL
+  TEAM
+}
+
+enum GenderCategory {
+  OPEN
+  MEN
+  WOMEN
+}
+
+enum FeeStructure {
+  FLAT          // fixed amount per team / individual
+  PER_HEAD      // fee × number of players
+  GENDER_BASED  // different amounts for MEN vs WOMEN brackets
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  SELECT
+  FILE
+}
+
+enum CustomFieldScope {
+  TEAM
+  PARTICIPANT
+}
+
+enum SubOptionType {
+  INDIVIDUAL // athlete competes solo (100m, Long Jump)
+  RELAY      // requires teammate names (4×100m)
+}
+
+enum ParticipantRole {
+  CAPTAIN
+  VICE_CAPTAIN
+  PLAYER
+  SUBSTITUTE
+}
+
+enum IdentityType {
+  COLLEGE_ID
+  AADHAR
+  PAN
+  DRIVING_LICENSE
+  PASSPORT
+  VOTER_ID
+}
+
+enum RegistrationStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMode {
+  ONLINE            // Razorpay / gateway
+  MANUAL_SCREENSHOT // screenshot + transaction ID submitted by registrant
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+  RECONCILIATION_PENDING
+}
+
+enum ScanDirection {
+  ENTRY
+  EXIT
+}
+
+enum ScanResult {
+  VALID
+  INVALID
+  DUPLICATE
+  EXPIRED
+}
+
+enum VerificationLevel {
+  BEHAVIORAL
+  API_CONFIRMED
+}
+
+enum TaskSource {
+  MODERATOR // assigned by event manager / internal team
+  BRAND     // assigned on behalf of a sponsor brand
+}
+
+enum TaskCategory {
+  REFERRAL
+  SOCIAL_MEDIA
+  PHYSICAL
+  CONTENT
+  COMMUNITY
+}
+
+// AUTO requires a connected social account with API access.
+// SCREENSHOT / PHOTO are the default for social tasks at launch.
+enum ProofType {
+  AUTO           // fetched automatically from social API (Phase 2)
+  URL_SUBMISSION // CA submits URL; API fetched on demand
+  SCREENSHOT
+  PHOTO
+}
+
+enum TaskStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+
+//--------- MODELS ---------------
+
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique
+  passwordHash    String?   // Null if registered via OAuth only
+  name            String
+  phone           String?
+  role            UserRole  @default(PARTICIPANT)
+  college         String?
+  isIITP          Boolean   @default(false)
+  iitpEmail       String?   @unique // .iitp.ac.in email confirmed via Microsoft OAuth
+  isIITPVerified  Boolean   @default(false)
+  isEmailVerified Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  captainedTeams     Team[]              @relation("TeamCaptain")
+  caProfile          CAProfile?
+  registrations      Registration[]      @relation("IndividualRegistrations")
+  credentials        Credential[]        @relation("UserCredentials")
+  scansDone          ScanLog[]           @relation("VolunteerScans")
+  rulebooksUploaded  EventRulebook[]     @relation("RulebookUploader")
+  taskVerifications  CATaskAssignment[]  @relation("TaskVerifier")
+  participants       Participant[]       @relation("UserParticipant")
+
+  @@index([isIITP, role])
+}
+
+model Event {
+  id                   String                @id @default(uuid()) @db.Uuid
+  name                 String
+  slug                 String                @unique
+  broadCategory        BroadCategory
+  sportCategory        String
+  description          String?
+  pointOfContactName   String?
+  pointOfContactPhone  String?
+  registrationType     EventRegistrationType
+  genderCategory       GenderCategory
+  teamSizeMin          Int?
+  teamSizeMax          Int?
+  maxSubstitutes       Int?
+  viceCaptainRequired  Boolean               @default(true)
+  coachAllowed         Boolean               @default(false)
+  feeStructure         FeeStructure
+  feeFlat              Decimal?              @db.Decimal(10, 2)
+  feePerHead           Decimal?              @db.Decimal(10, 2)
+  feeMale              Decimal?              @db.Decimal(10, 2)
+  feeFemale            Decimal?              @db.Decimal(10, 2)
+  startDate            DateTime
+  endDate              DateTime?
+  venue                String?
+  hasAccommodation     Boolean               @default(false)
+  accommodationRate    Decimal?              @db.Decimal(10, 2)
+  prizePool            Decimal?              @db.Decimal(10, 2)
+  capacity             Int?
+  // Array of { label, inputType: CustomFieldType, required, scope: CustomFieldScope, options? }
+  // TEAM fields collected once per registration; PARTICIPANT fields once per player row.
+  customFieldsDef      Json?
+  isPublished          Boolean               @default(false)
+  registrationOpen     Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+
+  // Relations
+  subOptions    EventSubOption[]
+  rulebooks     EventRulebook[]
+  registrations Registration[]
+  caTasks       CaTask[]
+
+  @@index([isPublished, registrationOpen])
+  @@index([broadCategory])
+}
+
+model EventSubOption {
+  id                   String        @id @default(uuid()) @db.Uuid
+  eventId              String        @db.Uuid
+  name                 String
+  type                 SubOptionType
+  maxSelectionsPerReg  Int
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  event                Event                   @relation(fields: [eventId], references: [id])
+  registrationSubOptions RegistrationSubOption[]
+
+  @@index([eventId, isActive])
+}
+
+model EventRulebook {
+  id           String   @id @default(uuid()) @db.Uuid
+  eventId      String   @db.Uuid
+  title        String
+  fileUrl      String
+  version      String?
+  uploadedById String   @db.Uuid
+  createdAt    DateTime @default(now())
+
+  event      Event @relation(fields: [eventId], references: [id])
+  uploadedBy User  @relation("RulebookUploader", fields: [uploadedById], references: [id])
+}
+
+model Team {
+  id               String    @id @default(uuid()) @db.Uuid
+  name             String
+  captainId        String    @db.Uuid
+  collegeName      String
+  collegeAddress   String?
+  isIITP           Boolean   @default(false)
+  viceCaptainName  String?
+  viceCaptainPhone String?
+  coachName        String?
+  coachPhone       String?
+  inviteCode       String    @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  captain      User          @relation("TeamCaptain", fields: [captainId], references: [id])
+  participants Participant[]
+  registration Registration? // enforced unique: one team = one event
+
+  @@index([isIITP])
+}
+
+model Participant {
+  id          String          @id @default(uuid()) @db.Uuid
+  teamId      String          @db.Uuid
+  name        String
+  phone       String?
+  role        ParticipantRole
+  isRequired  Boolean         // true for starters, false for substitutes
+  userId      String?         @db.Uuid // only captain typically links to a User
+  photoUrl    String          // mandatory upload; shown on volunteer dashboard after scan
+  idType      IdentityType
+  idNumber    String
+  idFileUrl   String
+  // Responses to PARTICIPANT-scoped custom fields from Event.customFieldsDef
+  // e.g. { "In-Game Name": "ProSniper99", "BGMI ID": "512345678" }
+  customData  Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  team        Team        @relation(fields: [teamId], references: [id])
+  user        User?       @relation("UserParticipant", fields: [userId], references: [id])
+  credential  Credential? @relation("ParticipantCredential")
+
+  @@index([teamId, role])
+}
+
+model CAProfile {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @unique @db.Uuid
+  refCode             String   @unique // e.g. "CA0042"
+  assignedCollegeName String
+  referralCount       Int      @default(0)
+  totalPoints         Int      @default(0)
+  rank                Int?     // refreshed every 15 min from Redis cache
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User                @relation(fields: [userId], references: [id])
+  socialAccounts      CASocialAccount[]
+  taskAssignments     CATaskAssignment[]
+  socialReferrals     SocialReferral[]
+  referralConversions ReferralConversion[]
+  referredRegistrations Registration[]   @relation("ReferredRegistrations")
+}
+
+model SocialPlatformConfig {
+  id              String            @id @default(uuid()) @db.Uuid
+  slug            String            @unique // stable code identifier e.g. "instagram"
+  displayName     String
+  isActive        Boolean           @default(true)
+  oauthEnabled    Boolean           @default(false)
+  canVerifyAction Boolean           @default(false)
+  oauthScopes     String[]
+  verifyEndpoint  String?           // API endpoint used when canVerifyAction = true
+  // [{ key, label, type }]
+  metricsDef      Json
+  // [{ field, min, label }]  — eligibility rules for CAs connecting this platform
+  constraintsDef  Json?
+  // [{ key, label, required }] — identity fields captured per referral
+  attributesDef   Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  socialAccounts  CASocialAccount[]
+  socialReferrals SocialReferral[]
+  caTasks         CaTask[]
+
+  @@index([isActive])
+}
+
+model CASocialAccount {
+  id           String    @id @default(uuid()) @db.Uuid
+  caId         String    @db.Uuid
+  platformId   String    @db.Uuid // FK → SocialPlatformConfig
+  accountId    String    // platform's internal user/channel ID
+  handle       String    // @username or channel name
+  accessToken  String?   // AES-256 encrypted; null until connected
+  tokenExpiry  DateTime?
+  connectedAt  DateTime  @default(now())
+
+  caProfile CAProfile            @relation(fields: [caId], references: [id])
+  platform  SocialPlatformConfig @relation(fields: [platformId], references: [id])
+
+  @@unique([caId, platformId])
+}
+
+model Brand {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  logoUrl      String?
+  contactName  String?
+  contactEmail String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tasks CaTask[]
+}
+
+model CaTask {
+  id               String       @id @default(uuid()) @db.Uuid
+  title            String
+  description      String
+  category         TaskCategory
+  source           TaskSource
+  brandId          String?      @db.Uuid // null when source = MODERATOR
+  platformId       String?      @db.Uuid // null for non-social tasks
+  targetMetric     String?      // metric key from SocialPlatformConfig.metricsDef
+  targetCount      Int?         // goal threshold e.g. 100 verified follows
+  targetContentUrl String?      // URL of Infinito post/reel/video to repost
+  points           Int
+  deadline         DateTime?
+  proofType        ProofType    @default(SCREENSHOT)
+  isActive         Boolean      @default(true)
+  eventId          String?      @db.Uuid
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  brand       Brand?                @relation(fields: [brandId], references: [id])
+  platform    SocialPlatformConfig? @relation(fields: [platformId], references: [id])
+  event       Event?                @relation(fields: [eventId], references: [id])
+  assignments CATaskAssignment[]
+  referrals   SocialReferral[]
+}
+
+model CATaskAssignment {
+  id            String     @id @default(uuid()) @db.Uuid
+  caId          String     @db.Uuid
+  taskId        String     @db.Uuid
+  status        TaskStatus @default(PENDING)
+  proofUrl      String?
+  proofNote     String?
+  fetchedStats  Json?      // API-fetched metrics at time of verification (Phase 2)
+  pointsAwarded Int?       // admin can override before approving
+  submittedAt   DateTime?
+  verifiedAt    DateTime?
+  verifiedById  String?    @db.Uuid
+
+  caProfile  CAProfile @relation(fields: [caId], references: [id])
+  task       CaTask    @relation(fields: [taskId], references: [id])
+  verifiedBy User?     @relation("TaskVerifier", fields: [verifiedById], references: [id])
+
+  @@unique([caId, taskId])
+}
+
+model SocialReferral {
+  id                String            @id @default(uuid()) @db.Uuid
+  caId              String            @db.Uuid
+  platformId        String            @db.Uuid
+  taskId            String?           @db.Uuid // null if walk-in (no specific task)
+  verifiedUserId    String            // platform's own user ID obtained via OAuth
+  verifiedHandle    String            // @username / channel name at time of verification
+  sessionToken      String?           // 15-min TTL session token; null for API_CONFIRMED
+  verificationLevel VerificationLevel
+  // Platform-specific identity fields from SocialPlatformConfig.attributesDef
+  attributes        Json?
+  // Snapshot of user metrics at time of verification from SocialPlatformConfig.metricsDef
+  metrics           Json?
+  createdAt         DateTime          @default(now())
+
+  caProfile CAProfile            @relation(fields: [caId], references: [id])
+  platform  SocialPlatformConfig @relation(fields: [platformId], references: [id])
+  task      CaTask?              @relation(fields: [taskId], references: [id])
+
+  // Core anti-cheat: one real account per platform = one attribution, ever.
+  @@unique([platformId, verifiedUserId])
+  @@index([caId, platformId])
+  @@index([taskId])
+}
+
+model Registration {
+  id                    String             @id @default(uuid()) @db.Uuid
+  eventId               String             @db.Uuid
+  teamId                String?            @unique @db.Uuid // unique: one team = one event
+  userId                String?            @db.Uuid         // null for team registrations
+  status                RegistrationStatus @default(PENDING_PAYMENT)
+  isIITP                Boolean            @default(false)
+  genderDeclared        GenderCategory?
+  accommodationOpted    Boolean            @default(false)
+  accommodationDays     Int?
+  accommodationHeadcount Int?
+  referredById          String?            @db.Uuid
+  // Responses to TEAM-scoped Event.customFieldsDef fields
+  customData            Json?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  deletedAt             DateTime?
+
+  event              Event               @relation(fields: [eventId], references: [id])
+  team               Team?               @relation(fields: [teamId], references: [id])
+  user               User?               @relation("IndividualRegistrations", fields: [userId], references: [id])
+  referredBy         CAProfile?          @relation("ReferredRegistrations", fields: [referredById], references: [id])
+  payments           Payment[]
+  credentials        Credential[]
+  subOptions         RegistrationSubOption[]
+  referralConversion ReferralConversion?
+
+  // One individual user cannot register for the same event twice
+  @@unique([eventId, userId])
+  @@index([eventId, status])
+  @@index([referredById])
+}
+
+model RegistrationSubOption {
+  id             String  @id @default(uuid()) @db.Uuid
+  registrationId String  @db.Uuid
+  subOptionId    String  @db.Uuid
+  // Array of teammate names; required when SubOptionType = RELAY
+  relayMembers   Json?
+
+  registration Registration   @relation(fields: [registrationId], references: [id])
+  subOption    EventSubOption @relation(fields: [subOptionId], references: [id])
+}
+
+model ReferralConversion {
+  id             String   @id @default(uuid()) @db.Uuid
+  caId           String   @db.Uuid
+  registrationId String   @unique @db.Uuid
+  createdAt      DateTime @default(now())
+
+  caProfile    CAProfile    @relation(fields: [caId], references: [id])
+  registration Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Payment {
+  id               String        @id @default(uuid()) @db.Uuid
+  registrationId   String        @db.Uuid
+  amount           Decimal       @db.Decimal(10, 2)
+  mode             PaymentMode
+  status           PaymentStatus @default(INITIATED)
+  gatewayOrderId   String?       @unique // null for manual payments
+  gatewayPaymentId String?       @unique // set on webhook success
+  screenshotUrl    String?       // manual payments
+  transactionId    String?       // user-entered transaction ID for manual payments
+  webhookVerified  Boolean       @default(false)
+  idempotencyKey   String        @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+}
+
+model Credential {
+  id             String    @id @default(uuid()) @db.Uuid
+  registrationId String    @db.Uuid
+  participantId  String?   @unique @db.Uuid // null for individual registrations
+  userId         String?   @unique @db.Uuid // null for team registrations
+  tokenHash      String    @unique          // SHA-256 of a secure random token
+  qrImageUrl     String
+  scanCount      Int       @default(0)
+  lastScannedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+  participant  Participant?  @relation("ParticipantCredential", fields: [participantId], references: [id])
+  user         User?         @relation("UserCredentials", fields: [userId], references: [id])
+  scanLogs     ScanLog[]
+}
+
+model ScanLog {
+  id           String        @id @default(uuid()) @db.Uuid
+  credentialId String        @db.Uuid
+  scannedById  String        @db.Uuid
+  gate         String        // e.g. "Gate 1", "Gate 2", "Accommodation Block"
+  direction    ScanDirection
+  result       ScanResult
+  metadata     Json?         // device info, volunteer notes, override reason
+  createdAt    DateTime      @default(now())
+
+  credential Credential @relation(fields: [credentialId], references: [id])
+  scannedBy  User       @relation("VolunteerScans", fields: [scannedById], references: [id])
+
+  @@index([credentialId, createdAt])
+  @@index([gate, direction, createdAt])
+}
+
