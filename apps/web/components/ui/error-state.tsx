@@ -1,4 +1,5 @@
 import Button from "./button"
+import { AlertTriangle } from "lucide-react"
 
 interface ErrorStateProps {
     title?: string
@@ -19,21 +20,7 @@ export function ErrorState({
                 }`}
         >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                <svg
-                    width="124"
-                    height="124"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                >
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                    <path d="M12 9v4" />
-                    <path d="M12 17h.01" />
-                </svg>
+                <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
             </div>
             <div className="space-y-1">
                 <h3 className="text-sm font-medium text-foreground">{title}</h3>

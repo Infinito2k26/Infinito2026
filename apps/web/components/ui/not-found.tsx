@@ -1,5 +1,6 @@
 import Link from "next/link"
 import Button from "./button"
+import { SearchX } from "lucide-react"
 
 interface NotFoundProps {
     title?: string
@@ -22,22 +23,7 @@ export function NotFound({
                 }`}
         >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <svg
-                    width="124"
-                    height="124"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                >
-                    <circle cx="10" cy="10" r="7" />
-                    <path d="m21 21-4.3-4.3" />
-                    <path d="m8 8 4 4" />
-                    <path d="m12 8-4 4" />
-                </svg>
+                <SearchX className="h-12 w-12 text-gray-400 mb-4" />
             </div>
             <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-foreground">{title}</h3>
