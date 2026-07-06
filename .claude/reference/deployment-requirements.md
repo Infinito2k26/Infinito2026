@@ -11,7 +11,7 @@
 
 Infinito 2K26 is IIT Patna's annual sports fest platform serving approximately 2,000–2,500 participants. The platform handles public event pages, team registrations, online payments, QR-based volunteer check-in, live scores, and a Campus Ambassador referral program.
 
-**Total Budget Requested: ₹12,000 – ₹15,000** for the full event lifecycle (roughly 5–6 months, development through post-fest).
+**Total Budget Requested: ₹20,000 – ₹22,000** for the full event lifecycle (roughly 5–6 months, development through post-fest). This covers cloud infrastructure (₹12,000) and one shared Claude Pro AI subscription for the development team (₹7,000–₹8,000).
 
 ---
 
@@ -170,6 +170,8 @@ No paid third-party API is required.
 
 ## 6. Full Lifecycle Budget
 
+### Infrastructure Costs
+
 | Period | Duration | Monthly Cost | Total |
 |--------|----------|-------------|-------|
 | Development / Staging | 2 months | ₹1,060 | ₹2,120 |
@@ -177,15 +179,59 @@ No paid third-party API is required.
 | Fest month (email upgrade) | 1 month | ₹2,740 | ₹2,740 |
 | Post-fest (results, archive) | 1 month | ₹1,060 | ₹1,060 |
 | Domain (1 year) | — | — | ₹900 |
-| **Total** | **6 months** | | **₹8,940** |
-| Contingency buffer (25%) | | | ₹2,235 |
-| **Recommended Sanction** | | | **₹11,175** |
+| **Infrastructure Subtotal** | **6 months** | | **₹8,940** |
 
-**We are requesting a round figure of ₹12,000** to cover all infrastructure costs for the full event lifecycle with buffer.
+### AI Development Tooling
+
+| Item | Duration | Monthly Cost | Total |
+|------|----------|-------------|-------|
+| Claude Pro (shared account) | 4 months | ₹1,680 | ₹6,720 |
+| **AI Tooling Subtotal** | | | **₹6,720** |
+
+### Combined Budget
+
+| Category | Amount |
+|----------|--------|
+| Infrastructure | ₹8,940 |
+| AI Development Tooling | ₹6,720 |
+| **Subtotal** | **₹15,660** |
+| Contingency buffer (25%) | ₹3,915 |
+| **Recommended Sanction** | **₹19,575** |
+
+**We are requesting a round figure of ₹20,000** to cover all infrastructure and development tooling costs for the full event lifecycle with buffer.
 
 ---
 
-## 7. What This Budget Does Not Cover
+## 7. AI Development Tooling
+
+### Claude Pro — Shared Team Subscription
+
+Modern software projects of this complexity benefit significantly from AI coding assistance. The team will use a shared **Claude Pro** subscription (by Anthropic) during the active development phase.
+
+Claude Pro assists with:
+- Writing and reviewing backend API code (NestJS, Prisma, PostgreSQL queries)
+- Generating boilerplate, test cases, and database migrations
+- Debugging complex logic (payment flows, QR generation, BullMQ workers)
+- Code review and catching security issues before they reach production
+- Drafting technical documentation
+
+| Plan | Cost | Why This Plan |
+|------|------|---------------|
+| Claude Free | ₹0 | Usage limits hit quickly; not viable for active development |
+| **Claude Pro (Recommended)** | **$20/month = ₹1,680/month** | Sufficient for a shared team account; higher usage limits, access to latest models |
+| Claude Team | $30/user/month (min. 5 seats) | Designed for larger organisations; overkill and significantly more expensive |
+
+**One shared Claude Pro account** across the core development team is the most cost-effective approach.
+
+**Duration:** Active development phases only — approximately 4 months (Development + Pre-registration phases).
+
+| Item | Calculation | Cost |
+|------|-------------|------|
+| Claude Pro shared account | ₹1,680 × 4 months | ₹6,720 |
+
+---
+
+## 8. What This Budget Does Not Cover
 
 | Item | Note |
 |------|------|
@@ -202,7 +248,7 @@ The Infinito 2K26 platform requires cloud hosting because campus servers are not
 
 At our scale of 2,000–2,500 participants, **a single ₹1,000/month cloud server is sufficient** to run the entire backend. Combined with free-tier services for the frontend, CDN, storage, and email, the total infrastructure cost is approximately **₹1,000–₹1,700/month**.
 
-We request a sanction of **₹12,000** to cover 6 months of infrastructure from development through post-fest archival, including a contingency buffer.
+We request a sanction of **₹20,000** to cover 6 months of infrastructure and a shared AI development tool subscription, including a contingency buffer. The AI subscription (Claude Pro at ₹1,680/month) directly reduces development time and the risk of shipping bugs in payment and registration flows — areas where errors have real financial consequences.
 
 ---
 
