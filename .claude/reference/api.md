@@ -58,6 +58,23 @@ Error envelope:
 
 ## 3. MVP Endpoint Map
 
+### Health
+
+| Method | Path      | Access | Purpose                                      |
+| ------ | --------- | ------ | --------------------------------------------- |
+| GET    | `/health` | Public | Liveness/readiness probe: DB + Redis status |
+
+Response `data` shape:
+
+```json
+{
+  "status": "ok",
+  "checks": { "db": "ok", "redis": "ok" }
+}
+```
+
+`status` is `"degraded"` (never a 5xx) when any dependency check fails; the corresponding `checks` entry becomes `"error"`.
+
 ### Auth
 
 | Method | Path             | Access         | Purpose                               |
