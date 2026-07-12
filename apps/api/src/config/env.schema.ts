@@ -13,6 +13,8 @@ export const envSchema = z.object({
   S3_BUCKET: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
+  JWT_ACCESS_EXPIRY: z.string().default('15m'),
+  JWT_REFRESH_EXPIRY: z.string().default('7d'),
   QR_SIGNING_SECRET: z.string().min(32),
 });
 
