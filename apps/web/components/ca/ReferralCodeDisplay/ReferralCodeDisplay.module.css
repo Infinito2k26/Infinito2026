@@ -1,0 +1,72 @@
+.container{
+    width: 100%;
+    max-width: 26rem;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-inline: auto;
+    padding: var(--spacing-container);
+}
+.label{
+   font-weight: 600;
+   letter-spacing: 0.06em;
+   color: var(--color-text-primary);
+   padding: 0.5rem;
+}
+.codeBox{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    background-color:var(--color-surface) ;
+    border : 1.5px dashed var(--color-border);
+}
+.code {
+  font-family: "SFMono-Regular", "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 600;
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  color: var(--color-text-primary);
+}
+.actions{
+    display: flex;
+    flex-wrap: wrap; /* buttons drop to a new row on very narrow parents */
+    gap: 1rem;
+}
+.btn{
+    flex: 1 1 8rem; /* grow evenly, but never below ~128px before wrapping */
+    padding:1rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius:  var(--radius-md);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: transform 0.08s ease, background-color 0.15s ease;
+    font-family: inherit;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.secondary{
+     background-color: var(--color-surface);
+    color: var(--color-text-primary);
+}
+.secondary:hover {
+  background-color: var(--color-bg-secondary);
+}
+.primary{
+     background-color: var(--color-accent-primary);
+    color: var(--color-bg-primary);
+    border-color: var(--color-accent-primary);
+}
+.primary:hover{
+    background-color: rgba(255, 255, 255, 0.877);
+    border-color: var(--color-accent-secondary);
+}

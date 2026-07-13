@@ -1,0 +1,142 @@
+.widget {
+  width: 100%;
+  max-width: 900px;/*Width of component*/
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+
+}
+
+.header {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- List layout  ---------- */
+
+.list {
+   display: flex;
+   flex-direction: column;
+  list-style: none;
+  gap: 1rem;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease;
+}
+.listItem:hover {
+  background-color: var(--color-bg-secondary);
+}
+.listInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.listItem .name,
+.listItem .college {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rankBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}
+.listItem--rank-1 .rankBadge {
+  background-color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+  color: #ffffff;
+}
+.listItem--rank-2 .rankBadge,
+.listItem--rank-3 .rankBadge {
+  background-color: var(--color-accent-secondary);
+  border-color: var(--color-accent-secondary);
+  color: #ffffff;
+}
+
+.name {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.college {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.referrals {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: none) {
+  .widget {
+    max-width: 1000px;/*Width of component*/
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .listItem {
+    padding: 0.875rem 1rem;
+    gap: 1rem;
+  }
+
+  .rankBadge {
+    min-width: 2.5rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8125rem;
+  }
+
+  .name {
+    font-size: 0.9375rem;
+  }
+
+  .referrals {
+    font-size: 1rem;
+  }
+}
+
