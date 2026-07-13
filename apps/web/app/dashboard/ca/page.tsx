@@ -1,13 +1,16 @@
 "use client";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useState, useEffect } from "react";
 // import { ReferralCodeDisplay } from "@/components/ca/ReferralCodeDisplay";
 // import { StatCard } from "@/components/ca/StatCard";
 // import { LeaderboardWidget } from "@/components/ca/LeaderboardWidget";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Users, Trophy, Target } from "lucide-react";
 
 export default function CADashboardPage() {
   // TODO: Replace with TanStack Query hook (e.g., const { data } = useCAProfile())
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [caData, setCaData] = useState({
     referralCode: "INF-2K26-ALIGARH",
     referralCount: 14,
@@ -18,6 +21,7 @@ export default function CADashboardPage() {
     const shareUrl = `https://infinito.iitp.ac.in/register?ref=${caData.referralCode}`;
 
   // Smart Logic 1: The Copy Handler
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleCopyCode = async () => {
     try {
         await navigator.clipboard.writeText(caData.referralCode);
@@ -29,6 +33,7 @@ export default function CADashboardPage() {
     };
 
   // Smart Logic 2: The Native Web Share API Handler
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleShareLink = async () => {
     if (navigator.share) {
         try {

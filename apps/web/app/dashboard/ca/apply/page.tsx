@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-// import { CAHeroSection } from "@/components/ca/CAHeroSection";
-// import { CAApplicationForm } from "@/components/ca/CAApplicationForm";
+import { CAHeroSection } from "@/components/ca/CAHeroSection";
+import { CAApplicationForm } from "@/components/ca/CAApplicationForm";
 
 export default function CAApplyPage() {
     const router = useRouter();
@@ -32,15 +32,15 @@ export default function CAApplyPage() {
 
     return (
     <div className="max-w-3xl mx-auto space-y-8">
-      {/* <CAHeroSection /> */}
+      <CAHeroSection />
         
         <div className="bg-white/5 border border-white/10 p-6 rounded-lg">
         <h2 className="text-xl font-bold mb-4">Submit Your Application</h2>
         {/* Dropping in the dumb component and passing down the smart logic */}
-        {/* <CAApplicationForm 
+        <CAApplicationForm 
             onSubmit={handleApply} 
             isLoading={isSubmitting} 
-        /> */}
+        />
         </div>
     </div>
     );
