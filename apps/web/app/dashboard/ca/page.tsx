@@ -1,10 +1,10 @@
 "use client";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useState, useEffect } from "react";
-// import { ReferralCodeDisplay } from "@/components/ca/ReferralCodeDisplay";
-// import { StatCard } from "@/components/ca/StatCard";
-// import { LeaderboardWidget } from "@/components/ca/LeaderboardWidget";
+import  {useState, useEffect } from "react";
+import  ReferralCodeDisplay  from "@/components/ca/ReferralCodeDisplay";
+import  StatCard  from "@/components/ca/StatCard";
+import LeaderboardWidget from "@/components/ca/LeaderboardWidget";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Users, Trophy, Target } from "lucide-react";
 
@@ -65,42 +65,42 @@ export default function CADashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {/* Passing the smart handlers down to the dumb UI */}
-            {/* <ReferralCodeDisplay 
+            <ReferralCodeDisplay 
             code={caData.referralCode}
             onCopy={handleCopyCode}
             onShare={handleShareLink}
-          /> */}
+          />
         </div>
         
         <div className="md:col-span-1">
-            {/* <StatCard 
+            <StatCard 
             title="Target College" 
             value={caData.targetCollege} 
             icon={<Target className="h-5 w-5 text-gray-400" />} 
             isTextValue={true}
-          /> */}
+          />
         </div>
         </div>
 
       {/* Middle Row: The Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {/* <StatCard 
+        <StatCard 
             title="Total Referrals" 
             value={caData.referralCount} 
             icon={<Users className="h-5 w-5 text-blue-500" />} 
-        /> */}
-        {/* <StatCard 
+        />
+        <StatCard 
             title="Current Rank" 
             value={`#${caData.rank}`} 
             icon={<Trophy className="h-5 w-5 text-yellow-500" />} 
-        /> */}
+        />
         </div>
 
       {/* Bottom Row: The Competition */}
         <div className="mt-12">
         <h2 className="text-xl font-bold mb-4">Global Leaderboard</h2>
         {/* Pass an array of dummy leaderboard data down to the widget */}
-        {/* <LeaderboardWidget /> */}
+        <LeaderboardWidget />
         </div>
     </div>
     );

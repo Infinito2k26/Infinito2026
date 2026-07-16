@@ -13,7 +13,7 @@ interface LeaderboardWidgetProps {
 }
 // Temporary local fixture used when no `data` prop is supplied.
 // Replace with API data once backend integration is complete.
-const MOCK_DATA: LeaderboardEntry[]=[
+const MOCK_DATA: LeaderboardEntry[] = [
   { rank: 1, name: "Aditi Sharma", college: "IIT Bombay", referrals: 128 },
   { rank: 2, name: "Rohan Mehta", college: "BITS Pilani", referrals: 111 },
   { rank: 3, name: "Sneha Iyer", college: "NIT Trichy", referrals: 97 },
@@ -40,14 +40,14 @@ export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
       <div className={styles.header}>
         <h2 className={styles.title}>Top Campus Ambassadors</h2>
         <p className={styles.subtitle}>Drive referrals and climb the leaderboard</p>
-     </div>
+      </div>
 
       <ul className={styles.list}>
         {rows.map((entry) => (
           <li key={entry.rank} className={getListItemClass(entry.rank)}>
             <span className={styles.rankBadge}>
-               {entry.rank}
-             </span>
+              {entry.rank}
+            </span>
             <div className={styles.listInfo}>
               <span className={styles.name}>{entry.name}</span>
               <span className={styles.college}>{entry.college}</span>
