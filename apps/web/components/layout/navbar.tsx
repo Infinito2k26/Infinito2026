@@ -20,7 +20,7 @@ const Navbar = () => {
                 </div>
 
                 <div className={styles.navbar_list_right}>
-                    <Link href="/signup" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Sign Up</Link>
+                    <Link href="/register" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Register</Link>
                     <Link href="/login" className={styles.navbar_item}>Login</Link>
                 </div>
 
