@@ -75,15 +75,9 @@ describe('AuthService', () => {
 
       await service.register({
         email: 'new@infinito.dev',
-        password: 'plaintext-password',
         name: 'New User',
       });
 
-      const createdData = prisma.user.create.mock.calls[0][0].data;
-      expect(createdData.passwordHash).not.toBe('plaintext-password');
-      expect(
-        await bcrypt.compare('plaintext-password', createdData.passwordHash!),
-      ).toBe(true);
     });
 
     it('rejects a duplicate email with 409 Conflict', async () => {

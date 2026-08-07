@@ -16,8 +16,12 @@ import type { Request, Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Env } from '../config/env.schema';
 import { AuthService, TokenPair } from './auth.service';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { RequestUser } from './strategies/jwt.strategy';
 
@@ -34,6 +38,18 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(200)
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto);
+  }
+
+  @Post('set-password')
+  @HttpCode(200)
+  setPassword(@Body() dto: SetPasswordDto) {
+  return this.authService.setPassword(dto);
   }
 
   @Post('login')
@@ -73,12 +89,27 @@ export class AuthController {
   ) {
     await this.authService.logout(user.id);
     res.clearCookie(REFRESH_COOKIE);
+        return {
+      message: 'Logout successful',
+    };
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: RequestUser) {
     return this.authService.me(user.id);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   private setRefreshCookie(

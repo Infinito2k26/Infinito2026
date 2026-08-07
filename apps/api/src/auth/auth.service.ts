@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -9,11 +10,16 @@ import { JwtService } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Env } from '../config/env.schema';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { OtpService } from './otp/otp.service';
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
 import type { RefreshTokenStore } from './refresh-token-store.interface';
 
@@ -53,11 +59,13 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
+    private readonly otpService: OtpService,
+    private readonly mailService: MailService,
     @Inject(REFRESH_TOKEN_STORE)
     private readonly refreshStore: RefreshTokenStore,
   ) {}
 
-  async register(dto: RegisterDto): Promise<UserProfile> {
+  async register(dto: RegisterDto): Promise<{ message: string }> {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -65,18 +73,82 @@ export class AuthService {
       throw new ConflictException('Email is already registered');
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.user.create({
+    await this.prisma.user.create({
       data: {
         email: dto.email,
-        passwordHash,
         name: dto.name,
         phone: dto.phone,
         college: dto.college,
       },
     });
 
-    return toProfile(user);
+    const otp = await this.otpService.generateAndStore(dto.email, 'register');
+    await this.mailService.sendOtp(dto.email, otp);
+
+    return { message: 'OTP sent to email for verification' };
+  }
+
+  async verifyOtp(dto: VerifyOtpDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (!user) {
+      throw new BadRequestException('No pending registration for this email');
+    }
+    if (user.isEmailVerified) {
+      throw new ConflictException('Email is already verified');
+    }
+
+    const isValid = await this.otpService.verify(
+      dto.email,
+      'register',
+      dto.otp,
+    );
+    if (!isValid) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    await this.prisma.user.update({
+      where: { email: dto.email },
+      data: {
+        isEmailVerified: true,
+      },
+    });
+
+    return {
+      message: 'OTP verified successfully. Please set your password.',
+    };
+  }
+
+    async setPassword(dto: SetPasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new BadRequestException('Email is not verified');
+    }
+
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    await this.prisma.user.update({
+      where: { email: dto.email },
+      data: {
+        passwordHash,
+      },
+    });
+
+    return {
+      message: 'Password set successfully. You can now login.',
+    };
   }
 
   async login(dto: LoginDto): Promise<TokenPair & { user: UserProfile }> {
@@ -88,6 +160,9 @@ export class AuthService {
       !(await bcrypt.compare(dto.password, user.passwordHash))
     ) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Email not verified');
     }
 
     const tokens = await this.issueTokens(user);
@@ -127,6 +202,40 @@ export class AuthService {
     return toProfile(user);
   }
 
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (user) {
+      const otp = await this.otpService.generateAndStore(
+        email,
+        'forgot-password',
+      );
+      await this.mailService.sendOtp(email, otp);
+    }
+    return { message: 'If an account exists, an OTP has been sent' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const isValid = await this.otpService.verify(
+      dto.email,
+      'forgot-password',
+      dto.otp,
+    );
+    if (!isValid) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({
+      where: { email: dto.email },
+      data: { passwordHash },
+    });
+
+    return { message: 'Password reset successful' };
+  }
+
   private async issueTokens(user: User): Promise<TokenPair> {
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role: user.role },
@@ -138,10 +247,7 @@ export class AuthService {
       },
     );
 
-    // ponytail: cast is load-bearing (randomUUID()'s branded UUID payload type
-    // pushes signAsync onto the JwtSignOptions overload); eslint's
-    // no-unnecessary-type-assertion false-positives here and --fix strips it.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
     const refreshExpiry = this.config.get('JWT_REFRESH_EXPIRY', {
       infer: true,
     }) as JwtSignOptions['expiresIn'];
