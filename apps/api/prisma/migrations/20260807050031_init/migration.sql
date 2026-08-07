@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'VOLUNTEER', 'CAMPUS_AMBASSADOR', 'PARTICIPANT');
+CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'VOLUNTEER', 'CAMPUS_AMBASSADOR', 'BRAND', 'PARTICIPANT');
 
 -- CreateEnum
 CREATE TYPE "BroadCategory" AS ENUM ('OUTDOOR', 'INDOOR', 'ESPORTS', 'CULTURAL', 'TECHNICAL');
@@ -68,6 +68,7 @@ CREATE TABLE "User" (
     "role" "UserRole" NOT NULL DEFAULT 'PARTICIPANT',
     "college" TEXT,
     "isIITP" BOOLEAN NOT NULL DEFAULT false,
+    "brandId" UUID,
     "iitpEmail" TEXT,
     "isIITPVerified" BOOLEAN NOT NULL DEFAULT false,
     "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
@@ -283,6 +284,8 @@ CREATE TABLE "CATaskAssignment" (
     "submittedAt" TIMESTAMP(3),
     "verifiedAt" TIMESTAMP(3),
     "verifiedById" UUID,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "CATaskAssignment_pkey" PRIMARY KEY ("id")
 );
@@ -404,6 +407,9 @@ CREATE UNIQUE INDEX "User_iitpEmail_key" ON "User"("iitpEmail");
 CREATE INDEX "User_isIITP_role_idx" ON "User"("isIITP", "role");
 
 -- CreateIndex
+CREATE INDEX "User_brandId_idx" ON "User"("brandId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Event_slug_key" ON "Event"("slug");
 
 -- CreateIndex
@@ -431,13 +437,49 @@ CREATE UNIQUE INDEX "CAProfile_userId_key" ON "CAProfile"("userId");
 CREATE UNIQUE INDEX "CAProfile_refCode_key" ON "CAProfile"("refCode");
 
 -- CreateIndex
+CREATE INDEX "CAProfile_isActive_idx" ON "CAProfile"("isActive");
+
+-- CreateIndex
+CREATE INDEX "CAProfile_assignedCollegeName_idx" ON "CAProfile"("assignedCollegeName");
+
+-- CreateIndex
+CREATE INDEX "CAProfile_totalPoints_idx" ON "CAProfile"("totalPoints");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "SocialPlatformConfig_slug_key" ON "SocialPlatformConfig"("slug");
 
 -- CreateIndex
 CREATE INDEX "SocialPlatformConfig_isActive_idx" ON "SocialPlatformConfig"("isActive");
 
 -- CreateIndex
+CREATE INDEX "CASocialAccount_platformId_idx" ON "CASocialAccount"("platformId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "CASocialAccount_caId_platformId_key" ON "CASocialAccount"("caId", "platformId");
+
+-- CreateIndex
+CREATE INDEX "Brand_isActive_idx" ON "Brand"("isActive");
+
+-- CreateIndex
+CREATE INDEX "CaTask_source_isActive_idx" ON "CaTask"("source", "isActive");
+
+-- CreateIndex
+CREATE INDEX "CaTask_brandId_idx" ON "CaTask"("brandId");
+
+-- CreateIndex
+CREATE INDEX "CaTask_eventId_idx" ON "CaTask"("eventId");
+
+-- CreateIndex
+CREATE INDEX "CaTask_platformId_idx" ON "CaTask"("platformId");
+
+-- CreateIndex
+CREATE INDEX "CATaskAssignment_status_idx" ON "CATaskAssignment"("status");
+
+-- CreateIndex
+CREATE INDEX "CATaskAssignment_caId_status_idx" ON "CATaskAssignment"("caId", "status");
+
+-- CreateIndex
+CREATE INDEX "CATaskAssignment_taskId_status_idx" ON "CATaskAssignment"("taskId", "status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CATaskAssignment_caId_taskId_key" ON "CATaskAssignment"("caId", "taskId");
@@ -467,6 +509,9 @@ CREATE UNIQUE INDEX "Registration_eventId_userId_key" ON "Registration"("eventId
 CREATE UNIQUE INDEX "ReferralConversion_registrationId_key" ON "ReferralConversion"("registrationId");
 
 -- CreateIndex
+CREATE INDEX "ReferralConversion_caId_idx" ON "ReferralConversion"("caId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Payment_gatewayOrderId_key" ON "Payment"("gatewayOrderId");
 
 -- CreateIndex
@@ -489,6 +534,9 @@ CREATE INDEX "ScanLog_credentialId_createdAt_idx" ON "ScanLog"("credentialId", "
 
 -- CreateIndex
 CREATE INDEX "ScanLog_gate_direction_createdAt_idx" ON "ScanLog"("gate", "direction", "createdAt");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventSubOption" ADD CONSTRAINT "EventSubOption_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -585,10 +633,3 @@ ALTER TABLE "ScanLog" ADD CONSTRAINT "ScanLog_credentialId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "ScanLog" ADD CONSTRAINT "ScanLog_scannedById_fkey" FOREIGN KEY ("scannedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- Custom check constraints
-ALTER TABLE "Registration" ADD CONSTRAINT "registration_team_or_user"
-  CHECK ("teamId" IS NOT NULL OR "userId" IS NOT NULL);
-  
-ALTER TABLE "Credential" ADD CONSTRAINT "credential_participant_or_user"
-  CHECK ("participantId" IS NOT NULL OR "userId" IS NOT NULL);
