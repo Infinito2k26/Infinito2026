@@ -21,7 +21,7 @@ export const envSchema = z.object({
   SMTP_USER: z.string(),
   SMTP_PASS: z.string(),
   MAIL_FROM: z.string().email(),
-  OTP_EXPIRY_SECONDS: z.coerce.number().default(300), 
+  OTP_EXPIRY_SECONDS: z.coerce.number().default(300),
 });
 
 export type Env = z.infer<typeof envSchema>;

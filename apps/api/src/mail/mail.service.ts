@@ -1,29 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-  private transporter;
+  private transporter: nodemailer.Transporter;
 
   constructor(private config: ConfigService) {
+    const host = this.config.get<string>('SMTP_HOST');
+    const port = this.config.get<number>('SMTP_PORT');
+    const user = this.config.get<string>('SMTP_USER');
+    const pass = this.config.get<string>('SMTP_PASS');
+
+    if (!host || !port || !user || !pass) {
+      throw new Error('SMTP configuration is missing');
+    }
+
     this.transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST'),
-      port: this.config.get('SMTP_PORT'),
+      host,
+      port,
       auth: {
-        user: this.config.get('SMTP_USER'),
-        pass: this.config.get('SMTP_PASS'),
+        user,
+        pass,
       },
     });
   }
 
   async sendOtp(email: string, otp: string) {
+    const from = this.config.get<string>('MAIL_FROM');
+
+    if (!from) {
+      throw new Error('MAIL_FROM is missing');
+    }
+
     await this.transporter.sendMail({
-      from: this.config.get('MAIL_FROM'),
+      from,
       to: email,
       subject: 'Your OTP Code',
       html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
     });
   }
-
 }

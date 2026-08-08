@@ -77,7 +77,6 @@ describe('AuthService', () => {
         email: 'new@infinito.dev',
         name: 'New User',
       });
-
     });
 
     it('rejects a duplicate email with 409 Conflict', async () => {

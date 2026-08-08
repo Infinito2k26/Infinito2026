@@ -49,7 +49,7 @@ export class AuthController {
   @Post('set-password')
   @HttpCode(200)
   setPassword(@Body() dto: SetPasswordDto) {
-  return this.authService.setPassword(dto);
+    return this.authService.setPassword(dto);
   }
 
   @Post('login')
@@ -89,7 +89,7 @@ export class AuthController {
   ) {
     await this.authService.logout(user.id);
     res.clearCookie(REFRESH_COOKIE);
-        return {
+    return {
       message: 'Logout successful',
     };
   }

@@ -120,7 +120,7 @@ export class AuthService {
     };
   }
 
-    async setPassword(dto: SetPasswordDto): Promise<{ message: string }> {
+  async setPassword(dto: SetPasswordDto): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -202,7 +202,6 @@ export class AuthService {
     return toProfile(user);
   }
 
-
   async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (user) {
@@ -247,10 +246,9 @@ export class AuthService {
       },
     );
 
-
     const refreshExpiry = this.config.get('JWT_REFRESH_EXPIRY', {
       infer: true,
-    }) as JwtSignOptions['expiresIn'];
+    });
     const refreshToken = await this.jwt.signAsync(
       { sub: user.id, jti: randomUUID() },
       {

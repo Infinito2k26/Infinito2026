@@ -9,7 +9,12 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async createPending(data: { email: string; name: string; phone?: string; college?: string }) {
+  async createPending(data: {
+    email: string;
+    name: string;
+    phone?: string;
+    college?: string;
+  }) {
     const existing = await this.findByEmail(data.email);
     if (existing) throw new ConflictException('Email already registered');
 
@@ -33,6 +38,9 @@ export class UsersService {
   }
 
   updatePassword(email: string, passwordHash: string) {
-    return this.prisma.user.update({ where: { email }, data: { passwordHash } });
+    return this.prisma.user.update({
+      where: { email },
+      data: { passwordHash },
+    });
   }
 }
