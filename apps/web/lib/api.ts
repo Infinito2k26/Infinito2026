@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface RequestConfig extends RequestInit {
     // custom configuration
@@ -59,9 +59,20 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
         }
 
         return data;
-    } catch (error) {
-        // Re-throw err
-        throw error;
+    } catch (error: any) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            throw new ApiError(
+                503,
+                null,
+                'Cannot connect to the server. Please ensure the backend is running.'
+            );
+        }
+
+        throw new ApiError(500, null, 'An unexpected network error occurred.');
     }
 }
 
