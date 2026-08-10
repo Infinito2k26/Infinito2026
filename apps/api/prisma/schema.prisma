@@ -143,6 +143,11 @@ enum TaskStatus {
   REJECTED
 }
 
+enum RecordStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 
 //--------- MODELS ---------------
 
@@ -309,6 +314,7 @@ model CAProfile {
   refCode             String   @unique // e.g. "CA0042"
   assignedCollegeName String
   referralCount       Int      @default(0)
+  clickCount          Int      @default(0)
   totalPoints         Int      @default(0)
   rank                Int?     // refreshed every 15 min from Redis cache
   isActive            Boolean  @default(true)
@@ -376,6 +382,7 @@ model Brand {
   contactName  String?
   contactEmail String?
   isActive     Boolean  @default(true)
+  status       RecordStatus @default(ACTIVE)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -400,6 +407,7 @@ model CaTask {
   deadline         DateTime?
   proofType        ProofType    @default(SCREENSHOT)
   isActive         Boolean      @default(true)
+  status           RecordStatus @default(ACTIVE)
   eventId          String?      @db.Uuid
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -421,6 +429,7 @@ model CATaskAssignment {
   caId          String     @db.Uuid
   taskId        String     @db.Uuid
   status        TaskStatus @default(PENDING)
+  rejectionReason String?
   proofUrl      String?
   proofNote     String?
   fetchedStats  Json?      // API-fetched metrics at time of verification (Phase 2)
@@ -573,5 +582,19 @@ model ScanLog {
 
   @@index([credentialId, createdAt])
   @@index([gate, direction, createdAt])
+}
+
+model CaReferralLead {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  email          String
+  phone          String
+  college        String
+  referralCode   String?
+  createdAt      DateTime  @default(now())
+  convertedAt    DateTime?
+  registrationId String?   @db.Uuid
+
+  @@map("ca_referral_leads")
 }
 

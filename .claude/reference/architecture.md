@@ -43,8 +43,10 @@ flowchart TD
 | Identity      | signed QR credential generation and validation      |
 | Notifications | email, push, in-app notifications                   |
 | Schedule      | fixtures, venues, match timelines                   |
-| Leaderboard   | standings, scores, live updates                     |
-| Admin         | operational dashboards and admin-only workflows     |
+| Leaderboard   | standings, scores, live updates, redis cache fallbacks|
+| Admin         | operational dashboards, brands, ca-tasks, task verification (compare-and-swap) |
+| CA            | Campus Ambassador onboarding, referral links, tasks, proofs |
+| Leads         | Waitlist capture and pre-registration CRM           |
 
 ## 4. Boundary Rules
 
@@ -93,6 +95,29 @@ sequenceDiagram
   Scanner->>API: POST /identity/scan
   API->>DB: Record scan event
   API-->>Scanner: Participant and registration status
+```
+
+### CA Portal Async Tracking & Validation
+
+```mermaid
+sequenceDiagram
+  participant CA
+  participant API
+  participant Redis
+  participant Queue
+  participant DB
+
+  CA->>API: POST /ca/referral/click
+  API->>Redis: Deduplicate by IP & Code
+  API->>Redis: Buffer increment (HINCRBY)
+  Queue->>Redis: Cron every 60s (referral-flush)
+  Queue->>DB: Atomic batch increment to clickCount
+
+  CA->>API: Submit Task Proof
+  API->>DB: Status -> SUBMITTED
+  Admin->>API: Verify Proof
+  API->>DB: Compare-and-swap (WHERE status = PENDING)
+  API-->>Admin: 409 Conflict if race condition
 ```
 
 ## 6. Deployment Assumptions

@@ -1,7 +1,11 @@
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { BullModule, InjectQueue } from '@nestjs/bullmq';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Env } from '../config/env.schema';
+import { Queue } from 'bullmq';
+import { ReferralFlushProcessor } from './jobs/referral-flush.processor';
+import { LeaderboardProcessor } from './jobs/leaderboard.processor';
+import { LeaderboardModule } from '../leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -25,7 +29,36 @@ import { Env } from '../config/env.schema';
       { name: 'leaderboard-recalc' },
       { name: 'social-metrics-fetch' },
     ),
+    LeaderboardModule,
   ],
+  providers: [ReferralFlushProcessor, LeaderboardProcessor],
   exports: [BullModule],
 })
-export class QueueModule {}
+export class QueueModule implements OnModuleInit {
+  constructor(
+    @InjectQueue('referral-flush') private readonly flushQueue: Queue,
+    @InjectQueue('leaderboard-recalc') private readonly leaderboardQueue: Queue,
+  ) {}
+
+  async onModuleInit() {
+    await this.flushQueue.add(
+      'flush',
+      {},
+      {
+        repeat: {
+          pattern: '*/1 * * * *',
+        },
+      },
+    );
+
+    await this.leaderboardQueue.add(
+      'recalc',
+      {},
+      {
+        repeat: {
+          pattern: '*/15 * * * *',
+        },
+      },
+    );
+  }
+}

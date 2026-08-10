@@ -123,6 +123,24 @@ Response `data` shape:
 | POST   | `/identity/scan`            | Volunteer/Admin | Scan and log credential            |
 | GET    | `/identity/validate/:token` | Public          | Offline-safe credential validation |
 
+### CA Portal (Phase 3-5 Additions)
+
+| Method | Path                                      | Access        | Purpose                                          |
+| ------ | ----------------------------------------- | ------------- | ------------------------------------------------ |
+| POST   | `/ca/onboard`                             | Authenticated | Onboard as a Campus Ambassador                   |
+| POST   | `/leads/waitlist`                         | Public        | Capture waitlist lead pre-registration           |
+| POST   | `/ca/referral/click`                      | Public        | Track referral link clicks asynchronously        |
+| GET    | `/leaderboard/ca`                         | Public        | Get ranked CA leaderboard                        |
+| GET    | `/ca/tasks`                               | Authenticated | Fetch CA tasks and user assignments              |
+| POST   | `/ca/tasks/:taskId/submit`                | Authenticated | Submit proof for a CA task                       |
+| GET    | `/admin/brands`                           | Admin         | List all active brands                           |
+| POST   | `/admin/brands`                           | Admin         | Create a brand                                   |
+| PATCH  | `/admin/brands/:id`                       | Admin         | Soft-delete or update brand                      |
+| GET    | `/admin/ca-tasks`                         | Admin         | List CA tasks                                    |
+| POST   | `/admin/ca-tasks`                         | Admin         | Create a CA task                                 |
+| PATCH  | `/admin/ca-tasks/:id`                     | Admin         | Soft-delete or update CA task                    |
+| PATCH  | `/admin/ca-task-assignments/:id/verify`   | Admin         | Verify CA task submission (compare-and-swap lock)|
+
 ## 4. Contract Rules
 
 - DTOs must reject unknown fields.
