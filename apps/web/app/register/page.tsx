@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 import styles from './register.module.css';
 
-const waitlistSchema = z.object({
+const registerSchema = z.object({
     name: z.string().min(2, 'Full name is required'),
     email: z.string().email('Please enter a valid email address'),
     phone: z.string().min(10, 'Please enter a valid phone number'),
@@ -23,39 +23,74 @@ const waitlistSchema = z.object({
     }),
 });
 
-type WaitlistFormValues = z.infer<typeof waitlistSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function RegisterWaitlistPage() {
-    const searchParams = useSearchParams();
-    const referralCode = searchParams.get('ref');
+export default function RegisterPage() {
+    const [successMessage, setSuccessMessage] = useState('');
+    const [apiError, setApiError] = useState('');
 
     const {
         register,
         handleSubmit,
-        setValue,
         formState: { errors, isSubmitting },
-    } = useForm<WaitlistFormValues>({
-        resolver: zodResolver(waitlistSchema),
+    } = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
     });
 
-    const onSubmit = async (data: WaitlistFormValues) => {
-        const payload = {
-            ...data,
-            referralCode: referralCode || null,
-        };
-        // TODO: Wire up POST /leads/waitlist via lib/api.ts
-        console.log('Waitlist payload:', payload);
+    const onSubmit = async (data: RegisterFormValues) => {
+        try {
+            setApiError('');
+            setSuccessMessage('');
+            
+            const payload = {
+                email: data.email,
+                name: data.name,
+                phone: data.phone,
+                college: data.college,
+            };
+            
+            const response = await api.post('/auth/register', payload);
+            setSuccessMessage(response?.message || 'OTP sent to email for verification');
+        } catch (error: any) {
+            setApiError(error?.message || 'An error occurred during registration.');
+        }
     };
+
+    if (successMessage) {
+        return (
+            <div className={styles.pageWrapper}>
+                <Card className={styles.registerCard}>
+                    <div className={styles.header}>
+                        <h1 className={styles.title}>Registration Successful</h1>
+                        <p className={styles.subtitle}>{successMessage}</p>
+                    </div>
+                    <div className={styles.footer}>
+                        <p className={styles.footerText}>
+                            <Link href="/login" className={styles.link}>
+                                Go to Sign In
+                            </Link>
+                        </p>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.pageWrapper}>
             <Card className={styles.registerCard}>
                 <div className={styles.header}>
-                    <h1 className={styles.title}>Registration Opens<br /> July 20th</h1>
+                    <h1 className={styles.title}>Create an Account</h1>
                     <p className={styles.subtitle}>
-                        Leave your details and you'll be emailed the moment it's live. No payment is required today.
+                        Register for Infinito 2K26
                     </p>
                 </div>
+
+                {apiError && (
+                    <div className={styles.errorAlert}>
+                        {apiError}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>
@@ -86,7 +121,7 @@ export default function RegisterWaitlistPage() {
                         <Input
                             id="phone"
                             type="tel"
-                            placeholder="+91 "
+                            placeholder="9876543210"
                             disabled={isSubmitting}
                             error={errors.phone?.message}
                             {...register('phone')}
@@ -130,7 +165,7 @@ export default function RegisterWaitlistPage() {
                         disabled={isSubmitting}
                         loading={isSubmitting}
                     >
-                        Join the Waitlist
+                        Register
                     </Button>
                 </form>
 
