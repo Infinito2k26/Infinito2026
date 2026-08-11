@@ -27,9 +27,10 @@ export default function DashboardDispatcher() {
           // Route standard users to the default event dashboard
           router.replace('/dashboard/general'); 
         }
-      } catch (error: any) {
+      } catch (error) {
+        const err = error as { response?: { status?: number } };
         // If the endpoint throws a 403 (Not a CA) or 401 (Unauthorized)
-        if (error.response?.status === 401) {
+        if (err.response?.status === 401) {
           router.replace('/login');
         } else {
           // Standard user fallback if /ca/me strictly rejects non-CAs

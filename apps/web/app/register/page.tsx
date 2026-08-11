@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,6 @@ export default function RegisterWaitlistPage() {
     const {
         register,
         handleSubmit,
-        setValue,
         formState: { errors, isSubmitting },
     } = useForm<WaitlistFormValues>({
         resolver: zodResolver(waitlistSchema),
@@ -53,7 +52,7 @@ export default function RegisterWaitlistPage() {
                 <div className={styles.header}>
                     <h1 className={styles.title}>Registration Opens<br /> July 20th</h1>
                     <p className={styles.subtitle}>
-                        Leave your details and you'll be emailed the moment it's live. No payment is required today.
+                        Leave your details and you&apos;ll be emailed the moment it&apos;s live. No payment is required today.
                     </p>
                 </div>
 

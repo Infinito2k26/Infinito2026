@@ -4,7 +4,6 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
 
 import Card from '@/components/ui/card';
 import Button from '@/components/ui/button';
@@ -29,8 +28,6 @@ const onboardSchema = z.object({
 type OnboardFormValues = z.infer<typeof onboardSchema>;
 
 export default function CAOnboardPage() {
-    const router = useRouter();
-
     const {
         register,
         handleSubmit,
@@ -54,7 +51,7 @@ export default function CAOnboardPage() {
                 <div className={styles.header}>
                     <h1 className={styles.title}>Welcome to the Team</h1>
                     <p className={styles.subtitle}>
-                        You've been approved as a Campus Ambassador! Select your assigned college to generate your referral link.
+                        You&apos;ve been approved as a Campus Ambassador! Select your assigned college to generate your referral link.
                     </p>
                 </div>
 

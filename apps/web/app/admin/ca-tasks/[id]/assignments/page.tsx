@@ -41,8 +41,6 @@ const verifySchema = z.object({
     }
 });
 
-type VerifyFormValues = z.infer<typeof verifySchema>;
-
 // Inline Review Component to keep form state isolated per submission
 const ReviewActionForm = ({
     assignmentId,
@@ -60,7 +58,7 @@ const ReviewActionForm = ({
 
     const selectedAction = watch('action');
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: z.infer<typeof verifySchema>) => {
         // TODO: Wire up POST /admin/ca-task-assignments/:id/verify
         console.log(`Verifying assignment ${assignmentId}:`, data);
         onComplete();
@@ -117,7 +115,7 @@ const ReviewActionForm = ({
     );
 };
 
-export default function TaskAssignmentsPage({ params }: { params: { id: string } }) {
+export default function TaskAssignmentsPage() {
     const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
 
     const renderProof = (type: string, value: string) => {
