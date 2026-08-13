@@ -1,23 +1,33 @@
-import { IsString, IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class WaitlistLeadDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  phone: string;
+  phone!: string;
 
   @IsString()
   @IsNotEmpty()
-  college: string;
+  college!: string;
 
   @IsString()
   @IsOptional()
   referralCode?: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  consent!: boolean;
 }

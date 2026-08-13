@@ -1,34 +1,34 @@
-import { IsString, IsNotEmpty, IsIn, IsOptional } from 'class-validator';
-
-export const PARTICIPATING_COLLEGES = [
-  'IIT Patna',
-  'NIT Patna',
-  'BIT Mesra',
-  'AMU',
-  'Other',
-];
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { Transform as TransformDecorator } from 'class-transformer';
 
 export class CaOnboardDto {
   @IsString()
   @IsNotEmpty()
-  @IsIn(PARTICIPATING_COLLEGES)
-  college: string;
+  @MaxLength(200)
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
+  @TransformDecorator(({ value }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
+  college!: string;
 }
 
 export class ReferralClickDto {
   @IsString()
   @IsNotEmpty()
-  referralCode: string;
+  referralCode!: string;
 }
 
 export class SubmitTaskDto {
   @IsString()
   @IsOptional()
-  proofUrl?: string; // We will validate this server-side manually or with standard class-validator
+  proofUrl?: string;
 
   @IsString()
   @IsOptional()
-  fileUrl?: string; // Usually you'd use a file upload interceptor, but if we receive a URL from a pre-signed S3 upload:
+  fileUrl?: string;
 
   @IsString()
   @IsOptional()

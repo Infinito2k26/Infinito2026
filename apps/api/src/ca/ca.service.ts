@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 import {
   Injectable,
   ConflictException,
@@ -5,6 +7,7 @@ import {
   BadRequestException,
   Inject,
 } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
 import Redis from 'ioredis';
@@ -21,16 +24,19 @@ export class CaService {
     const existing = await this.prisma.cAProfile.findUnique({
       where: { userId },
     });
+
     if (existing) {
       throw new ConflictException('CA profile already exists for this user');
     }
 
     // Generate unguessable referral code
     const suffix = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 chars
+
     const collegeCode = college
       .substring(0, 3)
       .toUpperCase()
       .replace(/[^A-Z]/g, 'X');
+
     const referralCode = `CA-${collegeCode}-${suffix}`;
 
     const profile = await this.prisma.cAProfile.create({
@@ -48,7 +54,7 @@ export class CaService {
   }
 
   async recordClick(referralCode: string, ip: string) {
-    // Validate code exists in DB. This could be cached in Redis in a real highly-scaled system, but checking DB is fine if caching isn't strictly requested. Wait, the prompt says "Validate that the referral code exists (return 404 if not found)".
+    // Validate code exists in DB
     const ca = await this.prisma.cAProfile.findUnique({
       where: { refCode: referralCode },
       select: { id: true },
@@ -63,8 +69,9 @@ export class CaService {
     const dedupKey = `referral_click:${referralCode}:${hashedIp}`;
 
     const exists = await this.redis.get(dedupKey);
+
     if (exists) {
-      return { status: 'deduplicated' }; // Do nothing
+      return { status: 'deduplicated' };
     }
 
     await this.redis.setex(dedupKey, 3600, '1');
@@ -76,7 +83,10 @@ export class CaService {
   }
 
   async getTasks(userId: string) {
-    const ca = await this.prisma.cAProfile.findUnique({ where: { userId } });
+    const ca = await this.prisma.cAProfile.findUnique({
+      where: { userId },
+    });
+
     if (!ca) {
       throw new NotFoundException('CA Profile not found');
     }
@@ -98,22 +108,28 @@ export class CaService {
     fileUrl?: string,
     proofNote?: string,
   ) {
-    const ca = await this.prisma.cAProfile.findUnique({ where: { userId } });
+    const ca = await this.prisma.cAProfile.findUnique({
+      where: { userId },
+    });
+
     if (!ca) {
       throw new NotFoundException('CA Profile not found');
     }
 
     // Validate URL scheme if proofUrl provided
     if (proofUrl) {
+      let parsedUrl: URL;
+
       try {
-        const parsedUrl = new URL(proofUrl);
-        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-          throw new BadRequestException(
-            'Invalid URL scheme. Must be http or https.',
-          );
-        }
+        parsedUrl = new URL(proofUrl);
       } catch {
         throw new BadRequestException('Invalid proof URL');
+      }
+
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new BadRequestException(
+          'Invalid URL scheme. Only http and https are allowed.',
+        );
       }
     }
 
@@ -128,7 +144,10 @@ export class CaService {
     // Check existing assignment
     const existing = await this.prisma.cATaskAssignment.findUnique({
       where: {
-        caId_taskId: { caId: ca.id, taskId },
+        caId_taskId: {
+          caId: ca.id,
+          taskId,
+        },
       },
     });
 
@@ -139,14 +158,29 @@ export class CaService {
         );
       }
 
-      return this.prisma.cATaskAssignment.update({
-        where: { id: existing.id },
+      // Atomic compare-and-set:
+      // Only update if the assignment is still PENDING.
+      const updated = await this.prisma.cATaskAssignment.updateMany({
+        where: {
+          id: existing.id,
+          status: 'PENDING',
+        },
         data: {
           status: 'SUBMITTED',
           proofUrl: finalProofUrl,
           proofNote,
           submittedAt: new Date(),
         },
+      });
+
+      if (updated.count === 0) {
+        throw new ConflictException(
+          'Resubmission is only allowed when status is PENDING',
+        );
+      }
+
+      return this.prisma.cATaskAssignment.findUniqueOrThrow({
+        where: { id: existing.id },
       });
     }
 
@@ -161,5 +195,55 @@ export class CaService {
         submittedAt: new Date(),
       },
     });
+  }
+
+  /**
+   * Records a referral conversion for a given refCode + registrationId.
+   * Deliberately NOT wired to any controller yet — the Registration module
+   * will call this once it is complete. Until then, ca_referral_leads /
+   * the waitlist data remains the reconciliation source of truth.
+   */
+  async recordConversion(refCode: string, registrationId: string) {
+    const ca = await this.prisma.cAProfile.findUnique({
+      where: { refCode },
+      select: { id: true },
+    });
+
+    if (!ca) {
+      throw new NotFoundException('Referral code not found');
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const conversion = await tx.referralConversion.create({
+          data: {
+            caId: ca.id,
+            registrationId,
+          },
+        });
+
+        await tx.cAProfile.update({
+          where: { id: ca.id },
+          data: {
+            referralCount: {
+              increment: 1,
+            },
+          },
+        });
+
+        return conversion;
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'A conversion already exists for this registration',
+        );
+      }
+
+      throw err;
+    }
   }
 }

@@ -168,6 +168,7 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
+  consentedAt     DateTime?
 
   // Relations
   captainedTeams     Team[]              @relation("TeamCaptain")
@@ -592,9 +593,9 @@ model CaReferralLead {
   college        String
   referralCode   String?
   createdAt      DateTime  @default(now())
+  consentedAt    DateTime?
   convertedAt    DateTime?
   registrationId String?   @db.Uuid
 
   @@map("ca_referral_leads")
 }
-
