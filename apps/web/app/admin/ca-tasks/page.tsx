@@ -11,22 +11,11 @@ import Button from '@/components/ui/button';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Badge from '@/components/ui/badge';
+import { api } from '@/lib/api';
 
 import styles from './ca-tasks.module.css';
 
-// Mock Data for Brands (In reality, fetched via GET /admin/brands)
-const MOCK_BRANDS = [
-  { id: 'brand_1', name: 'TechCorp Global' },
-  { id: 'brand_2', name: 'Energy Drink Co.' },
-];
-
-// Mock Data for Tasks (In reality, fetched via GET /admin/ca-tasks)
-const MOCK_TASKS = [
-  { id: 'task_001', title: 'Share Launch Reel', type: 'URL', points: 50, isBrandSourced: false, status: 'ACTIVE' },
-  { id: 'task_002', title: 'App Registration', type: 'URL', points: 120, isBrandSourced: true, brandName: 'TechCorp Global', status: 'ACTIVE' },
-  { id: 'task_003', title: 'Campus Poster Screenshot', type: 'FILE', points: 75, isBrandSourced: false, status: 'ARCHIVED' },
-];
-
+// Removed static mock data
 // Schema enforcing the cross-validation rule from the hardening plan
 const taskSchema = z.object({
   title: z.string().min(3, 'Title is required'),
@@ -48,6 +37,29 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 
 export default function AdminTasksPage() {
   const [isCreating, setIsCreating] = useState(false);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+        const [brandsData, tasksData] = await Promise.all([
+            api.get('/admin/brands').catch(() => []),
+            api.get('/admin/ca-tasks').catch(() => [])
+        ]);
+        if (brandsData) setBrands(brandsData);
+        if (tasksData) setTasks(tasksData);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
   const {
     register,
@@ -66,15 +78,23 @@ export default function AdminTasksPage() {
   const isBrandSourced = watch('isBrandSourced');
 
   const onSubmit: SubmitHandler<TaskFormValues> = async (data: TaskFormValues) => {
-    // TODO: Wire up POST /admin/ca-tasks
-    console.log('Creating task:', data);
-    reset();
-    setIsCreating(false);
+    try {
+        await api.post('/admin/ca-tasks', data);
+        await fetchData(); // Refresh list
+        reset();
+        setIsCreating(false);
+    } catch (err: any) {
+        alert(err?.message || "Failed to create task");
+    }
   };
 
   const handleArchive = async (taskId: string) => {
-    // TODO: Wire up PATCH /admin/ca-tasks/:id (soft delete)
-    console.log(`Archiving task: ${taskId}`);
+    try {
+        await api.patch(`/admin/ca-tasks/${taskId}`, { status: 'ARCHIVED' });
+        await fetchData(); // Refresh list
+    } catch (err: any) {
+        alert(err?.message || "Failed to archive task");
+    }
   };
 
   return (
@@ -159,7 +179,7 @@ export default function AdminTasksPage() {
                     defaultValue=""
                   >
                     <option value="" disabled>Select the sponsoring brand...</option>
-                    {MOCK_BRANDS.map(brand => (
+                    {brands.map(brand => (
                       <option key={brand.id} value={brand.id}>{brand.name}</option>
                     ))}
                   </select>
@@ -178,7 +198,11 @@ export default function AdminTasksPage() {
       )}
 
       <div className={styles.listContainer}>
-        {MOCK_TASKS.map((task) => (
+        {isLoading ? (
+            <p className="text-muted-foreground p-4">Loading tasks...</p>
+        ) : tasks.length === 0 ? (
+            <p className="text-muted-foreground p-4">No tasks found.</p>
+        ) : tasks.map((task) => (
           <Card key={task.id} className={`${styles.taskCard} ${task.status === 'ARCHIVED' ? styles.archivedCard : ''}`}>
             <div className={styles.taskMeta}>
               <div className={styles.taskHeader}>

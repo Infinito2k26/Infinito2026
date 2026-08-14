@@ -10,23 +10,11 @@ import { ArrowLeft, CheckCircle, XCircle, ExternalLink, Image as ImageIcon } fro
 import Button from '@/components/ui/button';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
+import { api } from '@/lib/api';
 
 import styles from './admin-assignments.module.css';
 
-// Mock Data (In reality, fetched via GET /admin/ca-tasks/:id/assignments)
-const MOCK_TASK_INFO = {
-    id: 'task_001',
-    title: 'Share Launch Reel',
-    defaultPoints: 50,
-    type: 'URL', // Or 'FILE'
-};
-
-const MOCK_ASSIGNMENTS = [
-    { id: 'assign_1', caName: 'Rahul Sharma', college: 'IIT Delhi', status: 'PENDING', submittedValue: 'https://instagram.com/p/xyz', submittedAt: '2 hours ago' },
-    { id: 'assign_2', caName: 'Priya Singh', college: 'NIT Warangal', status: 'APPROVED', pointsAwarded: 50, submittedValue: 'https://instagram.com/p/abc', submittedAt: '1 day ago' },
-    { id: 'assign_3', caName: 'Aman Gupta', college: 'BITS Pilani', status: 'REJECTED', rejectionReason: 'Link is broken.', submittedValue: 'https://instagram.com/broken', submittedAt: '2 days ago' },
-];
-
+// Removed mock data
 const verifySchema = z.object({
     action: z.enum(['APPROVE', 'REJECT']),
     pointsOverride: z.number({ message: 'Points must be a valid number' }).optional(),
@@ -61,9 +49,12 @@ const ReviewActionForm = ({
     const selectedAction = watch('action');
 
     const onSubmit = async (data: any) => {
-        // TODO: Wire up POST /admin/ca-task-assignments/:id/verify
-        console.log(`Verifying assignment ${assignmentId}:`, data);
-        onComplete();
+        try {
+            await api.patch(`/admin/ca-task-assignments/${assignmentId}/verify`, data);
+            onComplete();
+        } catch (err: any) {
+            alert(err?.message || "Failed to verify assignment");
+        }
     };
 
     return (
@@ -119,6 +110,28 @@ const ReviewActionForm = ({
 
 export default function TaskAssignmentsPage({ params }: { params: { id: string } }) {
     const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
+    const [assignments, setAssignments] = useState<any[]>([]);
+    const [taskInfo, setTaskInfo] = useState<any>({ title: '', defaultPoints: 0, type: 'URL' });
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchAssignments = async () => {
+        setIsLoading(true);
+        try {
+            const data = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
+            if (data) {
+                setAssignments(data.assignments || []);
+                if (data.task) setTaskInfo(data.task);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchAssignments();
+    }, [params.id]);
 
     const renderProof = (type: string, value: string) => {
         if (type === 'URL') {
@@ -146,13 +159,17 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
             <header className={styles.header}>
                 <h1 className={styles.pageTitle}>Review Submissions</h1>
                 <div className={styles.taskMetaHeader}>
-                    <span className={styles.taskTitle}>{MOCK_TASK_INFO.title}</span>
-                    <span className={styles.taskDefaultPoints}>{MOCK_TASK_INFO.defaultPoints} Pts Default</span>
+                    <span className={styles.taskTitle}>{taskInfo?.title}</span>
+                    <span className={styles.taskDefaultPoints}>{taskInfo?.defaultPoints} Pts Default</span>
                 </div>
             </header>
 
             <div className={styles.listContainer}>
-                {MOCK_ASSIGNMENTS.map((assignment) => (
+                {isLoading ? (
+                    <p className="text-muted-foreground p-4">Loading submissions...</p>
+                ) : assignments.length === 0 ? (
+                    <p className="text-muted-foreground p-4">No submissions yet.</p>
+                ) : assignments.map((assignment) => (
                     <Card key={assignment.id} className={styles.assignmentCard}>
                         <div className={styles.cardTop}>
                             <div className={styles.caInfo}>
@@ -168,7 +185,7 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
 
                         <div className={styles.proofSection}>
                             <span className={styles.proofLabel}>Proof Provided:</span>
-                            {renderProof(MOCK_TASK_INFO.type, assignment.submittedValue)}
+                            {renderProof(taskInfo?.type || 'URL', assignment.submittedValue)}
                         </div>
 
                         {assignment.status === 'APPROVED' && assignment.pointsAwarded && (
@@ -195,8 +212,11 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
                             <div className={styles.activeReviewZone}>
                                 <ReviewActionForm
                                     assignmentId={assignment.id}
-                                    defaultPoints={MOCK_TASK_INFO.defaultPoints}
-                                    onComplete={() => setActiveReviewId(null)}
+                                    defaultPoints={taskInfo?.defaultPoints || 0}
+                                    onComplete={() => {
+                                        setActiveReviewId(null);
+                                        fetchAssignments(); // Refresh
+                                    }}
                                 />
                             </div>
                         )}
