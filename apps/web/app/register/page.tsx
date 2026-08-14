@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
@@ -26,8 +27,17 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+    const searchParams = useSearchParams();
+    const refCode = searchParams.get('ref');
+
     const [successMessage, setSuccessMessage] = useState('');
     const [apiError, setApiError] = useState('');
+
+    React.useEffect(() => {
+        if (refCode) {
+            api.post('/ca/referral/click', { referralCode: refCode }).catch(console.error);
+        }
+    }, [refCode]);
 
     const {
         register,
