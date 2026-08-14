@@ -5,10 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 import styles from './login.module.css';
 
@@ -20,6 +22,9 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+    const router = useRouter();
+    const [apiError, setApiError] = React.useState('');
+
     const {
         register,
         handleSubmit,
@@ -29,8 +34,13 @@ export default function LoginPage() {
     });
 
     const onSubmit = async (data: LoginFormValues) => {
-        // TODO: Wire up lib/api.ts and global auth state here
-        console.log('Login payload:', data);
+        try {
+            setApiError('');
+            await api.post('/auth/login', data);
+            router.push('/dashboard');
+        } catch (error: any) {
+            setApiError(error?.message || 'Invalid email or password');
+        }
     };
 
     return (
@@ -40,6 +50,12 @@ export default function LoginPage() {
                     <h1 className={styles.title}>Welcome Back</h1>
                     <p className={styles.subtitle}>Sign in to your Infinito account</p>
                 </div>
+
+                {apiError && (
+                    <div className={styles.errorAlert}>
+                        {apiError}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>

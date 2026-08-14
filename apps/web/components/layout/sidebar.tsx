@@ -49,11 +49,11 @@ const SettingsIcon = () => (
 );
 
 const SIDE_ITEMS: SideItem[] = [
-  { label: "Dashboard", icon: <LayoutIcon />, href: "#dashboard" },
-  { label: "Events",    icon: <CalendarIcon />, href: "#events" },
-  { label: "Teams",     icon: <UsersIcon />,   href: "#teams" },
-  { label: "Analytics", icon: <BarChartIcon />, href: "#analytics" },
-  { label: "Settings",  icon: <SettingsIcon />, href: "#settings" },
+  { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
+  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events" },
+  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams" },
+  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics" },
+  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings" },
 ];
 
 export default function Sidebar() {

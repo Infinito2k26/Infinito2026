@@ -141,3 +141,14 @@
   }
 }
 
+
+.errorAlert {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-size: 0.875rem;
+  text-align: center;
+  border: 1px solid #f87171;
+}

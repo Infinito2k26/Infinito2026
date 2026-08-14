@@ -43,7 +43,7 @@ const Navbar = () => {
                 <Link href="/events" className={styles.mobile_menu_item} onClick={closeMenu}>Events</Link>
                 <Link href="/sports" className={styles.mobile_menu_item} onClick={closeMenu}>Sports</Link>
                 <Link href="/about" className={styles.mobile_menu_item} onClick={closeMenu}>About</Link>
-                <Link href="/signup" className={styles.mobile_menu_item} onClick={closeMenu}>Sign Up</Link>
+                <Link href="/register" className={styles.mobile_menu_item} onClick={closeMenu}>Register</Link>
                 <Link href="/login" className={styles.mobile_menu_item} onClick={closeMenu}>Login</Link>
             </div>
         </nav>
