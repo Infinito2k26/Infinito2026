@@ -47,20 +47,29 @@ describe('Auth (e2e)', () => {
 
     const registerRes = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password, name: 'E2E User' })
+      .send({
+        email,
+        password,
+        name: 'E2E User',
+        consent: true,
+      })
       .expect(201);
+
     const registerBody = registerRes.body as SuccessResponse<UserProfile>;
     expect(registerBody.data.email).toBe(email);
 
     const agent = request.agent(app.getHttpServer());
+
     const loginRes = await agent
       .post('/api/auth/login')
       .send({ email, password })
       .expect(200);
+
     const loginBody = loginRes.body as SuccessResponse<{
       accessToken: string;
       user: UserProfile;
     }>;
+
     expect(loginBody.data.accessToken).toBeDefined();
     expect(loginRes.headers['set-cookie']?.[0]).toMatch(/refresh_token=/);
 
@@ -68,6 +77,7 @@ describe('Auth (e2e)', () => {
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${loginBody.data.accessToken}`)
       .expect(200);
+
     const meBody = meRes.body as SuccessResponse<UserProfile>;
     expect(meBody.data.email).toBe(email);
   });
@@ -78,27 +88,47 @@ describe('Auth (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password, name: 'Dup User' })
+      .send({
+        email,
+        password,
+        name: 'Dup User',
+        consent: true,
+      })
       .expect(201);
 
     const res = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password, name: 'Dup User' })
+      .send({
+        email,
+        password,
+        name: 'Dup User',
+        consent: true,
+      })
       .expect(409);
+
     const body = res.body as ErrorResponse;
     expect(body.success).toBe(false);
   });
 
   it('wrong password returns 401', async () => {
     const email = `${randomUUID()}@infinito.dev`;
+
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password: 'correct-password', name: 'Wrong Pass' })
+      .send({
+        email,
+        password: 'correct-password',
+        name: 'Wrong Pass',
+        consent: true,
+      })
       .expect(201);
 
     await request(app.getHttpServer())
       .post('/api/auth/login')
-      .send({ email, password: 'incorrect-password' })
+      .send({
+        email,
+        password: 'incorrect-password',
+      })
       .expect(401);
   });
 
@@ -109,15 +139,22 @@ describe('Auth (e2e)', () => {
   it('a replayed refresh token after rotation returns 401', async () => {
     const email = `${randomUUID()}@infinito.dev`;
     const password = 'a-strong-password';
+
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password, name: 'Rotate User' })
+      .send({
+        email,
+        password,
+        name: 'Rotate User',
+        consent: true,
+      })
       .expect(201);
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/auth/login')
       .send({ email, password })
       .expect(200);
+
     const originalCookie = (
       loginRes.headers['set-cookie'] as unknown as string[]
     )[0];
@@ -133,6 +170,33 @@ describe('Auth (e2e)', () => {
       .post('/api/auth/refresh')
       .set('Cookie', originalCookie)
       .expect(401);
+  });
+
+  it('register without consent returns 400', async () => {
+    const email = `${randomUUID()}@infinito.dev`;
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email,
+        password: 'a-strong-password',
+        name: 'No Consent',
+      })
+      .expect(400);
+  });
+
+  it('register with consent=false returns 400', async () => {
+    const email = `${randomUUID()}@infinito.dev`;
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email,
+        password: 'a-strong-password',
+        name: 'False Consent',
+        consent: false,
+      })
+      .expect(400);
   });
 });
 
@@ -152,16 +216,23 @@ describe('Auth login throttling (e2e)', () => {
 
   it('throttles the 11th login attempt in a minute with 429', async () => {
     const email = `${randomUUID()}@infinito.dev`;
+
     for (let i = 0; i < 10; i++) {
       await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ email, password: 'wrong-password' })
+        .send({
+          email,
+          password: 'wrong-password',
+        })
         .expect(401);
     }
 
     await request(app.getHttpServer())
       .post('/api/auth/login')
-      .send({ email, password: 'wrong-password' })
+      .send({
+        email,
+        password: 'wrong-password',
+      })
       .expect(429);
   }, 15000);
 });
