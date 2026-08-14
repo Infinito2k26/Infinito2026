@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import styles from "./LeaderboardWidget.module.css";
 interface LeaderboardEntry {
   rank: number;
@@ -33,7 +35,35 @@ function getListItemClass(rank: number) {
 }
 
 export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
-  const rows = data && data.length > 0 ? data : MOCK_DATA;
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await api.get('/leaderboard/ca');
+        if (response && Array.isArray(response)) {
+            setLeaderboard(response);
+        } else {
+            setLeaderboard(MOCK_DATA);
+        }
+      } catch (err) {
+        console.error("Failed to fetch leaderboard", err);
+        setLeaderboard(MOCK_DATA);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (!data) {
+        fetchLeaderboard();
+    } else {
+        setLeaderboard(data);
+        setIsLoading(false);
+    }
+  }, [data]);
+
+  const rows = leaderboard;
 
   return (
     <div className={styles.widget}>
@@ -42,7 +72,10 @@ export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
         <p className={styles.subtitle}>Drive referrals and climb the leaderboard</p>
       </div>
 
-      <ul className={styles.list}>
+      {isLoading ? (
+        <div className="p-4 text-center text-sm text-gray-500">Loading leaderboard...</div>
+      ) : (
+        <ul className={styles.list}>
         {rows.map((entry) => (
           <li key={entry.rank} className={getListItemClass(entry.rank)}>
             <span className={styles.rankBadge}>
@@ -55,7 +88,8 @@ export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
             <span className={styles.referrals}>{entry.referrals}</span>
           </li>
         ))}
-      </ul>
+        </ul>
+      )}
     </div>
   )
 }
