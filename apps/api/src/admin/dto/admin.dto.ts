@@ -23,7 +23,7 @@ export enum TaskCategory {
 export class CreateBrandDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -51,29 +51,25 @@ export class UpdateBrandDto {
 export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
-  description: string;
+  description!: string;
 
   @IsEnum(TaskCategory)
-  category: TaskCategory;
+  category!: TaskCategory;
 
   @IsEnum(TaskSource)
-  source: TaskSource;
+  source!: TaskSource;
 
   @ValidateIf((o: CreateTaskDto) => o.source === TaskSource.BRAND)
   @IsString()
   @IsNotEmpty({ message: 'brandId is required when source is BRAND' })
   brandId?: string;
 
-  @ValidateIf((o: CreateTaskDto) => o.source === TaskSource.MODERATOR)
-  @IsOptional()
-  brandIdNullCheck?: any; // To forbid brandId, we can validate it in service or use custom validator.
-
   @IsInt()
-  points: number;
+  points!: number;
 }
 
 export class UpdateTaskDto {
@@ -84,7 +80,7 @@ export class UpdateTaskDto {
 
 export class VerifyTaskDto {
   @IsEnum(['VERIFIED', 'REJECTED'])
-  status: 'VERIFIED' | 'REJECTED';
+  status!: 'VERIFIED' | 'REJECTED';
 
   @IsInt()
   @IsOptional()

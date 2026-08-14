@@ -1,15 +1,12 @@
 import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+
 import { Transform } from 'class-transformer';
-import { Transform as TransformDecorator } from 'class-transformer';
 
 export class CaOnboardDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
-  )
-  @TransformDecorator(({ value }) =>
+  @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
   )
   college!: string;
