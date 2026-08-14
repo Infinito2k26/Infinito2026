@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 
 import Card from '@/components/ui/card';
 import Button from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 import styles from './onboard.module.css';
 
@@ -30,6 +31,7 @@ type OnboardFormValues = z.infer<typeof onboardSchema>;
 
 export default function CAOnboardPage() {
     const router = useRouter();
+    const [apiError, setApiError] = React.useState('');
 
     const {
         register,
@@ -40,12 +42,13 @@ export default function CAOnboardPage() {
     });
 
     const onSubmit = async (data: OnboardFormValues) => {
-        // TODO: Wire up POST /ca/onboard via lib/api.ts
-        // Note: The backend will return 409 if this CA already has a profile.
-        console.log('Onboarding payload:', data);
-
-        // On success, redirect to the main CA dashboard
-        // router.push('/dashboard/ca');
+        try {
+            setApiError('');
+            await api.post('/ca/onboard', { college: data.college });
+            router.push('/dashboard/ca');
+        } catch (error: any) {
+            setApiError(error?.message || 'Failed to complete onboarding');
+        }
     };
 
     return (
@@ -57,6 +60,12 @@ export default function CAOnboardPage() {
                         You've been approved as a Campus Ambassador! Select your assigned college to generate your referral link.
                     </p>
                 </div>
+
+                {apiError && (
+                    <div className="bg-red-100 text-red-800 p-3 rounded-md mb-4 text-sm text-center border border-red-300">
+                        {apiError}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>

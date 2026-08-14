@@ -3,6 +3,8 @@
 import { useState } from "react";
 import styles from "./layout.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 
 type SideItem = {
@@ -58,6 +60,20 @@ const SIDE_ITEMS: SideItem[] = [
 
 export default function Sidebar() {
   const [activeLabel, setActiveLabel] = useState("Dashboard");
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await api.delete('/auth/logout');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('infinito_token');
+        router.push('/login');
+      }
+    }
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -90,6 +106,18 @@ export default function Sidebar() {
               </li>
             );
           })}
+          <li key="Logout">
+            <button
+                className={styles.sidebarLink}
+                onClick={handleLogout}
+                style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+                <span className={styles.sidebarIcon}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </span>
+                <span className={styles.sidebarLabel}>Logout</span>
+            </button>
+          </li>
         </ul>
       </nav>
     </aside>

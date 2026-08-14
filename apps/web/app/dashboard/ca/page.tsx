@@ -1,22 +1,54 @@
 "use client";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import  {useState, useEffect } from "react";
-import  ReferralCodeDisplay  from "@/components/ca/ReferralCodeDisplay";
-import  StatCard  from "@/components/ca/StatCard";
+import { useState, useEffect } from "react";
+import ReferralCodeDisplay from "@/components/ca/ReferralCodeDisplay";
+import StatCard from "@/components/ca/StatCard";
 import LeaderboardWidget from "@/components/ca/LeaderboardWidget";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Users, Trophy, Target } from "lucide-react";
+import { Users, Trophy, Target, LogOut } from "lucide-react";
+import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import Button from "@/components/ui/button";
 
 export default function CADashboardPage() {
-  // TODO: Replace with TanStack Query hook (e.g., const { data } = useCAProfile())
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const router = useRouter();
     const [caData, setCaData] = useState({
-    referralCode: "INF-2K26-ALIGARH",
-    referralCount: 14,
-    targetCollege: "AMU Aligarh",
-    rank: 3,
+        referralCode: "",
+        referralCount: 0,
+        targetCollege: "",
+        rank: 0,
     });
+
+    const handleLogout = async () => {
+        try {
+            await api.delete('/auth/logout');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('infinito_token');
+                router.push('/login');
+            }
+        }
+    };
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const data = await api.get('/auth/me');
+                if (data && data.profile) {
+                    setCaData({
+                        referralCode: data.profile.referralCode || "",
+                        referralCount: data.profile.referralCount || 0,
+                        targetCollege: data.profile.targetCollege || "Not Assigned",
+                        rank: data.profile.rank || 0,
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load profile:", error);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     const shareUrl = `https://infinito.iitp.ac.in/register?ref=${caData.referralCode}`;
 
@@ -53,16 +85,16 @@ export default function CADashboardPage() {
     };
 
     return (
-    <div className="max-w-5xl mx-auto space-y-8">
-        <div>
-        <h1 className="text-3xl font-bold tracking-tight">Campus Ambassador Portal</h1>
-        <p className="text-muted-foreground mt-2">
-            Track your referrals, climb the leaderboard, and unlock your perks.
-        </p>
-        </div>
-
-      {/* Top Row: The Action Center */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-6">
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold tracking-tight">CA Portal</h1>
+                <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2">
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {/* Passing the smart handlers down to the dumb UI */}
             <ReferralCodeDisplay 
