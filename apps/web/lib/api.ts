@@ -1,14 +1,14 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-interface RequestConfig extends RequestInit {
-    // custom configuration
+interface RequestConfig extends Omit<RequestInit, 'body'> {
+    body?: unknown;
 }
 
 class ApiError extends Error {
     status: number;
-    data: any;
+    data: unknown;
 
-    constructor(status: number, data: any, message: string) {
+    constructor(status: number, data: unknown, message: string) {
         super(message);
         this.status = status;
         this.data = data;
@@ -28,8 +28,8 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
         },
     };
 
-    if (body && !(body instanceof FormData)) {
-        config.body = JSON.stringify(body);
+    if (body) {
+        config.body = body instanceof FormData ? body : JSON.stringify(body);
     }
 
     try {
@@ -60,15 +60,26 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
 
         return data;
     } catch (error) {
-        // Re-throw err
-        throw error;
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        if (error instanceof Error && error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            throw new ApiError(
+                503,
+                null,
+                'Cannot connect to the server. Please ensure the backend is running.'
+            );
+        }
+
+        throw new ApiError(500, null, 'An unexpected network error occurred.');
     }
 }
 
 export const api = {
     get: (endpoint: string, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, method: 'GET' }),
-    post: (endpoint: string, body: any, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'POST' }),
-    put: (endpoint: string, body: any, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'PUT' }),
-    patch: (endpoint: string, body: any, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'PATCH' }),
+    post: (endpoint: string, body: unknown, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'POST' }),
+    put: (endpoint: string, body: unknown, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'PUT' }),
+    patch: (endpoint: string, body: unknown, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, body, method: 'PATCH' }),
     delete: (endpoint: string, config?: RequestConfig) => fetchWrapper(endpoint, { ...config, method: 'DELETE' }),
 };

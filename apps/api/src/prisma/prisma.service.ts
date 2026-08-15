@@ -1,16 +1,28 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+import { Env } from '../config/env.schema';
 
-// Replace stub with: import { PrismaClient } from '@prisma/client';
-// Then extend PrismaClient instead of the empty class below.
-// npm install @prisma/client --workspace=api  (after issue #2 merges)
-
+// Prisma 7 has no bundled query engine binary; a driver adapter is required.
 @Injectable()
-export class PrismaService implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor(config: ConfigService<Env, true>) {
+    super({
+      adapter: new PrismaPg({
+        connectionString: config.get('DATABASE_URL', { infer: true }),
+      }),
+    });
+  }
+
   async onModuleInit() {
-    // await this.$connect();
+    await this.$connect();
   }
 
   async onModuleDestroy() {
-    // await this.$disconnect();
+    await this.$disconnect();
   }
 }

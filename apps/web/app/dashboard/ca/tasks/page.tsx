@@ -67,7 +67,7 @@ export default function CATasksPage() {
 
     // Form hooks configured dynamically per task input needs
     const urlForm = useForm<{ proofUrl: string }>({ resolver: zodResolver(urlSchema) });
-    const fileForm = useForm<{ proofFile: any }>({ resolver: zodResolver(fileSchema) });
+    const fileForm = useForm<{ proofFile: FileList }>({ resolver: zodResolver(fileSchema) });
 
     const handleUrlSubmit = async (taskId: string, data: { proofUrl: string }) => {
         setActiveSubmittingId(taskId);
@@ -81,7 +81,7 @@ export default function CATasksPage() {
         setActiveSubmittingId(null);
     };
 
-    const handleFileSubmit = async (taskId: string, data: { proofFile: any }) => {
+    const handleFileSubmit = async (taskId: string, data: { proofFile: FileList }) => {
         setActiveSubmittingId(taskId);
         try {
             const formData = new FormData();
