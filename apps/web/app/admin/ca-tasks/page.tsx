@@ -10,7 +10,6 @@ import { Plus, Archive, Users, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/button';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
-import Badge from '@/components/ui/badge';
 import { api } from '@/lib/api';
 
 import styles from './ca-tasks.module.css';
@@ -35,10 +34,25 @@ const taskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
+interface Brand {
+  id: string;
+  name: string;
+}
+
+interface AdminTask {
+  id: string;
+  title: string;
+  points: number;
+  type: 'URL' | 'FILE';
+  status: 'ACTIVE' | 'ARCHIVED';
+  isBrandSourced: boolean;
+  brandName?: string;
+}
+
 export default function AdminTasksPage() {
   const [isCreating, setIsCreating] = useState(false);
-  const [brands, setBrands] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [tasks, setTasks] = useState<AdminTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
@@ -83,8 +97,9 @@ export default function AdminTasksPage() {
         await fetchData(); // Refresh list
         reset();
         setIsCreating(false);
-    } catch (err: any) {
-        alert(err?.message || "Failed to create task");
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to create task";
+        alert(message);
     }
   };
 
@@ -92,8 +107,9 @@ export default function AdminTasksPage() {
     try {
         await api.patch(`/admin/ca-tasks/${taskId}`, { status: 'ARCHIVED' });
         await fetchData(); // Refresh list
-    } catch (err: any) {
-        alert(err?.message || "Failed to archive task");
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to archive task";
+        alert(message);
     }
   };
 

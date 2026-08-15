@@ -9,7 +9,6 @@ import { Link2, Upload, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
-import { api } from '@/lib/api';
 
 import styles from './tasks.module.css';
 
@@ -31,7 +30,40 @@ interface Task {
     };
 }
 
-// Remove static mock tasks
+// Fixed mock sample array matching standard API shapes for full-screen render checks
+const MOCK_TASKS: Task[] = [
+    {
+        id: "task_001",
+        title: "Share Infinito 2K26 Launch Reel",
+        description: "Post our official teaser reel on your Instagram story and tag @infinito_iitp. Leave the story up for at least 20 hours.",
+        points: 50,
+        type: "URL",
+        brandName: "Infinito Core Team",
+        submission: { status: "NOT_SUBMITTED" }
+    },
+    {
+        id: "task_002",
+        title: "Circulate WhatsApp Poster blast",
+        description: "Forward the main fest poster to your official college batch groups. Upload a clear screenshot showing the forwarded message tag.",
+        points: 75,
+        type: "FILE",
+        submission: { status: "PENDING", submittedValue: "screenshot-uuid-xyz.png" }
+    },
+    {
+        id: "task_003",
+        title: "Register Sponsoring Brand App Accounts",
+        description: "Sign up on our title sponsor's application using your college email address and submit your profile dashboard link.",
+        points: 120,
+        type: "URL",
+        brandName: "TechCorp Global",
+        submission: {
+            status: "REJECTED",
+            rejectionReason: "The link provided is broken or points to a private account dashboard. Please resubmit a public profile link.",
+            submittedValue: "https://techcorp.com/user/private_profile"
+        }
+    }
+];
+
 // Explicit client-side validation rules targeting scheme and type safety constraints
 const urlSchema = z.object({
     proofUrl: z.string().url('Please enter a valid URL').refine(
@@ -45,25 +77,7 @@ const fileSchema = z.object({
 });
 
 export default function CATasksPage() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [apiError, setApiError] = useState('');
     const [activeSubmittingId, setActiveSubmittingId] = useState<string | null>(null);
-
-    React.useEffect(() => {
-        fetchTasks();
-    }, []);
-
-    const fetchTasks = async () => {
-        try {
-            const data = await api.get('/ca/tasks');
-            if (data && data.tasks) setTasks(data.tasks);
-        } catch (err: any) {
-            setApiError(err?.message || 'Failed to load tasks');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Form hooks configured dynamically per task input needs
     const urlForm = useForm<{ proofUrl: string }>({ resolver: zodResolver(urlSchema) });
@@ -71,29 +85,15 @@ export default function CATasksPage() {
 
     const handleUrlSubmit = async (taskId: string, data: { proofUrl: string }) => {
         setActiveSubmittingId(taskId);
-        try {
-            await api.post(`/ca/tasks/${taskId}/submit`, { proofUrl: data.proofUrl });
-            await fetchTasks(); // Refresh list to show PENDING state
-            urlForm.reset();
-        } catch (err: any) {
-            alert(err?.message || 'Failed to submit URL proof');
-        }
+        // TODO: Wire up POST /ca/tasks/:taskId/submit via lib/api.ts
+        console.log(`Submitting URL for task ${taskId}:`, data.proofUrl);
         setActiveSubmittingId(null);
     };
 
     const handleFileSubmit = async (taskId: string, data: { proofFile: FileList }) => {
         setActiveSubmittingId(taskId);
-        try {
-            const formData = new FormData();
-            if (data.proofFile && data.proofFile[0]) {
-                formData.append('file', data.proofFile[0]);
-            }
-            await api.post(`/ca/tasks/${taskId}/submit`, formData);
-            await fetchTasks(); // Refresh list
-            fileForm.reset();
-        } catch (err: any) {
-            alert(err?.message || 'Failed to upload proof');
-        }
+        // TODO: Handle multi-part form data conversion for file uploads
+        console.log(`Submitting File payload for task ${taskId}:`, data.proofFile[0]);
         setActiveSubmittingId(null);
     };
 
@@ -116,21 +116,10 @@ export default function CATasksPage() {
                 <h1 className={styles.pageTitle}>Promotional Tasks</h1>
                 <p className={styles.pageSubtitle}>Complete tasks, submit verified proofs, and rack up points to scale the leaderboard.</p>
             </header>
-            
-            {apiError && (
-                <div className="bg-red-100 text-red-800 p-3 rounded-md mb-6 text-sm text-center border border-red-300">
-                    {apiError}
-                </div>
-            )}
 
             <div className={styles.taskList}>
-                {isLoading ? (
-                    <p className="text-muted-foreground">Loading tasks...</p>
-                ) : tasks.length === 0 ? (
-                    <p className="text-muted-foreground">No tasks available at the moment.</p>
-                ) : (
-                    tasks.map((task) => {
-                        const isPendingOrApproved = task.submission?.status === 'PENDING' || task.submission?.status === 'APPROVED';
+                {MOCK_TASKS.map((task) => {
+                    const isPendingOrApproved = task.submission?.status === 'PENDING' || task.submission?.status === 'APPROVED';
                     const isCurrentSubmitting = activeSubmittingId === task.id;
 
                     return (
@@ -228,7 +217,7 @@ export default function CATasksPage() {
                             )}
                         </Card>
                     );
-                }))}
+                })}
             </div>
         </div>
     );

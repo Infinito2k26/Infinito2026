@@ -38,8 +38,9 @@ export default function LoginPage() {
             setApiError('');
             await api.post('/auth/login', data);
             router.push('/dashboard');
-        } catch (error: any) {
-            setApiError(error?.message || 'Invalid email or password');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Invalid email or password';
+            setApiError(message);
         }
     };
 
@@ -98,7 +99,7 @@ export default function LoginPage() {
 
                 <div className={styles.footer}>
                     <p className={styles.footerText}>
-                        Don't have an account?{' '}
+                        Don&apos;t have an account?{' '}
                         <Link href="/waitlist" className={styles.link}>
                             Join the Waitlist
                         </Link>

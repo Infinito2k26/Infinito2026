@@ -14,7 +14,7 @@ export default function TeamsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="p-6 flex flex-col items-center text-center justify-center min-h-[200px] border border-dashed">
             <h3 className="text-lg font-semibold text-gray-500">No Teams Yet</h3>
-            <p className="text-sm text-gray-400 mt-2">You haven't joined or created any teams.</p>
+            <p className="text-sm text-gray-400 mt-2">You haven&apos;t joined or created any teams.</p>
         </Card>
       </div>
     </div>

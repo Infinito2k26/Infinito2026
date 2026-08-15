@@ -3,7 +3,7 @@ import styles from "./button.module.css";
 import Spinner from "./spinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "ghost" | "danger";
+    variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
     size?: "sm" | "md" | "lg";
     loading?: boolean;
     children: React.ReactNode;
@@ -14,6 +14,7 @@ const VARIANT_CLASS: Record<NonNullable<ButtonProps["variant"]>, string> = {
     secondary: styles.secondary ?? "",
     ghost: styles.ghost ?? "",
     danger: styles.danger ?? "",
+    outline: styles.outline ?? "",
 };
 
 const SIZE_CLASS: Record<NonNullable<ButtonProps["size"]>, string> = {
