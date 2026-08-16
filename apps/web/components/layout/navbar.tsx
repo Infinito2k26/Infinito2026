@@ -25,12 +25,7 @@ const Navbar = () => {
                             key={label}
                             href={href} 
                             className={styles.navbar_item}
-                            onClick={(e) => {
-                                if (status) {
-                                    e.preventDefault();
-                                }
-                            }}
-                            style={status ? { opacity: 0.6, cursor: "not-allowed", display: 'flex', alignItems: 'center', gap: '4px' } : {}}
+                            style={status ? { display: 'flex', alignItems: 'center', gap: '4px' } : {}}
                         >
                             {label}
                             {status && (
@@ -67,14 +62,8 @@ const Navbar = () => {
                         key={label}
                         href={href} 
                         className={styles.mobile_menu_item} 
-                        onClick={(e) => {
-                            if (status) {
-                                e.preventDefault();
-                                return;
-                            }
-                            closeMenu();
-                        }}
-                        style={status ? { opacity: 0.6, cursor: "not-allowed", display: 'flex', alignItems: 'center', gap: '8px' } : {}}
+                        onClick={() => closeMenu()}
+                        style={status ? { display: 'flex', alignItems: 'center', gap: '8px' } : {}}
                     >
                         {label}
                         {status && (
