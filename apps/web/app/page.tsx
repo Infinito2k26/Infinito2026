@@ -13,11 +13,6 @@ export default function Home() {
           Join the biggest sports fest of Eastern India. Experience the thrill, the passion, and the infinity of sports!
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/dashboard/ca">
-                <Button variant="primary" size="lg">
-                    Go to CA Portal
-                </Button>
-            </Link>
             <Link href="/register">
                 <Button variant="secondary" size="lg">
                     Register Now

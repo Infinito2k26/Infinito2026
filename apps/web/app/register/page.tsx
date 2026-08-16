@@ -51,7 +51,7 @@ export default function RegisterWaitlistPage() {
         <div className={styles.pageWrapper}>
             <Card className={styles.registerCard}>
                 <div className={styles.header}>
-                    <h1 className={styles.title}>Registration Opens<br /> July 20th</h1>
+                    <h1 className={styles.title}>Register</h1>
                     <p className={styles.subtitle}>
                             Leave your details and you&apos;ll be emailed the moment it&apos;s live. No payment is required today.
                      </p>
