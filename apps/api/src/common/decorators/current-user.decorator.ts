@@ -5,6 +5,6 @@ import { RequestUser } from '../../auth/strategies/jwt.strategy';
 export const CurrentUser = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): RequestUser => {
     const request = ctx.switchToHttp().getRequest<Request>();
-    return request.user as RequestUser;
+    return (request as any).user as RequestUser;
   },
 );

@@ -41,7 +41,7 @@ export default function AuthGuard({
         }
 
         setIsAuthorized(true);
-      } catch (error) {
+      } catch {
         // Clear invalid token
         localStorage.removeItem('infinito_token');
         router.replace('/login');

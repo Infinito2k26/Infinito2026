@@ -22,7 +22,7 @@ export default function DashboardDispatcher() {
           // Standard user dashboard
           router.replace('/dashboard/events'); 
         }
-      } catch (error: unknown) {
+      } catch {
         // Any error fetching profile indicates invalid session
         router.replace('/login');
       }
