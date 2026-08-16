@@ -36,8 +36,20 @@ export default function LoginPage() {
     const onSubmit = async (data: LoginFormValues) => {
         try {
             setApiError('');
-            await api.post('/auth/login', data);
-            router.push('/dashboard');
+            const res = await api.post('/auth/login', data);
+            
+            if (res && res.accessToken) {
+                localStorage.setItem('infinito_token', res.accessToken);
+            }
+            
+            const role = res?.user?.role;
+            if (role === 'ADMIN') {
+                router.push('/admin');
+            } else if (role === 'CA') {
+                router.push('/dashboard/ca');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (error: any) {
             setApiError(error?.message || 'Invalid email or password');
         }

@@ -11,6 +11,7 @@ type SideItem = {
   label: string;
   icon: React.ReactNode;
   href: string;
+  status?: string;
 };
 
 const InfinityIcon = () => (
@@ -52,10 +53,10 @@ const SettingsIcon = () => (
 
 const SIDE_ITEMS: SideItem[] = [
   { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
-  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events" },
-  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams" },
-  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics" },
-  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings" },
+  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events", status: "Upcoming" },
+  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams", status: "Upcoming" },
+  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics", status: "Upcoming" },
+  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings", status: "Upcoming" },
 ];
 
 export default function Sidebar() {
@@ -86,20 +87,32 @@ export default function Sidebar() {
       {/* ── Sidebar links ── */}
       <nav className={styles.sidebarNav} >
         <ul className={styles.sidebarNavList}>
-          {SIDE_ITEMS.map(({ label, icon, href }) => {
+          {SIDE_ITEMS.map(({ label, icon, href, status }) => {
             const active = activeLabel === label;
             return (
               <li key={label}>
                 <Link
                   href={href}
                   className={`${styles.sidebarLink} ${active ? styles.sidebarLinkActive : ""}`}
-                  onClick={() => setActiveLabel(label)}
+                  onClick={(e) => {
+                    if (status) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setActiveLabel(label);
+                  }}
+                  style={status ? { opacity: 0.6, cursor: "not-allowed" } : {}}
                 >
                   <span className={styles.sidebarIcon}>
                     {icon}
                   </span>
                   <span className={styles.sidebarLabel}>{label}</span>
-                  {active && (
+                  {status && (
+                    <span style={{ marginLeft: "auto", fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
+                      {status}
+                    </span>
+                  )}
+                  {active && !status && (
                     <span className={styles.activePip} />
                   )}
                 </Link>

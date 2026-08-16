@@ -2,9 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-// Adjust these imports based on your actual file structure
-// import api from '@/lib/api'; 
+import { api } from '@/lib/api';
 import Spinner from '@/components/ui/spinner';
 
 export default function DashboardDispatcher() {
@@ -13,29 +11,19 @@ export default function DashboardDispatcher() {
   useEffect(() => {
     const checkRoleAndRedirect = async () => {
       try {
-        // Hit the endpoint specified in the routing table
-        // const response = await api.get('/ca/me');
-        
-        // TODO: Replace this mock logic with your actual response evaluation.
-        // If the backend returns a 200 with the CA profile, they are a CA.
-        const isCampusAmbassador = true; 
+        const data = await api.get('/auth/me');
+        const user = data.profile || data;
 
-        if (isCampusAmbassador) {
-          // Use replace() instead of push() so the dispatcher page isn't left in the browser history back-stack
+        if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
+          router.replace('/admin');
+        } else if (user?.role === 'CA') {
           router.replace('/dashboard/ca');
         } else {
-          // Route standard users to the default event dashboard
-          router.replace('/dashboard/general'); 
+          // Standard user dashboard
+          router.replace('/dashboard/events'); 
         }
       } catch (error) {
-        const err = error as { response?: { status?: number } };
-        // If the endpoint throws a 403 (Not a CA) or 401 (Unauthorized)
-        if (err.response?.status === 401) {
-          router.replace('/login');
-        } else {
-          // Standard user fallback if /ca/me strictly rejects non-CAs
-          router.replace('/dashboard/general');
-        }
+        router.replace('/login');
       }
     };
 
@@ -51,7 +39,6 @@ export default function DashboardDispatcher() {
       justifyContent: 'center',
       backgroundColor: 'var(--color-bg-primary)' 
     }}>
-      {/* Reusing your existing Spinner primitive as mandated by the design rules */}
       <Spinner size="lg" />
     </div>
   );
