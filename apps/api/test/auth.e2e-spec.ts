@@ -7,6 +7,24 @@ import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from './../src/prisma/prisma.service';
+
+type AssignmentListingResponse = {
+  data: {
+    task: {
+      id: string;
+    };
+    assignments: Array<{
+      status: string;
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+};
+
 import type {
   SuccessResponse,
   ErrorResponse,
@@ -456,171 +474,170 @@ describe('CA onboarding RBAC (e2e)', () => {
       .expect(201);
   });
 
-it('rejects invalid proof uploads', async () => {
-  const caEmail = `${randomUUID()}@infinito.dev`;
-  const password = 'a-strong-password';
+  it('rejects invalid proof uploads', async () => {
+    const caEmail = `${randomUUID()}@infinito.dev`;
+    const password = 'a-strong-password';
 
-  // Create CA user.
-  await request(app.getHttpServer())
-    .post('/api/auth/register')
-    .send({
-      email: caEmail,
-      password,
-      name: 'E2E Upload CA',
-      consent: true,
-    })
-    .expect(201);
+    // Create CA user.
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: caEmail,
+        password,
+        name: 'E2E Upload CA',
+        consent: true,
+      })
+      .expect(201);
 
-  await prisma.user.update({
-    where: { email: caEmail },
-    data: { role: UserRole.CAMPUS_AMBASSADOR },
+    await prisma.user.update({
+      where: { email: caEmail },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
+
+    // Login.
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: caEmail,
+        password,
+      })
+      .expect(200);
+
+    const token = (
+      login.body as SuccessResponse<{
+        accessToken: string;
+        user: UserProfile;
+      }>
+    ).data.accessToken;
+
+    // Create CA profile.
+    await request(app.getHttpServer())
+      .post('/api/ca/onboard')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ college: 'IIT Patna' })
+      .expect(201);
+
+    // Create a task directly in the test DB.
+    const task = await prisma.caTask.create({
+      data: {
+        title: 'E2E Upload Test Task',
+        description: 'Task used for upload validation tests',
+        category: 'SOCIAL_MEDIA',
+        source: 'MODERATOR',
+        points: 10,
+        proofType: 'SCREENSHOT',
+      },
+    });
+
+    // 1. Bad MIME type -> 400.
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', Buffer.from('this is not an image'), {
+        filename: 'proof.txt',
+        contentType: 'text/plain',
+      })
+      .expect(400);
+
+    // 2. Oversized file (> 5 MB) -> 400.
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', Buffer.alloc(5 * 1024 * 1024 + 1), {
+        filename: 'large.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(413);
+
+    // 3. Renamed executable -> 400.
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('file', Buffer.from('fake executable content'), {
+        filename: 'malware.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(400);
   });
 
-  // Login.
-  const login = await request(app.getHttpServer())
-    .post('/api/auth/login')
-    .send({
-      email: caEmail,
-      password,
-    })
-    .expect(200);
+  it('rejects unsafe proof URL schemes', async () => {
+    const caEmail = `${randomUUID()}@infinito.dev`;
+    const password = 'a-strong-password';
 
-  const token = (
-    login.body as SuccessResponse<{
-      accessToken: string;
-      user: UserProfile;
-    }>
-  ).data.accessToken;
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: caEmail,
+        password,
+        name: 'E2E URL CA',
+        consent: true,
+      })
+      .expect(201);
 
-  // Create CA profile.
-  await request(app.getHttpServer())
-    .post('/api/ca/onboard')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ college: 'IIT Patna' })
-    .expect(201);
+    await prisma.user.update({
+      where: { email: caEmail },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
 
-  // Create a task directly in the test DB.
-  const task = await prisma.caTask.create({
-    data: {
-      title: 'E2E Upload Test Task',
-      description: 'Task used for upload validation tests',
-      category: 'SOCIAL_MEDIA',
-      source: 'MODERATOR',
-      points: 10,
-      proofType: 'SCREENSHOT',
-    },
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: caEmail,
+        password,
+      })
+      .expect(200);
+
+    const token = (
+      login.body as SuccessResponse<{
+        accessToken: string;
+        user: UserProfile;
+      }>
+    ).data.accessToken;
+
+    await request(app.getHttpServer())
+      .post('/api/ca/onboard')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ college: 'IIT Patna' })
+      .expect(201);
+
+    const task = await prisma.caTask.create({
+      data: {
+        title: 'E2E URL Test Task',
+        description: 'Task used for URL validation',
+        category: 'SOCIAL_MEDIA',
+        source: 'MODERATOR',
+        points: 10,
+        proofType: 'URL_SUBMISSION',
+      },
+    });
+
+    // javascript: -> 400
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        proofUrl: 'javascript:alert(1)',
+      })
+      .expect(400);
+
+    // data: -> 400
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        proofUrl: 'data:text/html,<script>alert(1)</script>',
+      })
+      .expect(400);
+
+    // Valid https URL -> accepted
+    await request(app.getHttpServer())
+      .post(`/api/ca/tasks/${task.id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        proofUrl: 'https://example.com/proof',
+      })
+      .expect(201);
   });
-
-  // 1. Bad MIME type -> 400.
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .attach('file', Buffer.from('this is not an image'), {
-      filename: 'proof.txt',
-      contentType: 'text/plain',
-    })
-    .expect(400);
-
-  // 2. Oversized file (> 5 MB) -> 400.
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .attach('file', Buffer.alloc(5 * 1024 * 1024 + 1), {
-      filename: 'large.jpg',
-      contentType: 'image/jpeg',
-    })
-    .expect(413);
-
-  // 3. Renamed executable -> 400.
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .attach('file', Buffer.from('fake executable content'), {
-      filename: 'malware.jpg',
-      contentType: 'image/jpeg',
-    })
-    .expect(400);
-});
-
-it('rejects unsafe proof URL schemes', async () => {
-  const caEmail = `${randomUUID()}@infinito.dev`;
-  const password = 'a-strong-password';
-
-  await request(app.getHttpServer())
-    .post('/api/auth/register')
-    .send({
-      email: caEmail,
-      password,
-      name: 'E2E URL CA',
-      consent: true,
-    })
-    .expect(201);
-
-  await prisma.user.update({
-    where: { email: caEmail },
-    data: { role: UserRole.CAMPUS_AMBASSADOR },
-  });
-
-  const login = await request(app.getHttpServer())
-    .post('/api/auth/login')
-    .send({
-      email: caEmail,
-      password,
-    })
-    .expect(200);
-
-  const token = (
-    login.body as SuccessResponse<{
-      accessToken: string;
-      user: UserProfile;
-    }>
-  ).data.accessToken;
-
-  await request(app.getHttpServer())
-    .post('/api/ca/onboard')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ college: 'IIT Patna' })
-    .expect(201);
-
-  const task = await prisma.caTask.create({
-    data: {
-      title: 'E2E URL Test Task',
-      description: 'Task used for URL validation',
-      category: 'SOCIAL_MEDIA',
-      source: 'MODERATOR',
-      points: 10,
-      proofType: 'URL_SUBMISSION',
-    },
-  });
-
-  // javascript: -> 400
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      proofUrl: 'javascript:alert(1)',
-    })
-    .expect(400);
-
-  // data: -> 400
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      proofUrl: 'data:text/html,<script>alert(1)</script>',
-    })
-    .expect(400);
-
-  // Valid https URL -> accepted
-  await request(app.getHttpServer())
-    .post(`/api/ca/tasks/${task.id}/submit`)
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      proofUrl: 'https://example.com/proof',
-    })
-    .expect(201);
-});
-
 });
 
 describe('Admin CA assignment listing (e2e)', () => {
@@ -737,54 +754,54 @@ describe('Admin CA assignment listing (e2e)', () => {
     });
 
     // Create 3 assignments with different statuses.
-// Create two additional CA users so the same task
-// can have multiple assignments.
-const ca2Email = `${randomUUID()}@infinito.dev`;
-const ca3Email = `${randomUUID()}@infinito.dev`;
+    // Create two additional CA users so the same task
+    // can have multiple assignments.
+    const ca2Email = `${randomUUID()}@infinito.dev`;
+    const ca3Email = `${randomUUID()}@infinito.dev`;
 
-for (const [email, name] of [
-  [ca2Email, 'E2E CA 2'],
-  [ca3Email, 'E2E CA 3'],
-] as const) {
-  await request(app.getHttpServer())
-    .post('/api/auth/register')
-    .send({
-      email,
-      password,
-      name,
-      consent: true,
-    })
-    .expect(201);
-}
+    for (const [email, name] of [
+      [ca2Email, 'E2E CA 2'],
+      [ca3Email, 'E2E CA 3'],
+    ] as const) {
+      await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email,
+          password,
+          name,
+          consent: true,
+        })
+        .expect(201);
+    }
 
-const ca2User = await prisma.user.update({
-  where: { email: ca2Email },
-  data: { role: UserRole.CAMPUS_AMBASSADOR },
-});
+    const ca2User = await prisma.user.update({
+      where: { email: ca2Email },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
 
-const ca3User = await prisma.user.update({
-  where: { email: ca3Email },
-  data: { role: UserRole.CAMPUS_AMBASSADOR },
-});
+    const ca3User = await prisma.user.update({
+      where: { email: ca3Email },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
 
-const ca2 = await prisma.cAProfile.create({
-  data: {
-    userId: ca2User.id,
-    refCode: `CA-E2E-${randomUUID().slice(0, 8)}`,
-    assignedCollegeName: 'IIT Delhi',
-  },
-});
+    const ca2 = await prisma.cAProfile.create({
+      data: {
+        userId: ca2User.id,
+        refCode: `CA-E2E-${randomUUID().slice(0, 8)}`,
+        assignedCollegeName: 'IIT Delhi',
+      },
+    });
 
-const ca3 = await prisma.cAProfile.create({
-  data: {
-    userId: ca3User.id,
-    refCode: `CA-E2E-${randomUUID().slice(0, 8)}`,
-    assignedCollegeName: 'IIT Bombay',
-  },
-});
+    const ca3 = await prisma.cAProfile.create({
+      data: {
+        userId: ca3User.id,
+        refCode: `CA-E2E-${randomUUID().slice(0, 8)}`,
+        assignedCollegeName: 'IIT Bombay',
+      },
+    });
 
-// Create 3 assignments for the same task,
-// each belonging to a different CA.
+    // Create 3 assignments for the same task,
+    // each belonging to a different CA.
     await prisma.cATaskAssignment.createMany({
       data: [
         {
@@ -827,18 +844,21 @@ const ca3 = await prisma.cAProfile.create({
       })
       .expect(200);
 
-      expect(response.body.data.task.id).toBe(task.id);
-      expect(response.body.data.assignments).toHaveLength(2);
+    const responseBody = response.body as AssignmentListingResponse;
 
-      expect(response.body.data.pagination).toEqual(
-        expect.objectContaining({
-          page: 1,
-          limit: 2,
-          total: 3,
-          totalPages: 2,
-        }),
-      );
-          const page2 = await request(app.getHttpServer())
+    expect(responseBody.data.task.id).toBe(task.id);
+    expect(responseBody.data.assignments).toHaveLength(2);
+
+    expect(responseBody.data.pagination).toEqual(
+      expect.objectContaining({
+        page: 1,
+        limit: 2,
+        total: 3,
+        totalPages: 2,
+      }),
+    );
+
+    const page2 = await request(app.getHttpServer())
       .get(`/api/admin/ca-tasks/${task.id}/assignments`)
       .set('Authorization', `Bearer ${adminToken}`)
       .query({
@@ -847,9 +867,11 @@ const ca3 = await prisma.cAProfile.create({
       })
       .expect(200);
 
-    expect(page2.body.data.assignments).toHaveLength(1);
+    const page2Body = page2.body as AssignmentListingResponse;
 
-    expect(page2.body.data.pagination).toEqual(
+    expect(page2Body.data.assignments).toHaveLength(1);
+
+    expect(page2Body.data.pagination).toEqual(
       expect.objectContaining({
         page: 2,
         limit: 2,
@@ -867,8 +889,11 @@ const ca3 = await prisma.cAProfile.create({
       })
       .expect(200);
 
-    expect(filtered.body.data.assignments).toHaveLength(1);
-    expect(filtered.body.data.assignments[0].status).toBe('PENDING');
+    const filteredBody = filtered.body as AssignmentListingResponse;
+
+    expect(filteredBody.data.assignments).toHaveLength(1);
+    expect(filteredBody.data.assignments[0].status).toBe('PENDING');
+
     // Invalid status -> 400.
     await request(app.getHttpServer())
       .get(`/api/admin/ca-tasks/${task.id}/assignments`)
@@ -887,7 +912,9 @@ const ca3 = await prisma.cAProfile.create({
       })
       .expect(200);
 
-    expect(capped.body.data.pagination.limit).toBe(100);
+    const cappedBody = capped.body as AssignmentListingResponse;
+
+    expect(cappedBody.data.pagination.limit).toBe(100);
   });
 });
 
