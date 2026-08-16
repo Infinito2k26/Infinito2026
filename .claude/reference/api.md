@@ -127,7 +127,7 @@ Response `data` shape:
 
 | Method | Path                                      | Access        | Purpose                                          |
 | ------ | ----------------------------------------- | ------------- | ------------------------------------------------ |
-| POST   | `/ca/onboard`                             | Authenticated | Onboard as a Campus Ambassador                   |
+| POST   | `/ca/onboard`                             | CAMPUS_AMBASSADOR | Onboard as a Campus Ambassador                   |
 | POST   | `/leads/waitlist`                         | Public        | Capture waitlist lead pre-registration           |
 | POST   | `/ca/referral/click`                      | Public        | Track referral link clicks asynchronously        |
 | GET    | `/leaderboard/ca`                         | Public        | Get ranked CA leaderboard                        |
@@ -139,8 +139,28 @@ Response `data` shape:
 | GET    | `/admin/ca-tasks`                         | Admin         | List CA tasks                                    |
 | POST   | `/admin/ca-tasks`                         | Admin         | Create a CA task                                 |
 | PATCH  | `/admin/ca-tasks/:id`                     | Admin         | Soft-delete or update CA task                    |
-| PATCH  | `/admin/ca-task-assignments/:id/verify`   | Admin         | Verify CA task submission (compare-and-swap lock)|
+| PATCH  | `/admin/ca-task-assignments/:id/verify`   | Admin         | Verify CA task submission
+(compare-and-swap lock)|
+| GET    | `/admin/ca-tasks/:id/assignments`         | Admin         | List CA task assignments                         |
 
+
+#### CA Task Proof Rules
+
+- Uploaded proof files are limited to 5 MB.
+- Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`.
+- URL proofs allow only `http:` and `https:` schemes.
+- Internal proof files are stored under `ca-proof/` in private S3-compatible storage.
+- Resubmission is allowed only while the assignment status is `PENDING`.
+
+#### CA Task Verification
+
+`PATCH /admin/ca-task-assignments/:id/verify`
+
+- Only `ADMIN` and `SUPER_ADMIN` can verify task assignments.
+- The assignment must currently be `SUBMITTED`.
+- Final status can be `VERIFIED` or `REJECTED`.
+- Verification uses an atomic compare-and-set update.
+- A concurrent or already-processed assignment returns `409 Conflict`.
 ## 4. Contract Rules
 
 - DTOs must reject unknown fields.

@@ -116,7 +116,7 @@ sequenceDiagram
   CA->>API: Submit Task Proof
   API->>DB: Status -> SUBMITTED
   Admin->>API: Verify Proof
-  API->>DB: Compare-and-swap (WHERE status = PENDING)
+  API->>DB: Compare-and-swap (WHERE status = SUBMITTED)
   API-->>Admin: 409 Conflict if race condition
 ```
 

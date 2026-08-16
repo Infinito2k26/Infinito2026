@@ -198,7 +198,7 @@ export class AdminService {
     const result = await this.prisma.cATaskAssignment.updateMany({
       where: {
         id: assignmentId,
-        status: 'PENDING',
+        status: 'SUBMITTED',
       },
       data: {
         status: dto.status,
