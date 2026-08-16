@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,11 +10,10 @@ import { useSearchParams } from 'next/navigation';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
-import { api } from '@/lib/api';
 
 import styles from './register.module.css';
 
-const registerSchema = z.object({
+const waitlistSchema = z.object({
     name: z.string().min(2, 'Full name is required'),
     email: z.string().email('Please enter a valid email address'),
     phone: z.string().min(10, 'Please enter a valid phone number'),
@@ -24,83 +23,39 @@ const registerSchema = z.object({
     }),
 });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type WaitlistFormValues = z.infer<typeof waitlistSchema>;
 
-export default function RegisterPage() {
+export default function RegisterWaitlistPage() {
     const searchParams = useSearchParams();
-    const refCode = searchParams.get('ref');
-
-    const [successMessage, setSuccessMessage] = useState('');
-    const [apiError, setApiError] = useState('');
-
-    React.useEffect(() => {
-        if (refCode) {
-            api.post('/ca/referral/click', { referralCode: refCode }).catch(console.error);
-        }
-    }, [refCode]);
+    const referralCode = searchParams.get('ref');
 
     const {
         register,
         handleSubmit,
+       // setValue,
         formState: { errors, isSubmitting },
-    } = useForm<RegisterFormValues>({
-        resolver: zodResolver(registerSchema),
+    } = useForm<WaitlistFormValues>({
+        resolver: zodResolver(waitlistSchema),
     });
 
-    const onSubmit = async (data: RegisterFormValues) => {
-        try {
-            setApiError('');
-            setSuccessMessage('');
-            
-            const payload = {
-                email: data.email,
-                name: data.name,
-                phone: data.phone,
-                college: data.college,
-            };
-            
-            const response = await api.post('/auth/register', payload);
-            setSuccessMessage(response?.message || 'OTP sent to email for verification');
-        } catch (error: any) {
-            setApiError(error?.message || 'An error occurred during registration.');
-        }
+    const onSubmit = async (data: WaitlistFormValues) => {
+        const payload = {
+            ...data,
+            referralCode: referralCode || null,
+        };
+        // TODO: Wire up POST /leads/waitlist via lib/api.ts
+        console.log('Waitlist payload:', payload);
     };
-
-    if (successMessage) {
-        return (
-            <div className={styles.pageWrapper}>
-                <Card className={styles.registerCard}>
-                    <div className={styles.header}>
-                        <h1 className={styles.title}>Registration Successful</h1>
-                        <p className={styles.subtitle}>{successMessage}</p>
-                    </div>
-                    <div className={styles.footer}>
-                        <p className={styles.footerText}>
-                            <Link href="/login" className={styles.link}>
-                                Go to Sign In
-                            </Link>
-                        </p>
-                    </div>
-                </Card>
-            </div>
-        );
-    }
 
     return (
         <div className={styles.pageWrapper}>
             <Card className={styles.registerCard}>
                 <div className={styles.header}>
-                    <h1 className={styles.title}>Create an Account</h1>
+                    <h1 className={styles.title}>Registration Opens<br /> July 20th</h1>
                     <p className={styles.subtitle}>
-                        Register for Infinito 2K26
-                    </p>
+                            Leave your details and you&apos;ll be emailed the moment it&apos;s live. No payment is required today.
+                     </p>
                 </div>
-
-                {apiError && (
-                    <div className={styles.errorAlert}>
-                        {apiError}
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>
@@ -131,7 +86,7 @@ export default function RegisterPage() {
                         <Input
                             id="phone"
                             type="tel"
-                            placeholder="9876543210"
+                            placeholder="+91 "
                             disabled={isSubmitting}
                             error={errors.phone?.message}
                             {...register('phone')}
@@ -175,7 +130,7 @@ export default function RegisterPage() {
                         disabled={isSubmitting}
                         loading={isSubmitting}
                     >
-                        Register
+                        Join the Waitlist
                     </Button>
                 </form>
 

@@ -1,8 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-interface RequestConfig extends Omit<RequestInit, 'body'> {
-    body?: unknown;
-}
+type RequestConfig = Omit<RequestInit, 'body'> & { body?: unknown };
 
 class ApiError extends Error {
     status: number;
@@ -28,52 +26,38 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
         },
     };
 
-    if (body) {
-        config.body = body instanceof FormData ? body : JSON.stringify(body);
+    if (body && !(body instanceof FormData)) {
+        config.body = JSON.stringify(body);
+    } else if (body instanceof FormData) {
+        config.body = body;
     }
 
-    try {
-        // snd request
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    // snd request
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-        if (response.status === 204) return null;
+    if (response.status === 204) return null;
 
-        const data = await response.json().catch(() => null);
+    const data = await response.json().catch(() => null);
 
-        if (response.status === 401) {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('infinito_token');
-                // Force redirect
-                window.location.href = '/login';
-            }
-            throw new ApiError(401, data, 'Session expired. Please log in again.');
+    if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('infinito_token');
+            // Force redirect
+            window.location.href = '/login';
         }
-
-        // other backend errors
-        if (!response.ok) {
-            throw new ApiError(
-                response.status,
-                data,
-                data?.message || data?.error || 'An unexpected error occurred'
-            );
-        }
-
-        return data;
-    } catch (error) {
-        if (error instanceof ApiError) {
-            throw error;
-        }
-
-        if (error instanceof Error && error.name === 'TypeError' && error.message === 'Failed to fetch') {
-            throw new ApiError(
-                503,
-                null,
-                'Cannot connect to the server. Please ensure the backend is running.'
-            );
-        }
-
-        throw new ApiError(500, null, 'An unexpected network error occurred.');
+        throw new ApiError(401, data, 'Session expired. Please log in again.');
     }
+
+    // other backend errors
+    if (!response.ok) {
+        throw new ApiError(
+            response.status,
+            data,
+            data?.message || data?.error || 'An unexpected error occurred'
+        );
+    }
+
+    return data;
 }
 
 export const api = {

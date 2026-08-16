@@ -36,8 +36,9 @@ export default function WaitlistPage() {
             setApiError('');
             await api.post('/leads/waitlist', data);
             setIsSuccess(true);
-        } catch (error: any) {
-            setApiError(error?.message || 'Failed to join waitlist');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to join waitlist';
+            setApiError(message);
         }
     };
 
