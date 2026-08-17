@@ -37,3 +37,5 @@ yarn-error.log*
 .DS_Store
 *.pem
 *.zip
+apps/api/prisma/seed.js
+apps/api/test-prisma.ts

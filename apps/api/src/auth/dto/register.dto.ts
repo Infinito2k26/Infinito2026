@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -25,4 +26,7 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   college?: string;
+
+  @IsBoolean()
+  consent!: boolean;
 }
