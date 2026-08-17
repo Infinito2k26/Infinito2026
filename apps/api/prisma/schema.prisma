@@ -14,6 +14,7 @@ enum UserRole {
   MODERATOR
   VOLUNTEER
   CAMPUS_AMBASSADOR
+  BRAND         // scoped login for a sponsor; sees only its own Brand's tasks
   PARTICIPANT
 }
 
@@ -142,6 +143,11 @@ enum TaskStatus {
   REJECTED
 }
 
+enum RecordStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 
 //--------- MODELS ---------------
 
@@ -155,12 +161,14 @@ model User {
   role            UserRole  @default(PARTICIPANT)
   college         String?
   isIITP          Boolean   @default(false)
+  brandId         String?   @db.Uuid // set only when role = BRAND; scopes login to one sponsor
   iitpEmail       String?   @unique // .iitp.ac.in email confirmed via Microsoft OAuth
   isIITPVerified  Boolean   @default(false)
   isEmailVerified Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
+  consentedAt     DateTime?
 
   // Relations
   captainedTeams     Team[]              @relation("TeamCaptain")
@@ -171,8 +179,10 @@ model User {
   rulebooksUploaded  EventRulebook[]     @relation("RulebookUploader")
   taskVerifications  CATaskAssignment[]  @relation("TaskVerifier")
   participants       Participant[]       @relation("UserParticipant")
+  brand              Brand?              @relation("BrandUsers", fields: [brandId], references: [id])
 
   @@index([isIITP, role])
+  @@index([brandId])
 }
 
 model Event {
@@ -305,6 +315,7 @@ model CAProfile {
   refCode             String   @unique // e.g. "CA0042"
   assignedCollegeName String
   referralCount       Int      @default(0)
+  clickCount          Int      @default(0)
   totalPoints         Int      @default(0)
   rank                Int?     // refreshed every 15 min from Redis cache
   isActive            Boolean  @default(true)
@@ -317,6 +328,10 @@ model CAProfile {
   socialReferrals     SocialReferral[]
   referralConversions ReferralConversion[]
   referredRegistrations Registration[]   @relation("ReferredRegistrations")
+
+  @@index([isActive])
+  @@index([assignedCollegeName]) // admin filter/search by college
+  @@index([totalPoints])         // DB-level leaderboard fallback if Redis cache is cold
 }
 
 model SocialPlatformConfig {
@@ -358,6 +373,7 @@ model CASocialAccount {
   platform  SocialPlatformConfig @relation(fields: [platformId], references: [id])
 
   @@unique([caId, platformId])
+  @@index([platformId]) // "who has connected Instagram" style admin lookups
 }
 
 model Brand {
@@ -367,10 +383,14 @@ model Brand {
   contactName  String?
   contactEmail String?
   isActive     Boolean  @default(true)
+  status       RecordStatus @default(ACTIVE)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   tasks CaTask[]
+  users User[]  @relation("BrandUsers")
+
+  @@index([isActive])
 }
 
 model CaTask {
@@ -388,6 +408,7 @@ model CaTask {
   deadline         DateTime?
   proofType        ProofType    @default(SCREENSHOT)
   isActive         Boolean      @default(true)
+  status           RecordStatus @default(ACTIVE)
   eventId          String?      @db.Uuid
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -397,6 +418,11 @@ model CaTask {
   event       Event?                @relation(fields: [eventId], references: [id])
   assignments CATaskAssignment[]
   referrals   SocialReferral[]
+
+  @@index([source, isActive]) // moderator/brand task-board filtering
+  @@index([brandId])          // sponsor reporting: "our tasks"
+  @@index([eventId])
+  @@index([platformId])
 }
 
 model CATaskAssignment {
@@ -404,6 +430,7 @@ model CATaskAssignment {
   caId          String     @db.Uuid
   taskId        String     @db.Uuid
   status        TaskStatus @default(PENDING)
+  rejectionReason String?
   proofUrl      String?
   proofNote     String?
   fetchedStats  Json?      // API-fetched metrics at time of verification (Phase 2)
@@ -411,12 +438,17 @@ model CATaskAssignment {
   submittedAt   DateTime?
   verifiedAt    DateTime?
   verifiedById  String?    @db.Uuid
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   caProfile  CAProfile @relation(fields: [caId], references: [id])
   task       CaTask    @relation(fields: [taskId], references: [id])
   verifiedBy User?     @relation("TaskVerifier", fields: [verifiedById], references: [id])
 
   @@unique([caId, taskId])
+  @@index([status])         // admin verification queue: all PENDING/SUBMITTED
+  @@index([caId, status])   // CA's own dashboard: my tasks by status
+  @@index([taskId, status]) // brand reporting: who completed this task
 }
 
 model SocialReferral {
@@ -496,6 +528,8 @@ model ReferralConversion {
 
   caProfile    CAProfile    @relation(fields: [caId], references: [id])
   registration Registration @relation(fields: [registrationId], references: [id])
+
+  @@index([caId]) // CA Overview Panel: registrations driven, live count
 }
 
 model Payment {
@@ -551,3 +585,17 @@ model ScanLog {
   @@index([gate, direction, createdAt])
 }
 
+model CaReferralLead {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  email          String
+  phone          String
+  college        String
+  referralCode   String?
+  createdAt      DateTime  @default(now())
+  consentedAt    DateTime?
+  convertedAt    DateTime?
+  registrationId String?   @db.Uuid
+
+  @@map("ca_referral_leads")
+}

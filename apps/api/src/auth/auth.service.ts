@@ -1,20 +1,33 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import { ConfigService } from '@nestjs/config';
+
 import { JwtService } from '@nestjs/jwt';
+
 import type { JwtSignOptions } from '@nestjs/jwt';
+
 import { User } from '@prisma/client';
+
 import * as bcrypt from 'bcrypt';
+
 import { createHash, randomUUID } from 'crypto';
+
 import { Env } from '../config/env.schema';
+
 import { PrismaService } from '../prisma/prisma.service';
+
 import { LoginDto } from './dto/login.dto';
+
 import { RegisterDto } from './dto/register.dto';
+
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
+
 import type { RefreshTokenStore } from './refresh-token-store.interface';
 
 export interface UserProfile {
@@ -61,11 +74,17 @@ export class AuthService {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
+
     if (existing) {
       throw new ConflictException('Email is already registered');
     }
 
+    if (dto.consent !== true) {
+      throw new BadRequestException('Consent is required');
+    }
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -73,6 +92,7 @@ export class AuthService {
         name: dto.name,
         phone: dto.phone,
         college: dto.college,
+        consentedAt: new Date(),
       },
     });
 
@@ -83,6 +103,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
+
     if (
       !user?.passwordHash ||
       !(await bcrypt.compare(dto.password, user.passwordHash))
@@ -96,10 +117,12 @@ export class AuthService {
 
   async refresh(refreshToken: string): Promise<TokenPair> {
     const payload = await this.verifyRefreshToken(refreshToken);
+
     const valid = await this.refreshStore.verify(
       payload.sub,
       hashToken(refreshToken),
     );
+
     if (!valid) {
       throw new UnauthorizedException('Refresh token has been revoked');
     }
@@ -107,6 +130,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
+
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
@@ -120,10 +144,14 @@ export class AuthService {
   }
 
   async me(userId: string): Promise<UserProfile> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
+
     return toProfile(user);
   }
 
@@ -145,6 +173,7 @@ export class AuthService {
     const refreshExpiry = this.config.get('JWT_REFRESH_EXPIRY', {
       infer: true,
     }) as JwtSignOptions['expiresIn'];
+
     const refreshToken = await this.jwt.signAsync(
       { sub: user.id, jti: randomUUID() },
       {
@@ -154,7 +183,9 @@ export class AuthService {
     );
 
     const { exp } = this.jwt.decode<{ exp: number }>(refreshToken);
+
     const refreshTokenExpiresAt = new Date(exp * 1000);
+
     await this.refreshStore.save(
       user.id,
       hashToken(refreshToken),
