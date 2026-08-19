@@ -9,27 +9,32 @@ export const revalidate = 900;
 
 interface LeaderboardEntry {
     rank: number;
-    ambassadorName: string;
+    id: string;
+    name: string;
     college: string;
-    points: number;
-    clicks: number;
-    verifiedSignups: number;
+    totalPoints: number;
+    clickCount: number;
+    referralCount: number;
 }
 
-// Mock data matching the GET /leaderboard/ca response shape
-const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-    { rank: 1, ambassadorName: "Rahul Sharma", college: "IIT Delhi", points: 2450, clicks: 840, verifiedSignups: 42 },
-    { rank: 2, ambassadorName: "Priya Singh", college: "NIT Warangal", points: 2100, clicks: 610, verifiedSignups: 35 },
-    { rank: 3, ambassadorName: "Aman Gupta", college: "BITS Pilani", points: 1950, clicks: 750, verifiedSignups: 28 },
-    { rank: 4, ambassadorName: "Sneha Reddy", college: "VIT Vellore", points: 1600, clicks: 420, verifiedSignups: 21 },
-    { rank: 5, ambassadorName: "Vikram Malhotra", college: "DTU", points: 1250, clicks: 315, verifiedSignups: 15 },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/leaderboard/ca`, { next: { revalidate: 900 } });
+        if (!response.ok) return [];
+        const body = await response.json();
+        return body?.data ?? [];
+    } catch {
+        // The API may be unreachable during build-time prerendering (e.g. CI, or a
+        // cold deploy) — degrade to an empty board rather than failing the build.
+        // The next ISR revalidation (15 min) will pick up real data once it's up.
+        return [];
+    }
+}
 
 export default async function PublicLeaderboardPage() {
-    // TODO: Replace with direct server-side fetch from the NestJS API
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leaderboard/ca`, { next: { revalidate: 900 } });
-    // const data = await response.json();
-    const data = MOCK_LEADERBOARD;
+    const data = await fetchLeaderboard();
 
     return (
         <div className={styles.pageWrapper}>
@@ -66,7 +71,7 @@ export default async function PublicLeaderboardPage() {
                             </thead>
                             <tbody>
                                 {data.map((entry) => (
-                                    <tr key={entry.rank} className={styles.row}>
+                                    <tr key={entry.id} className={styles.row}>
                                         <td className={styles.tdRank}>
                                             <span className={`${styles.rankBadge} ${entry.rank <= 3 ? styles[`rank${entry.rank}`] : ''}`}>
                                                 {entry.rank}
@@ -74,13 +79,13 @@ export default async function PublicLeaderboardPage() {
                                         </td>
                                         <td className={styles.tdName}>
                                             <div className={styles.nameWrapper}>
-                                                <span className={styles.ambassadorName}>{entry.ambassadorName}</span>
+                                                <span className={styles.ambassadorName}>{entry.name}</span>
                                                 <span className={styles.collegeName}>{entry.college}</span>
                                             </div>
                                         </td>
-                                        <td className={styles.tdMetrics}>{entry.clicks}</td>
-                                        <td className={styles.tdMetrics}>{entry.verifiedSignups}</td>
-                                        <td className={styles.tdPoints}>{entry.points}</td>
+                                        <td className={styles.tdMetrics}>{entry.clickCount}</td>
+                                        <td className={styles.tdMetrics}>{entry.referralCount}</td>
+                                        <td className={styles.tdPoints}>{entry.totalPoints}</td>
                                     </tr>
                                 ))}
                             </tbody>

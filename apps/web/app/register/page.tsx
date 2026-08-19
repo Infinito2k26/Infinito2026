@@ -10,8 +10,15 @@ import { useSearchParams } from 'next/navigation';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 import styles from './register.module.css';
+
+function readCaRefCookie(): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(/(?:^|; )ca_ref=([^;]*)/);
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
 
 const waitlistSchema = z.object({
     name: z.string().min(2, 'Full name is required'),
@@ -27,24 +34,32 @@ type WaitlistFormValues = z.infer<typeof waitlistSchema>;
 
 export default function RegisterWaitlistPage() {
     const searchParams = useSearchParams();
-    const referralCode = searchParams.get('ref');
+    const [apiError, setApiError] = React.useState('');
+    const [isSuccess, setIsSuccess] = React.useState(false);
 
     const {
         register,
         handleSubmit,
-       // setValue,
         formState: { errors, isSubmitting },
     } = useForm<WaitlistFormValues>({
         resolver: zodResolver(waitlistSchema),
     });
 
     const onSubmit = async (data: WaitlistFormValues) => {
+        const referralCode = searchParams.get('ref') || readCaRefCookie();
         const payload = {
             ...data,
-            referralCode: referralCode || null,
+            referralCode: referralCode || undefined,
         };
-        // TODO: Wire up POST /leads/waitlist via lib/api.ts
-        console.log('Waitlist payload:', payload);
+
+        try {
+            setApiError('');
+            await api.post('/leads/waitlist', payload);
+            setIsSuccess(true);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to join the waitlist';
+            setApiError(message);
+        }
     };
 
     return (
@@ -57,6 +72,19 @@ export default function RegisterWaitlistPage() {
                      </p>
                 </div>
 
+                {isSuccess && (
+                    <div className={styles.successAlert}>
+                        Thank you! You have been added to the waitlist. We will email you when registration opens.
+                    </div>
+                )}
+
+                {apiError && (
+                    <div className={styles.errorAlert}>
+                        {apiError}
+                    </div>
+                )}
+
+                {!isSuccess && (
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>
                         <label htmlFor="name" className={styles.label}>Full Name</label>
@@ -133,6 +161,7 @@ export default function RegisterWaitlistPage() {
                         Join the Waitlist
                     </Button>
                 </form>
+                )}
 
                 <div className={styles.footer}>
                     <p className={styles.footerText}>

@@ -9,7 +9,7 @@
   background-color: var(--color-bg-primary);
 }
 
-.loginCard {
+.signupCard {
   width: 100%;
   max-width: 100%;
   padding: 2rem 1.5rem;
@@ -54,6 +54,27 @@
   color: var(--color-text-primary);
 }
 
+.checkboxGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.checkbox {
+  margin-top: 0.25rem;
+}
+
+.checkboxLabel {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--color-error);
+}
+
 .submitBtn {
   margin-top: 0.5rem;
   width: 100%;
@@ -83,65 +104,6 @@
   text-decoration: underline;
 }
 
-.passwordWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-/* Ensure the input leaves padding on the right side so text doesn't slide under the icon */
-.passwordInput {
-  padding-right: 3rem !important; 
-  width: 100%;
-}
-
-.toggleButton {
-  position: absolute;
-  right: 0.75rem;
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  border-radius: var(--radius-sm);
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.toggleButton:hover:not(:disabled) {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-secondary);
-}
-
-.toggleButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.icon {
-  pointer-events: none; /* Prevents click handling bugs on the SVG element itself */
-}
-
-/* ---------- Desktop Scaling ---------- */
-@media (min-width: 640px) {
-  .loginCard {
-    max-width: 420px;
-    padding: 2.5rem 2rem;
-  }
-
-  .title {
-    font-size: 1.75rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
-  }
-}
-
-
 .errorAlert {
   padding: 0.75rem;
   margin-bottom: 1rem;
@@ -162,4 +124,20 @@
   font-size: 0.875rem;
   text-align: center;
   border: 1px solid #34d399;
+}
+
+/* ---------- Desktop Scaling ---------- */
+@media (min-width: 640px) {
+  .signupCard {
+    max-width: 420px;
+    padding: 2.5rem 2rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
 }

@@ -4,30 +4,25 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 
 import Card from '@/components/ui/card';
+import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 import styles from './onboard.module.css';
 
-// Fixed list of participating colleges to prevent data collisions and inappropriate link generation
-const COLLEGES = [
-    "College 1",
-    "College 2",
-    "College 3",
-    "College 4",
-    "College 5"
-] as const;
-
 const onboardSchema = z.object({
-    college: z.enum(COLLEGES, {
-        message: 'Please select a valid college from the list'
-    }),
+    college: z.string().min(1, 'College is required'),
 });
 
 type OnboardFormValues = z.infer<typeof onboardSchema>;
 
 export default function CAOnboardPage() {
+    const router = useRouter();
+    const [apiError, setApiError] = React.useState('');
+
     const {
         register,
         handleSubmit,
@@ -37,12 +32,17 @@ export default function CAOnboardPage() {
     });
 
     const onSubmit = async (data: OnboardFormValues) => {
-        // TODO: Wire up POST /ca/onboard via lib/api.ts
-        // Note: The backend will return 409 if this CA already has a profile.
-        console.log('Onboarding payload:', data);
-
-        // On success, redirect to the main CA dashboard
-        // router.push('/dashboard/ca');
+        try {
+            setApiError('');
+            await api.post('/ca/onboard', data);
+            router.push('/dashboard/ca');
+        } catch (error: unknown) {
+            const status = (error as { status?: number })?.status;
+            const message = status === 409
+                ? 'You have already onboarded as a Campus Ambassador.'
+                : error instanceof Error ? error.message : 'Failed to onboard';
+            setApiError(message);
+        }
     };
 
     return (
@@ -51,34 +51,26 @@ export default function CAOnboardPage() {
                 <div className={styles.header}>
                     <h1 className={styles.title}>Welcome to the Team</h1>
                     <p className={styles.subtitle}>
-                        You&apos;ve been approved as a Campus Ambassador! Select your assigned college to generate your referral link.
+                        You&apos;ve been approved as a Campus Ambassador! Enter your assigned college to generate your referral link.
                     </p>
                 </div>
+
+                {apiError && (
+                    <div className={styles.errorText}>{apiError}</div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                     <div className={styles.inputGroup}>
                         <label htmlFor="college" className={styles.label}>
                             Assigned College
                         </label>
-                        <div className={styles.selectWrapper}>
-                            <select
-                                id="college"
-                                disabled={isSubmitting}
-                                className={`${styles.select} ${errors.college ? styles.selectError : ''}`}
-                                defaultValue=""
-                                {...register('college')}
-                            >
-                                <option value="" disabled>Select your college...</option>
-                                {COLLEGES.map((college) => (
-                                    <option key={college} value={college}>
-                                        {college}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        {errors.college && (
-                            <span className={styles.errorText}>{errors.college.message}</span>
-                        )}
+                        <Input
+                            id="college"
+                            placeholder="Enter your college"
+                            disabled={isSubmitting}
+                            error={errors.college?.message}
+                            {...register('college')}
+                        />
                     </div>
 
                     <Button

@@ -157,3 +157,34 @@
   font-weight: 500;
   line-height: 1.5;
 }
+
+.rejectedContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  max-width: 600px;
+  margin: 2rem auto;
+  gap: 1.5rem;
+}
+
+.rejectedIcon {
+  color: var(--color-accent-secondary);
+}
+
+.rejectedTitle {
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.rejectedReason {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+}

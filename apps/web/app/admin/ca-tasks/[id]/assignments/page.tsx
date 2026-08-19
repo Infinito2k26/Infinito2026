@@ -1,38 +1,44 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 
 import Button from '@/components/ui/button';
 import Card from '@/components/ui/card';
 import Input from '@/components/ui/input';
+import { api } from '@/lib/api';
 
 import styles from './admin-assignments.module.css';
 
-// Mock Data (In reality, fetched via GET /admin/ca-tasks/:id/assignments)
-const MOCK_TASK_INFO = {
-    id: 'task_001',
-    title: 'Share Launch Reel',
-    defaultPoints: 50,
-    type: 'URL', // Or 'FILE'
-};
+interface TaskInfo {
+    id: string;
+    title: string;
+    points: number;
+}
 
-const MOCK_ASSIGNMENTS = [
-    { id: 'assign_1', caName: 'Rahul Sharma', college: 'IIT Delhi', status: 'PENDING', submittedValue: 'https://instagram.com/p/xyz', submittedAt: '2 hours ago' },
-    { id: 'assign_2', caName: 'Priya Singh', college: 'NIT Warangal', status: 'APPROVED', pointsAwarded: 50, submittedValue: 'https://instagram.com/p/abc', submittedAt: '1 day ago' },
-    { id: 'assign_3', caName: 'Aman Gupta', college: 'BITS Pilani', status: 'REJECTED', rejectionReason: 'Link is broken.', submittedValue: 'https://instagram.com/broken', submittedAt: '2 days ago' },
-];
+interface TaskAssignment {
+    id: string;
+    status: 'PENDING' | 'SUBMITTED' | 'VERIFIED' | 'REJECTED';
+    proofUrl: string | null;
+    pointsAwarded: number | null;
+    rejectionReason: string | null;
+    createdAt: string;
+    caProfile: {
+        assignedCollegeName: string;
+        user: { name: string };
+    };
+}
 
 const verifySchema = z.object({
-    action: z.enum(['APPROVE', 'REJECT']),
+    action: z.enum(['VERIFIED', 'REJECTED']),
     pointsOverride: z.number({ message: 'Points must be a valid number' }).optional(),
     rejectionReason: z.string().optional(),
 }).superRefine((data, ctx) => {
-    if (data.action === 'REJECT' && (!data.rejectionReason || data.rejectionReason.length < 5)) {
+    if (data.action === 'REJECTED' && (!data.rejectionReason || data.rejectionReason.length < 5)) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "A detailed reason is required for rejection",
@@ -55,31 +61,34 @@ const ReviewActionForm = ({
 }) => {
     const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<VerifyFormValues>({
         resolver: zodResolver(verifySchema),
-        defaultValues: { action: 'APPROVE', pointsOverride: defaultPoints }
+        defaultValues: { action: 'VERIFIED', pointsOverride: defaultPoints }
     });
 
     const selectedAction = watch('action');
 
     const onSubmit = async (data: VerifyFormValues) => {
-        // TODO: Wire up POST /admin/ca-task-assignments/:id/verify
-        console.log(`Verifying assignment ${assignmentId}:`, data);
+        await api.patch(`/admin/ca-task-assignments/${assignmentId}/verify`, {
+            status: data.action,
+            pointsOverride: data.action === 'VERIFIED' ? data.pointsOverride : undefined,
+            rejectionReason: data.rejectionReason,
+        });
         onComplete();
     };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className={styles.reviewForm}>
             <div className={styles.actionToggle}>
-                <label className={`${styles.radioLabel} ${selectedAction === 'APPROVE' ? styles.radioApprove : ''}`}>
-                    <input type="radio" value="APPROVE" {...register('action')} className={styles.radioInput} />
+                <label className={`${styles.radioLabel} ${selectedAction === 'VERIFIED' ? styles.radioApprove : ''}`}>
+                    <input type="radio" value="VERIFIED" {...register('action')} className={styles.radioInput} />
                     Approve
                 </label>
-                <label className={`${styles.radioLabel} ${selectedAction === 'REJECT' ? styles.radioReject : ''}`}>
-                    <input type="radio" value="REJECT" {...register('action')} className={styles.radioInput} />
+                <label className={`${styles.radioLabel} ${selectedAction === 'REJECTED' ? styles.radioReject : ''}`}>
+                    <input type="radio" value="REJECTED" {...register('action')} className={styles.radioInput} />
                     Reject
                 </label>
             </div>
 
-            {selectedAction === 'APPROVE' && (
+            {selectedAction === 'VERIFIED' && (
                 <div className={styles.inputGroup}>
                     <label className={styles.label}>Points to Award (Override)</label>
                     <Input
@@ -91,7 +100,7 @@ const ReviewActionForm = ({
                 </div>
             )}
 
-            {selectedAction === 'REJECT' && (
+            {selectedAction === 'REJECTED' && (
                 <div className={styles.inputGroup}>
                     <label className={styles.label}>Reason for Rejection</label>
                     <textarea
@@ -118,23 +127,34 @@ const ReviewActionForm = ({
 };
 
 export default function TaskAssignmentsPage({ params }: { params: { id: string } }) {
-    void params; // TODO: use params.id when wiring GET /admin/ca-tasks/:id/assignments
+    const [taskInfo, setTaskInfo] = useState<TaskInfo | null>(null);
+    const [assignments, setAssignments] = useState<TaskAssignment[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
 
-    const renderProof = (type: string, value: string) => {
-        if (type === 'URL') {
-            return (
-                <a href={value} target="_blank" rel="noopener noreferrer" className={styles.proofLink}>
-                    <ExternalLink size={14} /> Open Submitted Link
-                </a>
-            );
+    const fetchAssignments = async () => {
+        setIsLoading(true);
+        try {
+            const data = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
+            setTaskInfo(data?.task ?? null);
+            setAssignments(data?.assignments ?? []);
+        } catch (err) {
+            console.error("Failed to load assignments", err);
+        } finally {
+            setIsLoading(false);
         }
-        return (
-            <a href={value} target="_blank" rel="noopener noreferrer" className={styles.proofLink}>
-                <ImageIcon size={14} /> View Uploaded Image
-            </a>
-        );
     };
+
+    useEffect(() => {
+        fetchAssignments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [params.id]);
+
+    const renderProof = (value: string) => (
+        <a href={value} target="_blank" rel="noopener noreferrer" className={styles.proofLink}>
+            <ExternalLink size={14} /> View Proof
+        </a>
+    );
 
     return (
         <div className={styles.pageWrapper}>
@@ -146,33 +166,41 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
 
             <header className={styles.header}>
                 <h1 className={styles.pageTitle}>Review Submissions</h1>
-                <div className={styles.taskMetaHeader}>
-                    <span className={styles.taskTitle}>{MOCK_TASK_INFO.title}</span>
-                    <span className={styles.taskDefaultPoints}>{MOCK_TASK_INFO.defaultPoints} Pts Default</span>
-                </div>
+                {taskInfo && (
+                    <div className={styles.taskMetaHeader}>
+                        <span className={styles.taskTitle}>{taskInfo.title}</span>
+                        <span className={styles.taskDefaultPoints}>{taskInfo.points} Pts Default</span>
+                    </div>
+                )}
             </header>
 
             <div className={styles.listContainer}>
-                {MOCK_ASSIGNMENTS.map((assignment) => (
+                {isLoading ? (
+                    <p className="text-muted-foreground p-4">Loading submissions...</p>
+                ) : assignments.length === 0 ? (
+                    <p className="text-muted-foreground p-4">No submissions yet.</p>
+                ) : assignments.map((assignment) => (
                     <Card key={assignment.id} className={styles.assignmentCard}>
                         <div className={styles.cardTop}>
                             <div className={styles.caInfo}>
-                                <h3 className={styles.caName}>{assignment.caName}</h3>
-                                <span className={styles.caCollege}>{assignment.college} • {assignment.submittedAt}</span>
+                                <h3 className={styles.caName}>{assignment.caProfile.user.name}</h3>
+                                <span className={styles.caCollege}>{assignment.caProfile.assignedCollegeName}</span>
                             </div>
                             <div className={styles.statusBadgeWrapper}>
-                                {assignment.status === 'APPROVED' && <span className={`${styles.statusBadge} ${styles.statusApproved}`}><CheckCircle size={14} /> Approved</span>}
+                                {assignment.status === 'VERIFIED' && <span className={`${styles.statusBadge} ${styles.statusApproved}`}><CheckCircle size={14} /> Verified</span>}
                                 {assignment.status === 'REJECTED' && <span className={`${styles.statusBadge} ${styles.statusRejected}`}><XCircle size={14} /> Rejected</span>}
-                                {assignment.status === 'PENDING' && <span className={`${styles.statusBadge} ${styles.statusPending}`}>Pending</span>}
+                                {assignment.status === 'SUBMITTED' && <span className={`${styles.statusBadge} ${styles.statusPending}`}>Pending Review</span>}
                             </div>
                         </div>
 
-                        <div className={styles.proofSection}>
-                            <span className={styles.proofLabel}>Proof Provided:</span>
-                            {renderProof(MOCK_TASK_INFO.type, assignment.submittedValue)}
-                        </div>
+                        {assignment.proofUrl && (
+                            <div className={styles.proofSection}>
+                                <span className={styles.proofLabel}>Proof Provided:</span>
+                                {renderProof(assignment.proofUrl)}
+                            </div>
+                        )}
 
-                        {assignment.status === 'APPROVED' && assignment.pointsAwarded && (
+                        {assignment.status === 'VERIFIED' && assignment.pointsAwarded != null && (
                             <div className={styles.resolutionDetails}>
                                 <strong>Points Awarded:</strong> {assignment.pointsAwarded}
                             </div>
@@ -184,7 +212,7 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
                             </div>
                         )}
 
-                        {assignment.status === 'PENDING' && activeReviewId !== assignment.id && (
+                        {assignment.status === 'SUBMITTED' && activeReviewId !== assignment.id && (
                             <div className={styles.actionArea}>
                                 <Button onClick={() => setActiveReviewId(assignment.id)} className={styles.reviewTriggerBtn}>
                                     Review Submission
@@ -196,8 +224,11 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
                             <div className={styles.activeReviewZone}>
                                 <ReviewActionForm
                                     assignmentId={assignment.id}
-                                    defaultPoints={MOCK_TASK_INFO.defaultPoints}
-                                    onComplete={() => setActiveReviewId(null)}
+                                    defaultPoints={taskInfo?.points ?? 0}
+                                    onComplete={() => {
+                                        setActiveReviewId(null);
+                                        fetchAssignments();
+                                    }}
                                 />
                             </div>
                         )}
