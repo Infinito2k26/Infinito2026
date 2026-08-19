@@ -918,6 +918,221 @@ describe('Admin CA assignment listing (e2e)', () => {
   });
 });
 
+describe('CA application intake (e2e)', () => {
+  let app: INestApplication<App>;
+  let prisma: PrismaService;
+
+  beforeAll(async () => {
+    app = await createApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  async function registerAndLogin(name: string) {
+    const email = `${randomUUID()}@infinito.dev`;
+    const password = 'a-strong-password';
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password, name, consent: true })
+      .expect(201);
+
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email, password })
+      .expect(200);
+
+    const token = (
+      login.body as SuccessResponse<{
+        accessToken: string;
+        user: UserProfile;
+      }>
+    ).data.accessToken;
+
+    return { email, token };
+  }
+
+  it('apply -> me -> duplicate-pending is rejected -> already-CA is rejected', async () => {
+    const participant = await registerAndLogin('E2E Applicant');
+
+    // No application yet.
+    const emptyRes = await request(app.getHttpServer())
+      .get('/api/ca/apply/me')
+      .set('Authorization', `Bearer ${participant.token}`)
+      .expect(200);
+
+    expect((emptyRes.body as SuccessResponse<null>).data).toBeNull();
+
+    // First apply -> 201.
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${participant.token}`)
+      .send({ targetCollege: 'IIT Patna' })
+      .expect(201);
+
+    const meRes = await request(app.getHttpServer())
+      .get('/api/ca/apply/me')
+      .set('Authorization', `Bearer ${participant.token}`)
+      .expect(200);
+
+    const meBody = (
+      meRes.body as SuccessResponse<{ status: string; targetCollege: string }>
+    ).data;
+    expect(meBody.status).toBe('PENDING');
+    expect(meBody.targetCollege).toBe('IIT Patna');
+
+    // Second apply while still PENDING -> 409.
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${participant.token}`)
+      .send({ targetCollege: 'IIT Patna' })
+      .expect(409);
+
+    // An existing CAMPUS_AMBASSADOR applying -> 409.
+    const ca = await registerAndLogin('E2E Already CA');
+    await prisma.user.update({
+      where: { email: ca.email },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${ca.token}`)
+      .send({ targetCollege: 'IIT Patna' })
+      .expect(409);
+  });
+
+  it('admin review: RBAC, reject requires a reason, approve promotes role, race is CAS-guarded', async () => {
+    const admin = await registerAndLogin('E2E Admin Reviewer');
+    await prisma.user.update({
+      where: { email: admin.email },
+      data: { role: UserRole.ADMIN },
+    });
+    const adminLogin = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: admin.email, password: 'a-strong-password' })
+      .expect(200);
+    const adminToken = (
+      adminLogin.body as SuccessResponse<{
+        accessToken: string;
+        user: UserProfile;
+      }>
+    ).data.accessToken;
+
+    const applicant = await registerAndLogin('E2E Applicant Two');
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${applicant.token}`)
+      .send({ targetCollege: 'NIT Patna' })
+      .expect(201);
+
+    // Non-admin -> 403.
+    await request(app.getHttpServer())
+      .get('/api/admin/ca-applications')
+      .set('Authorization', `Bearer ${applicant.token}`)
+      .expect(403);
+
+    const listRes = await request(app.getHttpServer())
+      .get('/api/admin/ca-applications')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .query({ status: 'PENDING' })
+      .expect(200);
+
+    const listBody = (
+      listRes.body as SuccessResponse<{
+        applications: Array<{ id: string; user: { email: string } }>;
+      }>
+    ).data;
+    const application = listBody.applications.find(
+      (a) => a.user.email === applicant.email,
+    );
+    expect(application).toBeDefined();
+    const applicationId = application!.id;
+
+    // Reject without a reason -> 400.
+    await request(app.getHttpServer())
+      .patch(`/api/admin/ca-applications/${applicationId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'REJECTED' })
+      .expect(400);
+
+    // Concurrent review race: fire two approvals at once, exactly one succeeds.
+    const [first, second] = await Promise.all([
+      request(app.getHttpServer())
+        .patch(`/api/admin/ca-applications/${applicationId}/review`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'APPROVED' }),
+      request(app.getHttpServer())
+        .patch(`/api/admin/ca-applications/${applicationId}/review`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'APPROVED' }),
+    ]);
+
+    const statuses = [first.status, second.status].sort();
+    expect(statuses).toEqual([200, 409]);
+
+    const promotedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: applicant.email },
+    });
+    expect(promotedUser.role).toBe(UserRole.CAMPUS_AMBASSADOR);
+
+    // A separate applicant, rejected with a reason -> reason is CA-visible.
+    const applicant2 = await registerAndLogin('E2E Applicant Three');
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${applicant2.token}`)
+      .send({ targetCollege: 'BIT Mesra' })
+      .expect(201);
+
+    const list2 = await request(app.getHttpServer())
+      .get('/api/admin/ca-applications')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .query({ status: 'PENDING' })
+      .expect(200);
+
+    const app2 = (
+      list2.body as SuccessResponse<{
+        applications: Array<{ id: string; user: { email: string } }>;
+      }>
+    ).data.applications.find((a) => a.user.email === applicant2.email)!;
+
+    await request(app.getHttpServer())
+      .patch(`/api/admin/ca-applications/${app2.id}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'REJECTED',
+        rejectionReason: 'College not on the participating list',
+      })
+      .expect(200);
+
+    const rejectedMe = await request(app.getHttpServer())
+      .get('/api/ca/apply/me')
+      .set('Authorization', `Bearer ${applicant2.token}`)
+      .expect(200);
+
+    const rejectedBody = (
+      rejectedMe.body as SuccessResponse<{
+        status: string;
+        rejectionReason: string;
+      }>
+    ).data;
+    expect(rejectedBody.status).toBe('REJECTED');
+    expect(rejectedBody.rejectionReason).toBe(
+      'College not on the participating list',
+    );
+
+    // Rejected applicant can re-apply.
+    await request(app.getHttpServer())
+      .post('/api/ca/apply')
+      .set('Authorization', `Bearer ${applicant2.token}`)
+      .send({ targetCollege: 'BIT Mesra' })
+      .expect(201);
+  });
+});
+
 // Own app instance: the login endpoint's throttle bucket is per-process
 // (in-memory ThrottlerStorage), so sharing an app with the tests above would
 // let their login calls eat into this test's 10-request budget.

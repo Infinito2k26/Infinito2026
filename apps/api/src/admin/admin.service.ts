@@ -3,7 +3,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { TaskStatus } from '@prisma/client';
+import { TaskStatus, ApplicationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import {
@@ -12,6 +12,7 @@ import {
   CreateTaskDto,
   UpdateTaskDto,
   VerifyTaskDto,
+  ReviewApplicationDto,
   TaskSource as DtoTaskSource,
 } from './dto/admin.dto';
 
@@ -216,5 +217,107 @@ export class AdminService {
     }
 
     return { success: true, count: result.count };
+  }
+
+  // CA Applications
+  async listApplications(page = 1, limit = 20, status?: string) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+
+    const skip = (page - 1) * limit;
+
+    const allowedStatuses = ['PENDING', 'APPROVED', 'REJECTED'];
+
+    if (status && !allowedStatuses.includes(status)) {
+      throw new BadRequestException(
+        `Invalid application status. Allowed values: ${allowedStatuses.join(', ')}`,
+      );
+    }
+
+    const where = {
+      ...(status ? { status: status as ApplicationStatus } : {}),
+    };
+
+    const [applications, total] = await this.prisma.$transaction([
+      this.prisma.cAApplication.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          id: true,
+          targetCollege: true,
+          status: true,
+          rejectionReason: true,
+          reviewedAt: true,
+          createdAt: true,
+
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+
+      this.prisma.cAApplication.count({
+        where,
+      }),
+    ]);
+
+    return {
+      applications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async reviewApplication(
+    id: string,
+    dto: ReviewApplicationDto,
+    adminId: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      // Compare-and-swap mechanism
+      const result = await tx.cAApplication.updateMany({
+        where: {
+          id,
+          status: 'PENDING',
+        },
+        data: {
+          status: dto.status,
+          rejectionReason: dto.rejectionReason,
+          reviewedById: adminId,
+          reviewedAt: new Date(),
+        },
+      });
+
+      if (result.count === 0) {
+        throw new ConflictException(
+          'Application could not be reviewed. It may not exist or is no longer PENDING.',
+        );
+      }
+
+      if (dto.status === 'APPROVED') {
+        const application = await tx.cAApplication.findUniqueOrThrow({
+          where: { id },
+        });
+
+        await tx.user.update({
+          where: { id: application.userId },
+          data: { role: 'CAMPUS_AMBASSADOR' },
+        });
+      }
+
+      return { success: true, count: result.count };
+    });
   }
 }

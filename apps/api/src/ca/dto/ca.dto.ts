@@ -31,3 +31,13 @@ export class SubmitTaskDto {
   @IsOptional()
   proofNote?: string;
 }
+
+export class CreateApplicationDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
+  targetCollege!: string;
+}
