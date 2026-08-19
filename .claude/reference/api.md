@@ -128,6 +128,7 @@ Response `data` shape:
 | Method | Path                                      | Access        | Purpose                                          |
 | ------ | ----------------------------------------- | ------------- | ------------------------------------------------ |
 | POST   | `/ca/onboard`                             | CAMPUS_AMBASSADOR | Onboard as a Campus Ambassador                   |
+| GET    | `/ca/me`                                  | CAMPUS_AMBASSADOR | Get the caller's own CA profile (refCode, clickCount, referralCount, totalPoints, rank) |
 | POST   | `/leads/waitlist`                         | Public        | Capture waitlist lead pre-registration           |
 | POST   | `/ca/referral/click`                      | Public        | Track referral link clicks asynchronously        |
 | GET    | `/leaderboard/ca`                         | Public        | Get ranked CA leaderboard                        |

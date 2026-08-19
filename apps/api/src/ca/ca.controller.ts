@@ -50,6 +50,15 @@ export class CaController {
     return await this.caService.onboard(userId, body.college);
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CAMPUS_AMBASSADOR)
+  async getMe(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+
+    return await this.caService.getMe(userId);
+  }
+
   @Post('apply')
   @UseGuards(JwtAuthGuard)
   async apply(

@@ -409,6 +409,58 @@ describe('CA onboarding RBAC (e2e)', () => {
       .set('Authorization', `Bearer ${caToken}`)
       .send({ college: 'IIT Patna' })
       .expect(201);
+
+    // GET /ca/me: no token -> 401.
+    await request(app.getHttpServer()).get('/api/ca/me').expect(401);
+
+    // GET /ca/me: not-yet-onboarded CA -> 404.
+    const unonboardedEmail = `${randomUUID()}@infinito.dev`;
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({
+        email: unonboardedEmail,
+        password,
+        name: 'E2E Unonboarded CA',
+        consent: true,
+      })
+      .expect(201);
+
+    await prisma.user.update({
+      where: { email: unonboardedEmail },
+      data: { role: UserRole.CAMPUS_AMBASSADOR },
+    });
+
+    const unonboardedLogin = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: unonboardedEmail, password })
+      .expect(200);
+
+    const unonboardedToken = (
+      unonboardedLogin.body as SuccessResponse<{
+        accessToken: string;
+        user: UserProfile;
+      }>
+    ).data.accessToken;
+
+    await request(app.getHttpServer())
+      .get('/api/ca/me')
+      .set('Authorization', `Bearer ${unonboardedToken}`)
+      .expect(404);
+
+    // GET /ca/me: onboarded CA -> 200 with the real profile.
+    const meRes = await request(app.getHttpServer())
+      .get('/api/ca/me')
+      .set('Authorization', `Bearer ${caToken}`)
+      .expect(200);
+
+    const meBody = (
+      meRes.body as SuccessResponse<{
+        refCode: string;
+        assignedCollegeName: string;
+      }>
+    ).data;
+    expect(meBody.refCode).toMatch(/^CA-/);
+    expect(meBody.assignedCollegeName).toBe('IIT Patna');
   });
 
   it('rejects invalid college values and normalizes valid college', async () => {
