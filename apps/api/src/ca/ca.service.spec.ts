@@ -119,3 +119,144 @@ describe('CaService.recordConversion', () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('CaService.applyForCA', () => {
+  let service: CaService;
+
+  let prisma: {
+    user: {
+      findUniqueOrThrow: jest.Mock;
+    };
+    cAApplication: {
+      findFirst: jest.Mock;
+      create: jest.Mock;
+    };
+  };
+
+  beforeEach(async () => {
+    prisma = {
+      user: {
+        findUniqueOrThrow: jest.fn(),
+      },
+      cAApplication: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        CaService,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: REDIS_CLIENT,
+          useValue: {},
+        },
+      ],
+    }).compile();
+
+    service = moduleRef.get<CaService>(CaService);
+  });
+
+  it('creates a PENDING application for an eligible user', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue({ role: 'PARTICIPANT' });
+    prisma.cAApplication.findFirst.mockResolvedValue(null);
+
+    const fakeApplication = {
+      id: 'app-1',
+      userId: 'user-1',
+      targetCollege: 'IIT Patna',
+      status: 'PENDING',
+    };
+    prisma.cAApplication.create.mockResolvedValue(fakeApplication);
+
+    const result = await service.applyForCA('user-1', 'IIT Patna');
+
+    expect(result).toEqual(fakeApplication);
+    expect(prisma.cAApplication.create).toHaveBeenCalledWith({
+      data: { userId: 'user-1', targetCollege: 'IIT Patna', status: 'PENDING' },
+    });
+  });
+
+  it('throws ConflictException if the user is already a Campus Ambassador', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue({
+      role: 'CAMPUS_AMBASSADOR',
+    });
+
+    await expect(service.applyForCA('user-1', 'IIT Patna')).rejects.toThrow(
+      ConflictException,
+    );
+    expect(prisma.cAApplication.create).not.toHaveBeenCalled();
+  });
+
+  it('throws ConflictException if a PENDING application already exists', async () => {
+    prisma.user.findUniqueOrThrow.mockResolvedValue({ role: 'PARTICIPANT' });
+    prisma.cAApplication.findFirst.mockResolvedValue({
+      id: 'app-existing',
+      status: 'PENDING',
+    });
+
+    await expect(service.applyForCA('user-1', 'IIT Patna')).rejects.toThrow(
+      ConflictException,
+    );
+    expect(prisma.cAApplication.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('CaService.getMyApplication', () => {
+  let service: CaService;
+
+  let prisma: {
+    cAApplication: {
+      findFirst: jest.Mock;
+    };
+  };
+
+  beforeEach(async () => {
+    prisma = {
+      cAApplication: {
+        findFirst: jest.fn(),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        CaService,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: REDIS_CLIENT,
+          useValue: {},
+        },
+      ],
+    }).compile();
+
+    service = moduleRef.get<CaService>(CaService);
+  });
+
+  it('returns null when the user has no application', async () => {
+    prisma.cAApplication.findFirst.mockResolvedValue(null);
+
+    const result = await service.getMyApplication('user-1');
+
+    expect(result).toBeNull();
+  });
+
+  it('returns the most recently created application', async () => {
+    const latest = { id: 'app-2', status: 'PENDING', createdAt: new Date() };
+    prisma.cAApplication.findFirst.mockResolvedValue(latest);
+
+    const result = await service.getMyApplication('user-1');
+
+    expect(result).toEqual(latest);
+    expect(prisma.cAApplication.findFirst).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+});

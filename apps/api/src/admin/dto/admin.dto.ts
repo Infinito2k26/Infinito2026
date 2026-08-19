@@ -91,3 +91,15 @@ export class VerifyTaskDto {
   @IsNotEmpty({ message: 'rejectionReason is required when rejecting a task' })
   rejectionReason?: string;
 }
+
+export class ReviewApplicationDto {
+  @IsEnum(['APPROVED', 'REJECTED'])
+  status!: 'APPROVED' | 'REJECTED';
+
+  @ValidateIf((o: ReviewApplicationDto) => o.status === 'REJECTED')
+  @IsString()
+  @IsNotEmpty({
+    message: 'rejectionReason is required when rejecting an application',
+  })
+  rejectionReason?: string;
+}

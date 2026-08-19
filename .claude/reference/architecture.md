@@ -120,6 +120,8 @@ sequenceDiagram
   API-->>Admin: 409 Conflict if race condition
 ```
 
+Role promotion to `CAMPUS_AMBASSADOR` happens either directly via `PATCH /admin/users/:id/role`, or through the application queue: `POST /ca/apply` creates a `PENDING` `CAApplication`, `PATCH /admin/ca-applications/:id/review` approves or rejects it — approval promotes the role in the same compare-and-swap transaction as the status update, using the identical CAS pattern shown above for task verification.
+
 ## 6. Deployment Assumptions
 
 - Local development uses Docker Compose for PostgreSQL, Redis, and MinIO.
