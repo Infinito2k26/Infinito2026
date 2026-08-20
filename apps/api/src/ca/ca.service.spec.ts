@@ -260,3 +260,55 @@ describe('CaService.getMyApplication', () => {
     });
   });
 });
+
+describe('CaService.getMe', () => {
+  let service: CaService;
+
+  let prisma: {
+    cAProfile: {
+      findUnique: jest.Mock;
+    };
+  };
+
+  beforeEach(async () => {
+    prisma = {
+      cAProfile: {
+        findUnique: jest.fn(),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        CaService,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
+        {
+          provide: REDIS_CLIENT,
+          useValue: {},
+        },
+      ],
+    }).compile();
+
+    service = moduleRef.get<CaService>(CaService);
+  });
+
+  it('returns the CA profile for an onboarded user', async () => {
+    const profile = { id: 'ca-1', userId: 'user-1', refCode: 'CA-IIT-ABC123' };
+    prisma.cAProfile.findUnique.mockResolvedValue(profile);
+
+    const result = await service.getMe('user-1');
+
+    expect(result).toEqual(profile);
+    expect(prisma.cAProfile.findUnique).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+    });
+  });
+
+  it('throws NotFoundException when the user has not onboarded yet', async () => {
+    prisma.cAProfile.findUnique.mockResolvedValue(null);
+
+    await expect(service.getMe('user-1')).rejects.toThrow(NotFoundException);
+  });
+});

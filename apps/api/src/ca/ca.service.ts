@@ -53,6 +53,18 @@ export class CaService {
     return profile;
   }
 
+  async getMe(userId: string) {
+    const profile = await this.prisma.cAProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!profile) {
+      throw new NotFoundException('CA profile not found');
+    }
+
+    return profile;
+  }
+
   async recordClick(referralCode: string, ip: string) {
     // Validate code exists in DB
     const ca = await this.prisma.cAProfile.findUnique({
@@ -96,6 +108,9 @@ export class CaService {
       include: {
         assignments: {
           where: { caId: ca.id },
+        },
+        brand: {
+          select: { name: true },
         },
       },
     });

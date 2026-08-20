@@ -3,6 +3,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import styles from "./layout.module.css";
 
+const NAV_ITEMS = [
+    { label: 'Home', href: '/' },
+    { label: 'Events', href: '/events', status: 'Upcoming' },
+    { label: 'Sports', href: '/sports', status: 'Upcoming' },
+    { label: 'About', href: '/about', status: 'Upcoming' },
+];
+
 const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -13,14 +20,25 @@ const Navbar = () => {
         <nav className={styles.navbar}>
             <div className={styles.navbar_inner}>
                 <div className={styles.navbar_list_left}>
-                    <Link href="/" className={styles.navbar_item}>Home</Link>
-                    <Link href="/events" className={styles.navbar_item}>Events</Link>
-                    <Link href="/sports" className={styles.navbar_item}>Sports</Link>
-                    <Link href="/about" className={styles.navbar_item}>About</Link>
+                    {NAV_ITEMS.map(({ label, href, status }) => (
+                        <Link 
+                            key={label}
+                            href={href} 
+                            className={styles.navbar_item}
+                            style={status ? { display: 'flex', alignItems: 'center', gap: '4px' } : {}}
+                        >
+                            {label}
+                            {status && (
+                                <span style={{ fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
+                                    {status}
+                                </span>
+                            )}
+                        </Link>
+                    ))}
                 </div>
 
                 <div className={styles.navbar_list_right}>
-                    <Link href="/signup" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Sign Up</Link>
+                    <Link href="/register" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Register</Link>
                     <Link href="/login" className={styles.navbar_item}>Login</Link>
                 </div>
 
@@ -39,11 +57,23 @@ const Navbar = () => {
             </div>
             
             <div id="mobile-menu" className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_active : ""}`}>
-                <Link href="/" className={styles.mobile_menu_item} onClick={closeMenu}>Home</Link>
-                <Link href="/events" className={styles.mobile_menu_item} onClick={closeMenu}>Events</Link>
-                <Link href="/sports" className={styles.mobile_menu_item} onClick={closeMenu}>Sports</Link>
-                <Link href="/about" className={styles.mobile_menu_item} onClick={closeMenu}>About</Link>
-                <Link href="/signup" className={styles.mobile_menu_item} onClick={closeMenu}>Sign Up</Link>
+                {NAV_ITEMS.map(({ label, href, status }) => (
+                    <Link 
+                        key={label}
+                        href={href} 
+                        className={styles.mobile_menu_item} 
+                        onClick={() => closeMenu()}
+                        style={status ? { display: 'flex', alignItems: 'center', gap: '8px' } : {}}
+                    >
+                        {label}
+                        {status && (
+                            <span style={{ fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
+                                {status}
+                            </span>
+                        )}
+                    </Link>
+                ))}
+                <Link href="/register" className={styles.mobile_menu_item} onClick={closeMenu}>Register</Link>
                 <Link href="/login" className={styles.mobile_menu_item} onClick={closeMenu}>Login</Link>
             </div>
         </nav>

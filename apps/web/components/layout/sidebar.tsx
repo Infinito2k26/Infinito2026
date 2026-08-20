@@ -3,12 +3,15 @@
 import { useState } from "react";
 import styles from "./layout.module.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 
 type SideItem = {
   label: string;
   icon: React.ReactNode;
   href: string;
+  status?: string;
 };
 
 const InfinityIcon = () => (
@@ -49,15 +52,29 @@ const SettingsIcon = () => (
 );
 
 const SIDE_ITEMS: SideItem[] = [
-  { label: "Dashboard", icon: <LayoutIcon />, href: "#dashboard" },
-  { label: "Events",    icon: <CalendarIcon />, href: "#events" },
-  { label: "Teams",     icon: <UsersIcon />,   href: "#teams" },
-  { label: "Analytics", icon: <BarChartIcon />, href: "#analytics" },
-  { label: "Settings",  icon: <SettingsIcon />, href: "#settings" },
+  { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
+  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events", status: "Upcoming" },
+  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams", status: "Upcoming" },
+  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics", status: "Upcoming" },
+  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings", status: "Upcoming" },
 ];
 
 export default function Sidebar() {
   const [activeLabel, setActiveLabel] = useState("Dashboard");
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await api.delete('/auth/logout');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('infinito_token');
+        router.push('/login');
+      }
+    }
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -70,26 +87,50 @@ export default function Sidebar() {
       {/* ── Sidebar links ── */}
       <nav className={styles.sidebarNav} >
         <ul className={styles.sidebarNavList}>
-          {SIDE_ITEMS.map(({ label, icon, href }) => {
+          {SIDE_ITEMS.map(({ label, icon, href, status }) => {
             const active = activeLabel === label;
             return (
               <li key={label}>
                 <Link
                   href={href}
                   className={`${styles.sidebarLink} ${active ? styles.sidebarLinkActive : ""}`}
-                  onClick={() => setActiveLabel(label)}
+                  onClick={(e) => {
+                    if (status) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setActiveLabel(label);
+                  }}
+                  style={status ? { opacity: 0.6, cursor: "not-allowed" } : {}}
                 >
                   <span className={styles.sidebarIcon}>
                     {icon}
                   </span>
                   <span className={styles.sidebarLabel}>{label}</span>
-                  {active && (
+                  {status && (
+                    <span style={{ marginLeft: "auto", fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
+                      {status}
+                    </span>
+                  )}
+                  {active && !status && (
                     <span className={styles.activePip} />
                   )}
                 </Link>
               </li>
             );
           })}
+          <li key="Logout">
+            <button
+                className={styles.sidebarLink}
+                onClick={handleLogout}
+                style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+                <span className={styles.sidebarIcon}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </span>
+                <span className={styles.sidebarLabel}>Logout</span>
+            </button>
+          </li>
         </ul>
       </nav>
     </aside>

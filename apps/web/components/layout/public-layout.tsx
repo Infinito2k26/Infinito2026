@@ -12,7 +12,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
       
-      {/* TODO: Jamanrao-Import and place <Footer/> here */}
       <Footer/>
     </div>
   );

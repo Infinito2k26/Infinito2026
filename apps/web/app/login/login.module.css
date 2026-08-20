@@ -1,0 +1,165 @@
+/* ---------- Base Styles (Mobile First: 375px) ---------- */
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--color-bg-primary);
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 100%;
+  padding: 2rem 1.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.submitBtn {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+}
+
+.footerText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.link {
+  color: var(--color-accent-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--color-accent-secondary);
+  text-decoration: underline;
+}
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Ensure the input leaves padding on the right side so text doesn't slide under the icon */
+.passwordInput {
+  padding-right: 3rem !important; 
+  width: 100%;
+}
+
+.toggleButton {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.toggleButton:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.toggleButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon {
+  pointer-events: none; /* Prevents click handling bugs on the SVG element itself */
+}
+
+/* ---------- Desktop Scaling ---------- */
+@media (min-width: 640px) {
+  .loginCard {
+    max-width: 420px;
+    padding: 2.5rem 2rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+}
+
+
+.errorAlert {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-size: 0.875rem;
+  text-align: center;
+  border: 1px solid #f87171;
+}
+
+.successAlert {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  background-color: #d1fae5;
+  color: #065f46;
+  font-size: 0.875rem;
+  text-align: center;
+  border: 1px solid #34d399;
+}

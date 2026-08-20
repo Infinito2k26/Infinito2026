@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Infinito 2K26 — CA Portal: Spec, Scope & Execution Plan</title>
+<style>
+  body { font-family: 'Georgia', 'Times New Roman', serif; color: #1a1a1a; line-height: 1.6; }
+  h1 { color: #1F3864; font-family: 'Arial', sans-serif; }
+  h2 { color: #1F3864; font-family: 'Arial', sans-serif; border-bottom: 1px solid #d0d0d0; padding-bottom: 4px; }
+  h3 { color: #2E5090; font-family: 'Arial', sans-serif; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #c9c9c9; padding: 8px 10px; text-align: left; vertical-align: top; font-size: 10.5pt; }
+  th { background-color: #EEF2F8; font-family: 'Arial', sans-serif; }
+  .tldr { background-color: #F4F7FC; border-left: 4px solid #1F3864; padding: 12px 16px; margin: 16px 0; }
+  .subtitle { color: #555555; font-style: italic; font-family: 'Arial', sans-serif; }
+  code { font-family: 'Courier New', monospace; background-color: #F2F2F2; padding: 1px 4px; }
+</style>
+</head>
+<body>
+
+<h1>Infinito 2K26 — Campus Ambassador (CA) Portal</h1>
+<p class="subtitle">Spec, Scope &amp; Execution Plan</p>
+
+<table>
+<tr><th>Prepared by</th><td>Minhaj (Lead Architect)</td></tr>
+<tr><th>Date</th><td>July 15, 2026</td></tr>
+<tr><th>Status</th><td>Approved — Full Scope, Free-Tier Launch Stack</td></tr>
+<tr><th>Target Launch</th><td>July 20, 2026</td></tr>
+</table>
+
+<div class="tldr">
+<strong>In one sentence:</strong> we are building a small, focused website area where student volunteers ("Campus Ambassadors") get a personal referral link, complete promotional tasks, earn points, and compete on a public leaderboard — and where our own team can approve ambassadors, assign tasks, and review their submissions. Roughly a third of it is already built; the rest is planned in detail below and is targeted to go live on <strong>July 20, 2026</strong>.
+</div>
+
+<p><strong>How to read this document:</strong> Part One explains the CA Portal in plain language — no technical background required. It is written for event managers, coordinators, and anyone who needs to understand what we're building and how to use it. Part Two is the technical execution plan for the engineering team, with precise, task-by-task instructions for backend and frontend work.</p>
+
+<hr>
+
+<h1>Part One — The CA Portal, Explained</h1>
+
+<h2>1. What Is the CA Portal?</h2>
+<p>A Campus Ambassador (CA) is a student at another college who volunteers to promote Infinito 2K26 to their own campus and bring in registrations. The CA Portal is the part of our website built specifically for these volunteers and for the team members who manage them.</p>
+<p>It is one focused feature inside the much larger Infinito 2K26 platform. The rest of the platform — event registration, payment, QR check-in on fest day, schedules — is a separate, larger body of work that has not been built yet and is not part of this document.</p>
+
+<h2>2. Who Uses It</h2>
+<table>
+<tr><th>Role</th><th>Who they are</th></tr>
+<tr><td><strong>Campus Ambassador</strong></td><td>A student volunteer promoting Infinito at their own college.</td></tr>
+<tr><td><strong>Admin / Event Manager</strong></td><td>An Infinito team member who approves ambassadors, sets up promotional tasks, and reviews what ambassadors submit.</td></tr>
+</table>
+
+<h2>3. What a Campus Ambassador Can Do</h2>
+<ol>
+<li>Create an account and log in.</li>
+<li>Once approved into the CA role, get a personal referral code and a shareable link (for example, <code>infinito.iitp.ac.in/register?ref=CA-AMU-042</code>).</li>
+<li>See a personal dashboard: how many people have clicked their link, how many points they've earned, and where they rank.</li>
+<li>See a list of promotional tasks the Infinito team has set up (for example, "post this reel," "share this poster on your college group") and submit proof of completion — either a link or an uploaded photo/screenshot.</li>
+<li>See themselves ranked against every other Campus Ambassador on a public leaderboard.</li>
+</ol>
+
+<h2>4. What an Event Manager (Admin) Can Do</h2>
+<ol>
+<li>Approve a registered user into the Campus Ambassador role.</li>
+<li>Create promotional tasks — either general tasks the team sets, or tasks tied to a sponsoring brand.</li>
+<li>Review what each ambassador submits as proof of completing a task.</li>
+<li>Approve or reject each submission, and award (or adjust) the points for it.</li>
+<li>View the same leaderboard everyone else sees.</li>
+</ol>
+
+<h2>5. How It Works, Step by Step</h2>
+<p>A new ambassador's journey looks like this: they sign up on the site → an admin approves them into the Campus Ambassador role → they get their personal referral link → they share it on their campus → every click on that link is counted instantly → the Infinito team posts a task → the ambassador completes it and submits proof → an admin reviews and approves it → points are added to their score → their rank on the public leaderboard updates.</p>
+<p><strong>One important limitation to understand up front:</strong> at launch, we can count how many people <em>clicked</em> an ambassador's link, but we cannot yet automatically confirm how many of those clicks turned into an actual, paid registration. That's because the registration-and-payment part of the platform doesn't exist yet — it's a separate, larger project. Click counts are real and live; registration attribution is not available until that later system is built. This is a known, accepted gap for launch week, not an oversight.</p>
+
+<h2>6. Where We Stand Today (as of July 15, 2026)</h2>
+<table>
+<tr><th>Piece</th><th>Status</th><th>What this means</th></tr>
+<tr><td>Account sign-up &amp; login (behind the scenes)</td><td>✅ Done</td><td>The underlying system that creates accounts and logs people in is built and tested. The visible sign-up/login page itself still needs to be built (see below).</td></tr>
+<tr><td>Visual building blocks</td><td>✅ Done</td><td>Buttons, cards, forms, pop-ups, loading/error screens, and the site's navigation are all built and ready to reuse.</td></tr>
+<tr><td>Data design</td><td>✅ Done</td><td>Every piece of information the CA Portal needs to store — profiles, tasks, brands, submissions, referral counts — has already been mapped out. Nothing to redesign here.</td></tr>
+<tr><td>Background traffic handling</td><td>✅ Built, final review pending</td><td>The system that lets a referral link survive a sudden burst of clicks (e.g. going around a WhatsApp group) without slowing the site down. Code is complete and just needs a final sign-off to go live.</td></tr>
+<tr><td>Dashboard visual pieces</td><td>🟡 Built, but shelved</td><td>Three visual pieces for the ambassador dashboard (referral code display, stats card, leaderboard widget) were designed and built on a separate work branch. That work was closed without being merged in, due to conflicts and incomplete scope. Nothing is lost — the design work can be reused — but none of it is live on the site today, and it needs to be finished and properly connected.</td></tr>
+<tr><td>All ambassador-side and admin-side server logic</td><td>❌ Not started</td><td>Creating a profile, generating a referral code, counting a click, listing a task, accepting a submission, awarding points, calculating the leaderboard — none of this exists yet. This is the single largest piece of remaining work.</td></tr>
+<tr><td>Visible sign-up / login page</td><td>❌ Not started</td><td>The backend supports it, but there is no page yet where a person actually types in their email and password.</td></tr>
+<tr><td>Automatic social media stat-checking</td><td>❌ Deliberately deferred</td><td>Auto-pulling a view count from a YouTube or Twitter post an ambassador submits. Not required for launch — admins will check submissions manually instead (see Section 7).</td></tr>
+<tr><td>Public hosting</td><td>❌ Not started</td><td>The entire site currently only runs on our own laptops. Nobody outside the team can visit it yet. A hosting plan exists and is scheduled to be set up this week (see Section 8).</td></tr>
+</table>
+
+<h2>7. What We're Deliberately Leaving Out For Now</h2>
+<p>These are conscious decisions to keep launch week realistic — not things we forgot. Each one can be added later without reworking anything we build now.</p>
+<ul>
+<li><strong>Automatic checking of YouTube/Twitter view counts.</strong> An admin will look at a submitted link or screenshot and approve it by hand. Same end result for the ambassador — just a manual step for us instead of an automatic one.</li>
+<li><strong>Signing in with Instagram, LinkedIn, or a college Microsoft account.</strong> Only plain email/password sign-in at launch.</li>
+<li><strong>A separate login area for sponsoring brands.</strong> Brands don't get their own accounts — our team manages brand-sponsored tasks on their behalf.</li>
+<li><strong>Redeeming points for a prize.</strong> Points are for ranking on the leaderboard only, for now.</li>
+<li><strong>Automatically confirming a click turned into a paid registration.</strong> As explained in Section 5 — this depends on the registration system, which is a separate, larger project.</li>
+</ul>
+
+<h2>8. Timeline to Launch</h2>
+<p>Today is July 15. The target launch date is <strong>July 20, 2026</strong> — five days away. This is a tight but deliberate timeline: everything in the "not started" list in Section 6 needs to be built in that window. Roughly:</p>
+<ul>
+<li><strong>July 15 (today):</strong> Final planning, groundwork, and setting up the hosting accounts we'll need.</li>
+<li><strong>July 16–17:</strong> The core ambassador-side and admin-side server logic gets built.</li>
+<li><strong>July 18:</strong> Remaining server logic finished; hosting setup begins.</li>
+<li><strong>July 19:</strong> Hosting finished; the whole flow gets tested end to end on the live site.</li>
+<li><strong>July 20:</strong> Buffer day for final fixes, then live.</li>
+</ul>
+<p>This is achievable, but only if nothing else pulls the two people building it away this week, and only with the deliberate scope cut in Section 7 respected.</p>
+
+<h2>9. Who's Building It</h2>
+<table>
+<tr><th>Part</th><th>Owner</th></tr>
+<tr><td>Backend (accounts, referral tracking, points, leaderboard logic)</td><td>Minhaj</td></tr>
+<tr><td>Frontend (the pages people actually see and click)</td><td>Anjneya, with support from the rest of the frontend team</td></tr>
+</table>
+
+<h2>10. Things to Keep in Mind (Plain-Language Risk Notes)</h2>
+<ul>
+<li><strong>The site may feel slow on its very first visit of the day.</strong> We're launching on free hosting this week (see Part Two, Section 5) to avoid a paid setup we haven't budgeted for yet. Free hosting "falls asleep" after a few minutes of no visitors and takes up to a minute to wake up on the next visit. After that, it's normal speed. This is fine for launch week and gets fixed automatically once we move to paid hosting later — no rebuilding required.</li>
+<li><strong>Registration numbers tied to a specific ambassador won't be available at launch</strong> — only click counts. See Section 5.</li>
+<li><strong>Task approval is manual at launch.</strong> Admins will personally check each submission rather than having the system auto-verify social media stats. This just means a small amount of admin review time per submission.</li>
+<li><strong>This is a genuinely tight five-day build.</strong> The plan is realistic, not padded — if anything unexpected comes up, the first thing to slip would be timeline, not the quality of what ships.</li>
+</ul>
+
+<hr>
+
+<h1>Part Two — Technical Execution Plan</h1>
+<p class="subtitle">For the engineering team. Precise, task-by-task.</p>
+
+<h2>1. System Overview</h2>
+<p>Monorepo with two applications: <code>apps/api</code> (NestJS backend) and <code>apps/web</code> (Next.js frontend), sharing a PostgreSQL database (via Prisma) and a Redis instance for caching and background job processing (via BullMQ). All new endpoints must follow the existing response-envelope contract and module-boundary rules already documented in <code>CONSTITUTION.md</code>, <code>.claude/reference/architecture.md</code>, and <code>.claude/reference/api.md</code>.</p>
+
+<h2>2. Decisions Locked This Week (2026-07-15)</h2>
+<table>
+<tr><th>Decision</th><th>Outcome</th></tr>
+<tr><td>Launch scope</td><td><strong>Full scope</strong> — referral tracking, task/points system, admin review, leaderboard, all live by July 20.</td></tr>
+<tr><td>Hosting</td><td><strong>Free-tier stopgap stack</strong> (no infra budget sanctioned yet). See Section 5.</td></tr>
+<tr><td>Social auto-verification</td><td><strong>Deferred to fast-follow.</strong> Admins verify proof manually at launch.</td></tr>
+<tr><td>Registration-linked attribution</td><td><strong>Clicks-only at launch.</strong> The conversion-recording method is built but intentionally left unwired — no Registration module exists yet to call it.</td></tr>
+<tr><td>Points redemption</td><td>Out of scope. Ranking only, no fixed formula, admin-configurable per task.</td></tr>
+</table>
+
+<h2>3. Backend Plan — Precise Task List (Owner: Minhaj)</h2>
+<p>Tracked in GitHub issue <strong>#24</strong>. Branch: <code>feature/ca-backend</code>, off fresh <code>origin/develop</code>, after PR #23 (Redis/BullMQ infra) merges.</p>
+
+<h3>3.1 Endpoints to Build</h3>
+<table>
+<tr><th>Method</th><th>Path</th><th>Access</th><th>Purpose</th></tr>
+<tr><td>PATCH</td><td><code>/admin/users/:id/role</code></td><td>Admin</td><td>Promote a user to Campus Ambassador. The only way a user becomes a CA at launch — no self-service application flow.</td></tr>
+<tr><td>POST</td><td><code>/ca/onboard</code></td><td>Campus Ambassador</td><td>Body: assigned college name. Generates a unique referral code, creates the CA profile. Returns 409 if a profile already exists.</td></tr>
+<tr><td>GET</td><td><code>/ca/me</code></td><td>Campus Ambassador</td><td>Returns profile, referral code + shareable link, live click count, referral count, total points, and rank.</td></tr>
+<tr><td>POST</td><td><code>/ca/referral/click</code></td><td>Public</td><td>Body: referral code. Validates the code exists (404 if not), then increments a click counter. No database write per click — rate-limited.</td></tr>
+<tr><td>POST / GET / PATCH</td><td><code>/admin/brands</code></td><td>Admin / Moderator</td><td>CRUD for sponsoring brands (name, logo, contact).</td></tr>
+<tr><td>POST / GET / PATCH</td><td><code>/admin/ca-tasks</code></td><td>Admin / Moderator</td><td>CRUD for promotional tasks. Brand-sourced tasks require a brand; moderator-sourced tasks forbid one.</td></tr>
+<tr><td>GET</td><td><code>/ca/tasks</code></td><td>Campus Ambassador</td><td>List active tasks with the caller's own submission status, if any.</td></tr>
+<tr><td>POST</td><td><code>/ca/tasks/:taskId/submit</code></td><td>Campus Ambassador</td><td>Submit proof — a URL or an uploaded file. Re-submitting before verification updates the existing submission rather than creating a duplicate.</td></tr>
+<tr><td>GET</td><td><code>/admin/ca-tasks/:id/assignments</code></td><td>Admin / Moderator</td><td>Paginated list of submissions for a task, filterable by status.</td></tr>
+<tr><td>PATCH</td><td><code>/admin/ca-task-assignments/:id/verify</code></td><td>Admin / Moderator</td><td>Approve or reject a submission, with an optional points override. Must never award points twice for the same submission.</td></tr>
+<tr><td>GET</td><td><code>/leaderboard/ca</code></td><td>Public</td><td>Ranked leaderboard, served from a cache that refreshes every 15 minutes; falls back to a live query if the cache is empty.</td></tr>
+</table>
+
+<h3>3.2 Build Order</h3>
+<ol>
+<li>Add the required environment variables and dependencies (S3-compatible file storage client).</li>
+<li>Minimal admin role-promotion endpoint.</li>
+<li>CA onboarding + profile endpoint.</li>
+<li>Referral click tracking (rate-limited, no synchronous database write).</li>
+<li>The conversion-recording method — built and unit-tested, but intentionally not called from anywhere yet (documented in code with a pointer to this plan, so whoever builds the Registration module later finds the hook immediately).</li>
+<li>Brand and task admin CRUD, with the brand/moderator cross-validation rule.</li>
+<li>Task list + submission endpoint, including file upload.</li>
+<li><em>(Fast-follow, not launch-blocking)</em> Social media auto-metric fetch.</li>
+<li>Admin verification + points award, with strict duplicate-award protection.</li>
+<li>Leaderboard computation, caching, and endpoint.</li>
+<li>Update <code>.claude/reference/api.md</code> and <code>architecture.md</code> to reflect exactly what shipped.</li>
+</ol>
+
+<h3>3.3 Non-Negotiable Acceptance Criteria</h3>
+<ul>
+<li>Referral clicks never cause a synchronous database write.</li>
+<li>Brand tasks require a brand; moderator tasks forbid one.</li>
+<li>A submission cannot be verified twice — points cannot double-award.</li>
+<li>File uploads validate content type and size server-side, not just on the frontend.</li>
+<li>The leaderboard cache survives a cold start by falling back to a live query.</li>
+<li>Reference docs (<code>api.md</code>, <code>architecture.md</code>) describe exactly what was built, updated in the same pull request.</li>
+<li>No cross-module service imports — the CA module talks to Auth only through the authenticated request, never by importing Auth's service directly.</li>
+</ul>
+
+<h2>4. Frontend Plan — Precise Task List (Owner: Anjneya, with frontend team support)</h2>
+<p>Tracked in GitHub issue <strong>#25</strong>. Branch: <code>feature/ca-frontend</code>, off fresh <code>origin/develop</code>, after the backend endpoints above start landing (API contract is locked above, so this can start in parallel — do not wait for every endpoint to be finished before starting).</p>
+
+<h3>4.1 Design &amp; UI Rules — Read Before Building Anything</h3>
+<ul>
+<li><strong>Reuse the existing design system only.</strong> Button, Card, Badge, Input, Modal, Spinner, EmptyState, ErrorState, and NotFound components are already built — use them. Do not create new base components for things these already cover.</li>
+<li><strong>Styling stays in CSS Modules.</strong> No Tailwind, no new styling system.</li>
+<li><strong>Mobile-first is mandatory.</strong> Every new page must be checked at a 375px width, not just desktop.</li>
+<li><strong>Every new page needs a loading state, an empty state, and an error state</strong> — verified by actually looking at it in the browser, not assumed from reading the code.</li>
+<li><strong>No new component libraries or state-management libraries</strong> unless a specific, real need comes up while building — do not add anything speculatively.</li>
+<li><strong>Keyboard accessibility</strong> on every button and link — tab order should make sense, nothing should be a click-only trap.</li>
+</ul>
+
+<h3>4.2 Pages to Build</h3>
+<table>
+<tr><th>Page</th><th>Purpose</th><th>Backend endpoint(s) it uses</th></tr>
+<tr><td><code>/login</code></td><td>Sign in with email and password.</td><td>Existing auth endpoints</td></tr>
+<tr><td><code>/register</code></td><td>Create an account.</td><td>Existing auth endpoints</td></tr>
+<tr><td><code>/dashboard</code></td><td>Role-aware redirect — sends Campus Ambassadors to their dashboard, everyone else elsewhere.</td><td><code>/ca/me</code> (to check role/profile)</td></tr>
+<tr><td><code>/dashboard/ca/onboard</code></td><td>One-field form (assigned college) for a newly-approved ambassador to complete onboarding.</td><td><code>POST /ca/onboard</code></td></tr>
+<tr><td><code>/dashboard/ca</code></td><td>Main ambassador dashboard: referral code, shareable link with copy button, live click count, referral count, points, rank.</td><td><code>GET /ca/me</code></td></tr>
+<tr><td><code>/dashboard/ca/tasks</code></td><td>List of active tasks as cards, with a submission form on each (URL field or file upload depending on task type).</td><td><code>GET /ca/tasks</code>, <code>POST /ca/tasks/:id/submit</code></td></tr>
+<tr><td><code>/leaderboard</code></td><td>Public, server-rendered ranked table — no login required to view.</td><td><code>GET /leaderboard/ca</code></td></tr>
+<tr><td><code>/admin/ca-tasks</code></td><td>Admin: create a task, see a list of existing tasks.</td><td><code>/admin/ca-tasks</code></td></tr>
+<tr><td><code>/admin/ca-tasks/[id]/assignments</code></td><td>Admin: review submissions for a task, approve or reject with a points override.</td><td><code>/admin/ca-tasks/:id/assignments</code>, <code>/admin/ca-task-assignments/:id/verify</code></td></tr>
+</table>
+
+<h3>4.3 Also Required</h3>
+<ul>
+<li><strong>A small shared API client</strong> that talks to the backend, attaches the login token automatically, and handles an expired-session refresh without the user noticing.</li>
+<li><strong>Referral-link capture:</strong> when someone visits the site with a referral code in the link (e.g. <code>?ref=CA-AMU-042</code>), the code must be remembered for 30 days and the click recorded immediately — without ever blocking or slowing down the page for the visitor.</li>
+</ul>
+
+<h3>4.4 Non-Negotiable Acceptance Criteria</h3>
+<ul>
+<li>Full click-through works end to end: visiting a referral link sets the code, records the click, and the ambassador sees it reflected on their dashboard.</li>
+<li>Full click-through works end to end: a task submission, once approved by an admin, visibly updates the ambassador's points and leaderboard position.</li>
+<li>Loading, empty, and error states are verified in-browser for every new page.</li>
+<li>Every new page is checked at 375px width.</li>
+<li>No dependency is added beyond what's explicitly needed for this work.</li>
+</ul>
+
+<h2>5. Deployment Plan — Free-Tier Launch Stack</h2>
+<p>No hosting budget is sanctioned yet, so launch runs on free services this week. Moving to the paid, long-term hosting plan later is a configuration change only — no code rewrite.</p>
+<table>
+<tr><th>Piece</th><th>Service</th><th>Note</th></tr>
+<tr><td>Frontend</td><td>Vercel (free tier)</td><td>Already the intended long-term choice.</td></tr>
+<tr><td>Backend API</td><td>Render or Fly.io (free tier)</td><td>Background job processing runs inside the same instance — no separate worker service.</td></tr>
+<tr><td>Database</td><td>Neon (free Postgres)</td><td>Doesn't expire after a trial period, unlike some other free database offers.</td></tr>
+<tr><td>Cache / background jobs</td><td>Upstash (free Redis)</td><td>Drop-in compatible with what the code already expects.</td></tr>
+<tr><td>File storage (task proof uploads)</td><td>Cloudflare R2 (free tier)</td><td>Free up to 10GB, no payment method required. Already the intended long-term choice.</td></tr>
+<tr><td>Domain</td><td>Default Vercel/Render subdomains for now</td><td>A custom domain isn't blocking launch — can be added later with zero code change.</td></tr>
+</table>
+<p><strong>Known limitation, flagged deliberately:</strong> free backend instances "sleep" after roughly 15 minutes of no traffic, and the first request after that takes 30–50 seconds to respond. Acceptable for launch week; not a long-term solution. Upgrading to an always-on instance later is a billing change only, not a code change. A free uptime monitor should be set up to check on the service periodically so it doesn't stay asleep when someone actually needs it.</p>
+
+<h2>6. Day-by-Day Schedule</h2>
+<table>
+<tr><th>Day</th><th>Date</th><th>Backend (Minhaj)</th><th>Frontend (Anjneya)</th></tr>
+<tr><td>0</td><td>Jul 15</td><td>Merge the Redis/background-job infra PR. Lock the API contract above so frontend isn't blocked. Set up all free-tier hosting accounts. Kick off the payment-provider KYC paperwork (unrelated to this feature, but has a multi-week lead time — starting now costs nothing).</td><td>Read the locked API contract. Start the login/register pages and the shared API client — neither depends on backend work being finished.</td></tr>
+<tr><td>1–2</td><td>Jul 16–17</td><td>Build the bulk of the backend task list in Section 3 — onboarding, referral tracking, task/brand management, submissions, verification, points, leaderboard.</td><td>Build the referral-capture logic. As each backend endpoint lands, connect the existing dashboard visual pieces to real data instead of building new ones.</td></tr>
+<tr><td>3</td><td>Jul 18</td><td>Finish any remaining backend endpoints. Begin hosting setup.</td><td>Task list + submission page, public leaderboard page, minimal admin review page.</td></tr>
+<tr><td>4</td><td>Jul 19</td><td>Finish hosting setup end to end. Full test pass on the live site, not just local machines.</td><td>Check every new/changed page at mobile width. Fix anything the live test pass surfaces.</td></tr>
+<tr><td>5</td><td>Jul 20</td><td colspan="2">Buffer day. Final checks, fix anything broken, go live.</td></tr>
+</table>
+
+<h2>7. Definition of Done (Every Phase)</h2>
+<ul>
+<li>Lint, type-check, and build all pass.</li>
+<li>Automated backend tests (unit and end-to-end) pass.</li>
+<li>Every pull request is linked to its GitHub issue and includes what was tested.</li>
+<li><code>api.md</code> and <code>architecture.md</code> are updated in the same pull request that changes the API or module structure — never deferred to "later."</li>
+<li>For frontend work: manually verified in a real browser, at both mobile and desktop widths, including loading/empty/error states.</li>
+</ul>
+
+<h2>8. Open Risks &amp; Decisions Log</h2>
+<table>
+<tr><th>Risk</th><th>Status</th></tr>
+<tr><td>Referral-to-registration attribution can't work end to end without the Registration module, which doesn't exist yet.</td><td>Accepted for launch. Clicks-only tracking. The connecting code is built and ready, just not wired up.</td></tr>
+<tr><td>File uploads are the first user-supplied file surface in the codebase.</td><td>Mitigated by server-side content-type and size validation — not just a frontend hint.</td></tr>
+<tr><td>Free-tier hosting sleeps after inactivity, causing a slow first request.</td><td>Accepted for launch week. Fixed later by a billing upgrade, no code change.</td></tr>
+<tr><td>This is an aggressive five-day timeline for a two-person build track.</td><td>Accepted, with one deliberate scope cut (social auto-verification deferred) to buy back time.</td></tr>
+</table>
+
+<h2>9. Reference Links</h2>
+<table>
+<tr><th>Item</th><th>Reference</th></tr>
+<tr><td>Backend work</td><td>GitHub issue #24</td></tr>
+<tr><td>Frontend work</td><td>GitHub issue #25</td></tr>
+<tr><td>Background-job infra (merging now)</td><td>Pull Request #23, closes issue #21</td></tr>
+<tr><td>Full technical execution plan (source document)</td><td><code>.claude/plans/local-ca-program-launch.md</code> in the project repository</td></tr>
+</table>
+
+<hr>
+<p class="subtitle">End of document. Questions or scope changes should be raised with Minhaj before implementation starts on the affected piece.</p>
+
+</body>
+</html>
