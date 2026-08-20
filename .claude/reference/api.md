@@ -142,6 +142,11 @@ Response `data` shape:
 | PATCH  | `/admin/ca-task-assignments/:id/verify`   | Admin         | Verify CA task submission
 (compare-and-swap lock)|
 | GET    | `/admin/ca-tasks/:id/assignments`         | Admin         | List CA task assignments                         |
+| PATCH  | `/admin/users/:id/role`                   | Admin         | Promote or change a user's role                  |
+| POST   | `/ca/apply`                               | Authenticated | Apply to become a Campus Ambassador              |
+| GET    | `/ca/apply/me`                            | Authenticated | Get the caller's latest application status       |
+| GET    | `/admin/ca-applications`                  | Admin         | List CA applications (paginated, status filter)  |
+| PATCH  | `/admin/ca-applications/:id/review`       | Admin         | Approve or reject a CA application (compare-and-swap lock) |
 
 
 #### CA Task Proof Rules
@@ -161,6 +166,27 @@ Response `data` shape:
 - Final status can be `VERIFIED` or `REJECTED`.
 - Verification uses an atomic compare-and-set update.
 - A concurrent or already-processed assignment returns `409 Conflict`.
+
+#### CA Application Intake
+
+`POST /ca/apply` — any authenticated user who is not already `CAMPUS_AMBASSADOR`.
+
+- Body: `{ targetCollege: string }`.
+- Returns `409 Conflict` if the caller already has a `PENDING` application, or is already `CAMPUS_AMBASSADOR`.
+- A previously `REJECTED` application does not block re-applying.
+
+`GET /ca/apply/me` — returns the caller's most recent `CAApplication`, or `null` if none exists.
+
+`GET /admin/ca-applications` — Admin-only, paginated (`?page=&limit=`, default limit 20), optional `?status=` filter (`PENDING`/`APPROVED`/`REJECTED`), joined to the applicant's name/email.
+
+`PATCH /admin/ca-applications/:id/review`
+
+- Only `ADMIN` and `SUPER_ADMIN` can review applications.
+- The application must currently be `PENDING`.
+- Body: `{ status: 'APPROVED' | 'REJECTED', rejectionReason?: string }` — `rejectionReason` is required when rejecting.
+- Approval promotes the applicant's role to `CAMPUS_AMBASSADOR` atomically, in the same transaction as the compare-and-swap status update.
+- A concurrent or already-processed application returns `409 Conflict`.
+
 ## 4. Contract Rules
 
 - DTOs must reject unknown fields.

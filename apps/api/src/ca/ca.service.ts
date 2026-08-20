@@ -197,6 +197,42 @@ export class CaService {
     });
   }
 
+  async applyForCA(userId: string, targetCollege: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (user.role === 'CAMPUS_AMBASSADOR') {
+      throw new ConflictException('You are already a Campus Ambassador');
+    }
+
+    const existingPending = await this.prisma.cAApplication.findFirst({
+      where: { userId, status: 'PENDING' },
+    });
+
+    if (existingPending) {
+      throw new ConflictException(
+        'You already have a pending Campus Ambassador application',
+      );
+    }
+
+    return this.prisma.cAApplication.create({
+      data: {
+        userId,
+        targetCollege,
+        status: 'PENDING',
+      },
+    });
+  }
+
+  async getMyApplication(userId: string) {
+    return this.prisma.cAApplication.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   /**
    * Records a referral conversion for a given refCode + registrationId.
    * Deliberately NOT wired to any controller yet — the Registration module

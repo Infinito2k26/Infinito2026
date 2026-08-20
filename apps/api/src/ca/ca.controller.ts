@@ -19,7 +19,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from '../uploads/uploads.service';
 import { CaService } from './ca.service';
 
-import { CaOnboardDto, ReferralClickDto, SubmitTaskDto } from './dto/ca.dto';
+import {
+  CaOnboardDto,
+  ReferralClickDto,
+  SubmitTaskDto,
+  CreateApplicationDto,
+} from './dto/ca.dto';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -43,6 +48,25 @@ export class CaController {
     const userId = req.user.id;
 
     return await this.caService.onboard(userId, body.college);
+  }
+
+  @Post('apply')
+  @UseGuards(JwtAuthGuard)
+  async apply(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CreateApplicationDto,
+  ) {
+    const userId = req.user.id;
+
+    return await this.caService.applyForCA(userId, body.targetCollege);
+  }
+
+  @Get('apply/me')
+  @UseGuards(JwtAuthGuard)
+  async getMyApplication(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+
+    return await this.caService.getMyApplication(userId);
   }
 
   @Post('referral/click')
