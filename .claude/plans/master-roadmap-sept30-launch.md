@@ -1,118 +1,92 @@
-# Master Execution Plan — Full Public Launch by September 30, 2026
+# Master Execution Plan — 3-Day Compressed Launch (Aug 28–30, 2026)
 
-**Written:** 2026-08-03. **Target:** full public launch (real registrations, real payments, QR check-in, live) by **2026-09-30**.
-**Supersedes:** `.claude/reference/project-roadmap.md` (still on unmerged PR #17) for dates and sequencing. Phase numbering kept identical so the two docs stay cross-referenceable — merge PR #17 first, then apply this doc's dates/re-sequencing on top of it.
+**Written:** 2026-08-28. **Target:** register → pay via UPI (manual, screenshot-verified) → QR credential live, in **3 calendar days**.
+**Supersedes:** the previous version of this document (the Aug 3 → Sept 30, 8-week plan) **entirely**. That schedule is void — this is a full rewrite, not an amendment. Razorpay is removed from scope, not deferred.
 
-## Ground truth as of 2026-08-03 (verified against code, not docs)
+## Why this replaces the old plan, not just its dates
 
-| Phase | Status |
+The 8-week plan assumed Razorpay (2–4 week KYC lead time) and a full phase sequence (Registration → Payments → QR → Notifications → Schedule → Admin → Hardening → Deploy). Two things changed:
+1. **Payment method:** no gateway. Every registration form shows a static UPI QR code to the fest's business account; the payer pays externally in their own UPI app, then uploads a screenshot + enters the transaction ID in the same form. Admin manually approves or rejects against that proof. This removes order creation, webhook HMAC verification, and reconciliation automation from scope completely — not "later," gone.
+2. **Timeline:** 3 days, 4 people, starting today. That is not enough time to also do Notifications, Schedule, a hardening pass, or a polished deploy — those are cut or reduced to best-effort stretch goals below. Say so plainly now so nobody discovers it on day 3.
+
+## Ground truth as of 2026-08-28 (verified against code, not docs)
+
+| Area | Status |
 |---|---|
-| 0 — Foundation | ✅ Done |
-| 1A — Prisma schema (v2.2, 19 models) | ✅ Done |
-| 1B — Auth | ✅ Done — register/login/refresh/logout/me, JwtAuthGuard, RolesGuard, ThrottlerGuard all present. More complete than the roadmap doc assumed. |
-| 1C — UI shell/primitives | ✅ Done |
-| Redis + BullMQ infra | ✅ Done, merged (PR #23) |
-| 6 — CA Program (Phase C backend, Phase D frontend) | ❌ **0% code.** Was "locked" for July 20 launch with a fully hardened plan (`local-ca-program-launch.md`). No `feature/ca-backend` or `feature/ca-frontend` branch was ever created. **Two weeks overdue with zero output on a 5-day plan** — the biggest risk factor for this new plan is a repeat of this. |
-| 2–5, 7 — Users/Events/Teams/Registration/Payments/QR/Notifications/Schedule/Leaderboard/Admin | ❌ 0% — no modules beyond auth/common/config/health/prisma/queue/redis exist in `apps/api/src` |
-| 8/9/10 — Hardening/Deploy/Launch | ❌ Not started, no infra provisioned |
-| PR #17 (master roadmap + budget doc) | Open, unmerged for ~4 weeks |
-| External: Razorpay KYC, domain, budget sanction | Not started — pure ask-and-wait, zero dev cost, start Day 0 |
+| Auth | ✅ Done — register/login/refresh/logout/me, JwtAuthGuard, RolesGuard, ThrottlerGuard. |
+| CA Portal (backend + most frontend) | ✅ Done — onboarding, application review, referral clicks, task list/submit, admin brand/task/assignment management, CA leaderboard. Built on `apps/api/src/ca/`, `apps/web/app/dashboard/ca/*`. |
+| Admin module | 🟡 Partial — brands, CA-tasks, CA-task-assignment verification, CA-application review, user role updates. No registration/payment/event admin views yet. |
+| Uploads | 🟡 Partial — `UploadsService` does presigned S3/R2 PUT+GET, but the object-key prefix is hardcoded to `ca-proof/`. Needs generalizing before payment screenshots can reuse it. |
+| Leads/waitlist | ✅ Done — simple capture endpoint, no conversion wiring yet. |
+| Redis + BullMQ infra | ✅ Done. |
+| **Events module** | ❌ 0% code. Schema (`Event`, `EventSubOption`, `EventRulebook`) exists, no service/controller. |
+| **Teams module** | ❌ 0% code. Schema (`Team`, `Participant`) exists, no service/controller. |
+| **Registration module** | ❌ 0% code. Schema (`Registration`, `RegistrationSubOption`) exists, no service/controller. |
+| **Payments (any mode)** | ❌ 0% code. Schema already models `PaymentMode.MANUAL_SCREENSHOT` with `screenshotUrl`/`transactionId` fields — the data model was built anticipating exactly this flow. No service/controller exists yet. |
+| **QR/Credential + scan** | ❌ 0% code. Schema (`Credential`, `ScanLog`) exists, no service/controller. |
+| Notifications (email) | ❌ 0% code, **cut from this sprint** (see below). |
+| Schedule/Match/Venue | ❌ Not even modeled in schema, **cut from this sprint**. |
 
-Team confirmed fully active: Minhaj (Lead), Saad-Manda (Sr. Backend), Mahendra-seervi + ansariowais669-hub (Jr. Backend), Anjney-Lawaniya (Sr. Frontend), jamanrao-beep + Himanshi-05 (Jr. Frontend/Design).
+**The real gap this sprint closes:** Events, Teams, Registration, Payments, and QR/Credential — the actual core of "someone registers for an event and gets in" — currently do not exist as code at all, only as Prisma models.
 
-## Why this is tight, said plainly
+Team for this sprint: **Minhaj** (Lead), **Saad-Manda** (Sr. Backend), **Shikhar Yadav** (Backend), **Anjney-Lawaniya** (Sr. Frontend). Mahendra-seervi is off this sprint; Shikhar Yadav takes his place.
 
-8.5 weeks to build and ship everything from Phase 2 through Phase 10 — registration, payments, QR, notifications, schedule, leaderboard, admin, hardening, and deployment — starting from a program that just missed a 5-day CA Portal plan by two-plus weeks with no code at all. The schedule below has **no slack until the final 3-day buffer**. It only holds if:
-1. CA Portal actually starts today, not "this week."
-2. Nobody treats a written plan as done work — a `.claude/plans/*.md` file with no branch behind it is exactly what happened in July.
-3. Razorpay/domain/budget asks go out today — their lead time is calendar time we cannot buy back later.
+This sprint is split **by feature, not by frontend/backend layer**. Each of the four people owns one vertical end-to-end — its schema/service/controller *and* its UI — for the whole 3 days, instead of one person building every backend route and another building every screen. That keeps handoffs out of the critical path: nobody is blocked waiting for someone else to finish "their half" of the same feature. All four reuse the CA-portal's established patterns (`lib/api.ts`, `AuthGuard`, `StatCard`/module.css conventions, Nest module/service/controller layout) to move fast without inventing new patterns — including on the backend side for Anjney-Lawaniya and on the frontend side for Minhaj/Saad-Manda/Shikhar Yadav, all of whom are now writing across both layers on their vertical.
 
-If week 1 or 2 slips the way the CA plan did, this whole date moves. Flag it early, don't discover it in week 7.
+The four verticals, by owner:
 
-## Day 0 actions (2026-08-03, before anything else)
+| Owner | Vertical | Why them |
+|---|---|---|
+| **Minhaj** (Lead) | Events + Teams — the foundation schemas everything else registers against | Lead unblocks the other three fastest by locking this contract first; carries the admin-dashboard and sprint-governance overhead (throttling, env audit, migration dry-run) that naturally falls to the lead |
+| **Saad-Manda** (Sr. Backend) | Registration — individual/team branching, duplicate guard, status transitions, the registration form UI | Single largest, most logic-heavy module; matches seniority |
+| **Shikhar Yadav** (Backend) | Payments — manual UPI screenshot submission + admin verification, both sides of that form | Self-contained vertical, good scope for ramping onto the codebase this sprint |
+| **Anjney-Lawaniya** (Sr. Frontend) | QR/Credential + Scan — token/QR generation, credential display, volunteer scan endpoint | Depends on Payments confirming first, so it has the most slack on Day 1; stretching into backend here is offset by lighter Day-1 load |
 
-- [ ] Minhaj: send the Razorpay KYC request, domain request (institute subdomain or purchase), and budget sanction ask to their respective owners **today** — zero dev cost, pure lead-time risk if delayed.
-- [ ] Minhaj: get the participating-college list from the outreach team (blocks CA Phase C Step 3).
-- [ ] Merge PR #17 (roadmap/budget docs) — docs-only, no code risk, unblocks this doc superseding it cleanly. *(Ask before merging — shared PR state.)*
-- [ ] Create `feature/ca-backend` branch off fresh `develop`. This is the literal first line of code.
+Workload is balanced by giving each vertical one backend-heavy day, one frontend-heavy day, and a Day-3 hardening/QA pass — see below.
 
-## Week-by-week plan
+## Explicitly cut from this sprint (fast-follow after launch, not before)
 
-### W1 — Aug 3–9: CA Portal catch-up + Core Domain kickoff (parallel)
-CA Portal was supposed to be done in July; it runs now, in parallel with Phase 2 starting immediately (not gated behind CA finishing, per the original roadmap's parallel-stream design).
+- **Razorpay / any payment gateway** — removed from scope permanently for this launch, not just this sprint.
+- **Email notifications (Resend)** — no confirmation/QR emails. Registrants see status on their dashboard only.
+- **Schedule/live scores/Match module** — not modeled, not built, not attempted.
+- **Volunteer scanner PWA (offline-first, camera UX)** — only the bare `POST /identity/scan` API + a minimal admin scan-log table get attempted, and only if Day 3 has slack.
+- **Load testing, full OWASP pass, npm audit, dependency updates** — a fast sanity pass only (reuse existing `ThrottlerGuard`, extend it to the new endpoints).
+- **Production deployment (VPS/Cloudflare/R2 provisioning)** — best-effort stretch on Day 3 evening; the sprint's success bar is the full loop working end-to-end on staging/local, not a public URL.
 
-- **Minhaj:** CA backend Phase C Steps 1–5 (schema migration, onboarding w/ fixed college list, deduped+durable click tracking, waitlist capture, `recordConversion` stub). Full spec: `.claude/plans/local-ca-program-launch.md`.
-- **Saad-Manda:** Phase 2A Users module (`findById`/`findByEmail`/`updateProfile`, `GET/PATCH /users/me`, admin user list + role assignment).
-- **Mahendra-seervi:** Phase 2B Events module (CRUD, publish toggle, capacity guard).
-- **ansariowais669-hub:** Phase 2C Teams module (create, invite code, join, size enforcement).
-- **Anjney-Lawaniya:** CA frontend Phase D Steps 1–4 (`lib/api.ts`, referral middleware, `/login`, `/signup`, `/register` waitlist page) — contract is already locked in the CA plan doc, no need to wait on backend completion. Also: TanStack Query setup + auth context (roadmap 2D.5/2D.6), shared infra everything else needs.
-- **jamanrao-beep / Himanshi-05:** Homepage, events listing/detail pages as Events API lands mid-week; continue wiring the disconnected CA components from closed PR #22 into place.
+## Day 1 — Aug 28: Foundations + Registration + Payments scaffold
 
-### W2 — Aug 10–16: CA Portal ships + Registration scaffolding starts
-- **Minhaj:** CA backend Phase C Steps 6–10 (Brand/CaTask CRUD, task submission w/ signed-URL uploads, admin verification w/ compare-and-swap, leaderboard, Sentry). **Gate: Saad-Manda reviews Step 8 (points-award + file-upload) before merge** — widest attack surface, per the CA plan's own review requirement.
-- **Anjney-Lawaniya + team:** CA frontend Phase D Steps 5–11 (dashboard wiring, task list/submission UI, public leaderboard ISR, minimal admin UI, Sentry, mobile QA at 375px). **CA Portal actually goes live this week** — three weeks late against the original ask, but live, hardened, and real.
-- **Saad-Manda + juniors:** finish Users/Events/Teams; start Phase 3A Registration service scaffolding (create, status transition, idempotency, duplicate guard).
-- **Frontend juniors:** finish public pages, team management UI (create/invite/join).
+Lock the Event/Registration contract (fields, DTOs) early in the day — every downstream vertical (Registration, Payments, QR) depends on it, so it's the one thing that must not slip past midday.
 
-### W3 — Aug 17–23: Registration + Payments backend
-- **Minhaj:** PaymentsService — Razorpay order creation, `POST /payments/orders`, `POST /payments/verify` (signature check, transactional success), `POST /webhooks/razorpay` (HMAC validation, fast 200, enqueue reconciliation).
-- **Saad-Manda:** finish RegistrationService — waitlist logic, cancellation + status propagation, `GET /admin/registrations`.
-- **Backend juniors:** `GET /registrations/mine`, idempotency key enforcement on payment mutations, supporting DTOs/tests.
-- **Frontend:** registration form (individual/team selection), start Razorpay checkout SDK integration.
+- **Minhaj (Events + Teams):** Events module — CRUD, publish toggle, capacity guard, `GET /events` public listing, admin create/update — and Teams module — create, invite code, join, size enforcement against `Event.teamSizeMin/Max`. Publish the locked contract to the other three by midday.
+- **Saad-Manda (Registration):** Registration module backend — `POST /registrations` (individual + team branches), duplicate guard (schema already enforces `@@unique([eventId, userId])`), status transitions, stub `Payment` row creation in `MANUAL_SCREENSHOT` mode only.
+- **Shikhar Yadav (Payments):** UPI payment section scaffold on the registration form — static QR image + VPA + amount-due display (doesn't need the registration backend yet, so front-loaded here) — plus generalize `UploadsService`'s key prefix so it isn't `ca-proof/`-only (e.g. accept a `folder` param), unblocking his own Day 2 upload work.
+- **Anjney-Lawaniya (QR/Credential + Scan):** Lightest day by design, since Credential issuance depends on Payments confirming first (not landing until Day 2). Spends it on the `Credential`/`ScanLog` token design (HMAC scheme, QR payload shape) and shoring up the shared frontend conventions (`lib/api.ts`, `AuthGuard`, module.css patterns) the other three are now also writing against on their verticals.
 
-### W4 — Aug 24–30: Finish Payments + start QR/Notifications
-- **Minhaj:** BullMQ payment reconciliation worker, refund flow, `POST /admin/payments/:id/reconcile`. Then start QR: BullMQ QR generation worker (triggered on payment confirmed), signed credential (HMAC/JWT) + PNG upload to R2, `GET /identity/mine`, `GET /identity/validate/:token` (offline-safe).
-- **Saad-Manda:** `POST /identity/scan`, duplicate scan detection (`ScanLog.DUPLICATE`).
-- **Mahendra-seervi:** Notifications — Resend integration, BullMQ email worker, registration confirmation email (QR attached).
-- **ansariowais669-hub:** payment failure email, password reset email templates.
-- **Frontend:** payment success/failure screens, `/dashboard/registrations` page, start scanner PWA shell (camera access, QR decode).
+## Day 2 — Aug 29: Registration UI, payment verification, QR issuance
 
-### W5 — Aug 31–Sep 6: Finish QR/Notifications + start Schedule/Leaderboard + Admin surface
-- **Minhaj/Anjney-Lawaniya:** finish scanner PWA (offline-first credential cache for poor fest-day network), QR credential display + download page.
-- **Mahendra-seervi:** fest-day reminder email (bulk, scheduled job) — last notification item.
-- **ansariowais669-hub:** Schedule module — `Match`/`Venue`/`Round` Prisma models + migration, `GET /schedule`, admin fixture CRUD, `PATCH .../result`.
-- **Saad-Manda:** Leaderboard module — score aggregation, Redis cache w/ invalidation, `GET /leaderboard`, `GET /leaderboard/:eventId`.
-- **jamanrao-beep/Himanshi-05:** Admin surface kickoff — layout (role-gated), event management table, registration management, payment management (APIs are ready by now).
+- **Minhaj (Events + Teams):** Event/team-facing frontend pieces (browsing/selection surfaces consumed by Saad-Manda's registration form) and admin event/team management screens if time allows; otherwise starts early on the Day 3 admin dashboard.
+- **Saad-Manda (Registration):** Registration form UI — event selection, individual/team branch, custom-field renderer driven by `Event.customFieldsDef`, team create/join UI — wired through `lib/api.ts`.
+- **Shikhar Yadav (Payments):** `POST /payments` (create the `MANUAL_SCREENSHOT` row, presigned upload for the screenshot), `PATCH /admin/payments/:id/verify` (approve → `Registration.CONFIRMED`, transactional; reject → back to `PENDING_PAYMENT` with a reason); wires the screenshot upload + transaction-ID input into the payment form UI he scaffolded Day 1.
+- **Anjney-Lawaniya (QR/Credential + Scan):** QR/Credential module — BullMQ worker fired on payment-confirmed, signed token (HMAC) + QR PNG generation to storage, `GET /identity/mine`, `GET /identity/validate/:token` — plus the QR credential display/download page frontend.
 
-### W6 — Sep 7–13: Finish Schedule/Leaderboard/Admin + buffer
-- Finish schedule + live leaderboard frontend pages, real-time score updates (SSE/polling), admin scan-log viewer, fixture/result management UI, remaining admin user-management screen.
-- Explicit buffer slot for anything that slipped from W1–5 — treat this week as the "catch the CA-style slip before it compounds" checkpoint, not extra scope.
-- CA fast-follow items (rate limiting on onboard/submit, suspension toggle, audit log) only if genuinely idle — these are explicitly deferred in the CA plan, don't let them displace Phase 8.
+## Day 3 — Aug 30: Admin surface, fast hardening pass, end-to-end smoke test, launch
 
-### W7 — Sep 14–20: Pre-production hardening
-- E2E suite (Playwright): register → pay → QR → scan, full loop.
-- Load test: 50–100 concurrent users at simulated registration deadline.
-- Security review: OWASP top 10, auth tokens, webhook HMAC, injection/XSS surfaces.
-- Rate limiting audit across every public + auth-adjacent endpoint.
-- `npm audit` + dependency updates.
-- Env var audit (no secrets in repo, `.env.example` complete), migration dry-run against a prod-shaped DB.
-- Razorpay test→live switch prepared (not flipped yet).
-- Mobile QA (real devices), Lighthouse pass, cross-browser check.
+- **Minhaj (Events + Teams):** Admin registration/payment dashboard wiring (list + filter by status), extend `ThrottlerGuard` to the new public endpoints (register, payment submit), env var audit, migration dry-run.
+- **Saad-Manda (Registration):** `/dashboard/registrations` page (pending/confirmed/rejected states) and Registration edge cases (waitlist, cancellation) hardening.
+- **Shikhar Yadav (Payments):** Admin "pending payments" review screen (screenshot preview + transaction ID + approve/reject buttons); final pass on the UPI QR/VPA asset itself (correct account, correct amount display).
+- **Anjney-Lawaniya (QR/Credential + Scan):** `POST /identity/scan` (volunteer check-in) + duplicate-scan detection (`ScanLog.DUPLICATE`); a bare admin scan-log viewer if there's slack, cut without guilt if not; mobile QA at 375px across the registration form, payment form, and dashboard, fixing visual breakage.
+- **All, together, once each vertical's own piece is done:** the manual end-to-end pass — register → pay (manual) → admin verify → QR issued → scan — is now a shared acceptance test, not one person's job, since each of the four owns a leg of that chain; fix whatever breaks in the handoffs between verticals as a group.
+- **All, if the above lands with time to spare:** best-effort deploy to VPS/Vercel — do not let this block the core loop working reliably on staging.
 
-### W8 — Sep 21–27: Production deployment
-- Provision VPS (DigitalOcean 2GB droplet per `deployment-requirements.md`), Cloudflare DNS/SSL, R2 bucket.
-- Deploy API via Docker Compose, run Prisma migrations, prod seed (admin account only, no sample data).
-- Deploy web to Vercel with production env vars.
-- Full smoke test on production: health, login, event listing, payment sandbox.
-- Razorpay live-mode activation + production webhook URL.
-- Resend domain verification (DKIM/SPF).
-- UptimeRobot monitoring on `/health`.
+## Standing rules (unchanged, restated because they matter more under pressure, not less)
 
-### Sep 28–30: Buffer + Launch
-- Final smoke tests, fix anything broken.
-- Registration-open announcement, CA/UTM link distribution activated.
-- Volunteer scanner briefing + PWA distribution.
+- A plan file is not progress. A branch with a commit is.
+- Payments/QR/auth code still needs a second set of eyes before merge — under this compressed timeline that means same-day review (e.g. Minhaj reviews Shikhar Yadav's `payments/:id/verify` endpoint the moment it's open), not a scheduled weekly gate. With each person now owning a full vertical solo, this cross-review is the only check another set of eyes gets on that code before merge — don't skip it under time pressure.
+- `.claude/reference/api.md` / `architecture.md` / `database.md` get updated in the same PR as any contract change — skipping this now just creates confusion on day 2 and 3 when contracts are still being locked.
 
-## Standing rules (unchanged from CONSTITUTION.md, restated because July broke them)
+## Risks, said plainly
 
-- A plan file is not progress. A branch with a commit is. Every phase above becomes a GitHub issue with an owner **before** work starts, tracked on the Infinito Atlas board, moved to In Progress the day work actually begins — not the day it's assigned.
-- Weekly checkpoint every Monday: did last week's owners actually open the branches/PRs listed? If not, surface it immediately, don't wait for the next weekly.
-- Phase C (points/file-upload) and any payments/QR/auth code: no self-review-only merges — matches CONSTITUTION.md's two-approval rule for these areas.
-- `.claude/reference/api.md` / `architecture.md` / `database.md` updated in the same PR as any contract/schema change — not batched later.
-
-## Risks carried forward, undiluted
-
-- **Recurrence risk:** the single largest threat to Sept 30 is a repeat of the CA Portal's July slip — a hardened plan existing on disk is not the same as work happening. This plan assigns Day 0 actions specifically to break that pattern immediately.
-- **Razorpay KYC (2–4 week lead time):** started Day 0 per this plan, lands comfortably before the W8 live-mode flip *only if actually sent today*.
-- **No slack before W8:** any single-week slip compounds directly into the launch date; the W6 buffer is the only cushion in the entire plan.
-- **Structural CA gap (from the CA plan, still true):** `recordConversion()` stays unwired until the Registration module (W3–4) exists — this plan's sequencing finally closes that gap, unlike the original CA-only plan which couldn't.
+- **This is a 10–15x compression** of what the original 8-week plan allocated to the same scope (Registration, Payments, QR). It only survives by: (a) never touching a payment gateway at all, (b) the cut list above actually staying cut, (c) the Day-1 Event/Registration contract lock holding so the four vertical owners don't block each other mid-sprint, (d) deployment staying a stretch goal, not a gate on calling the sprint done.
+- **Highest-risk single dependency:** if Minhaj's Events/Teams contract (Day 1) slips past midday, Saad-Manda's Registration, Shikhar Yadav's Payments, and Anjney-Lawaniya's QR/Credential all slip behind it in lockstep, since each vertical's backend depends on the one before it — flag that immediately if it's at risk, don't wait for end of day.
+- **Vertical ownership is a single point of failure per feature.** With one person covering both backend and frontend on their vertical, there's no second person who could pick it up mid-sprint if that owner gets stuck or unavailable — lean harder on the same-day cross-review above as the safety net, and flag a stuck vertical immediately rather than quietly losing a day to it.
+- **No buffer exists in this plan.** Unlike the old plan's W6 buffer week, there is no slack day here — a slip on Day 1 or 2 directly eats into Day 3's smoke test, which is the sprint's only correctness gate before calling this launched.
