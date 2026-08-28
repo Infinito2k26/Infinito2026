@@ -20,11 +20,11 @@ flowchart TD
   Web --> API[NestJS API]
   API --> Postgres[(PostgreSQL 16)]
   API --> Redis[(Redis 7)]
-  API --> MinIO[(MinIO / S3)]
+  API --> Cloudinary[(Cloudinary)]
   API --> Queues[BullMQ Queues]
   Queues --> Workers[NestJS Workers]
   Workers --> Postgres
-  Workers --> MinIO
+  Workers --> Cloudinary
 ```
 
 ## 3. Backend Modules
@@ -124,6 +124,6 @@ Role promotion to `CAMPUS_AMBASSADOR` happens either directly via `PATCH /admin/
 
 ## 6. Deployment Assumptions
 
-- Local development uses Docker Compose for PostgreSQL, Redis, and MinIO.
-- Production should use managed PostgreSQL, managed Redis, S3-compatible storage, HTTPS, and environment-level secrets.
+- Local development uses Docker Compose for PostgreSQL and Redis, and Cloudinary for object storage.
+- Production should use managed PostgreSQL, managed Redis, Cloudinary storage, HTTPS, and environment-level secrets.
 - CI should run lint, typecheck, build, tests, and migration checks before merge.

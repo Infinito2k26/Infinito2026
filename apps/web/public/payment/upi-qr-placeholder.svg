@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Placeholder UPI QR code">
+  <rect width="200" height="200" fill="#ffffff" stroke="#e4e4e7" stroke-width="2"/>
+  <!-- Finder-pattern corners, stylized (not a scannable QR) -->
+  <g fill="#27272a">
+    <rect x="16" y="16" width="36" height="36"/>
+    <rect x="26" y="26" width="16" height="16" fill="#ffffff"/>
+    <rect x="148" y="16" width="36" height="36"/>
+    <rect x="158" y="26" width="16" height="16" fill="#ffffff"/>
+    <rect x="16" y="148" width="36" height="36"/>
+    <rect x="26" y="158" width="16" height="16" fill="#ffffff"/>
+  </g>
+  <rect x="70" y="70" width="60" height="60" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="100" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#71717a">SAMPLE</text>
+  <text x="100" y="117" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#a1a1aa">replace before launch</text>
+</svg>

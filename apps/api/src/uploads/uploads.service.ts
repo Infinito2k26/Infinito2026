@@ -1,10 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 
@@ -16,25 +11,18 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
 
 @Injectable()
 export class UploadsService {
-  private readonly s3: S3Client;
-  private readonly bucket: string;
-
   constructor(private readonly config: ConfigService) {
-    this.bucket = this.config.get<string>('S3_BUCKET')!;
-    this.s3 = new S3Client({
-      endpoint: this.config.get<string>('S3_ENDPOINT'),
-      region: 'us-east-1',
-      credentials: {
-        accessKeyId: this.config.get<string>('S3_ACCESS_KEY_ID')!,
-        secretAccessKey: this.config.get<string>('S3_SECRET_ACCESS_KEY')!,
-      },
-      forcePathStyle: true,
+    cloudinary.config({
+      cloud_name: this.config.get<string>('CLOUDINARY_CLOUD_NAME')!,
+      api_key: this.config.get<string>('CLOUDINARY_API_KEY')!,
+      api_secret: this.config.get<string>('CLOUDINARY_API_SECRET')!,
     });
   }
 
   async uploadProof(
     buffer: Buffer,
     mimeType: string,
+    folder: string,
   ): Promise<{ key: string }> {
     const extension = MIME_EXTENSION_MAP[mimeType];
     if (!extension) {
@@ -43,25 +31,42 @@ export class UploadsService {
       );
     }
 
-    const key = `ca-proof/${randomUUID()}.${extension}`;
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          public_id: randomUUID(),
+          resource_type: 'image',
+          type: 'authenticated',
+        },
+        (error, uploadResult) => {
+          if (error || !uploadResult) {
+            reject(
+              error instanceof Error
+                ? error
+                : new Error(error?.message ?? 'Cloudinary upload failed'),
+            );
+            return;
+          }
+          resolve(uploadResult);
+        },
+      );
+      stream.end(buffer);
+    });
 
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: buffer,
-        ContentType: mimeType,
-      }),
-    );
-
-    return { key };
+    return { key: result.public_id };
   }
 
-  async getSignedGetUrl(key: string, ttlSeconds = 900): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
+  // Requires the Cloudinary account's token-based authentication add-on for the
+  // signed URL to actually expire after ttlSeconds; otherwise it stays valid indefinitely.
+  getSignedGetUrl(key: string, ttlSeconds = 900): string {
+    return cloudinary.url(key, {
+      resource_type: 'image',
+      type: 'authenticated',
+      sign_url: true,
+      auth_token: {
+        duration: ttlSeconds,
+      },
     });
-    return getSignedUrl(this.s3, command, { expiresIn: ttlSeconds });
   }
 }
