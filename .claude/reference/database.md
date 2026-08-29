@@ -25,6 +25,7 @@ erDiagram
   User ||--o{ Registration           : "registers (individual)"
   User ||--o| CAProfile              : "is ambassador"
   User ||--o{ Team                   : "captains"
+  Event ||--o{ Team                  : "entered by"
   Team ||--o{ Participant            : "has"
   Team ||--o| Registration           : "registers (team, one event only)"
   Event ||--o{ Registration          : "receives"
@@ -317,6 +318,7 @@ A group of players from one college entering a **single** event. Captain is the 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID PK | |
+| `eventId` | UUID FK → Event | The single event this team is entering. Set at creation — required so roster size can be validated against `Event.teamSizeMin/Max` before a `Registration` exists. Added 2026-08-29 (v2.2 originally shipped without it). |
 | `name` | String | Team name |
 | `captainId` | UUID FK → User | Must have a platform account |
 | `collegeName` | String | |
@@ -668,6 +670,7 @@ Immutable audit of every QR scan. Volunteer selects gate and direction (ENTRY / 
 | EventSubOption | `(eventId, isActive)` | Form population |
 | Team | unique `inviteCode` | Join flow |
 | Team | `(isIITP)` | Fee exemption queries |
+| Team | `(eventId)` | Roster/size lookups per event |
 | Participant | `(teamId, role)` | Roster lookup |
 | CAProfile | unique `userId` | User → CA lookup |
 | CAProfile | unique `refCode` | Referral attribution |
