@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, QrCode } from "lucide-react";
+import { Copy, Check, QrCode, Upload, Loader2 } from "lucide-react";
+import { api } from "../../lib/api";
 import styles from "./UpiPaymentSection.module.css";
+
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 interface UpiPaymentSectionProps {
   /** Amount due in INR. Pass 0 for IITP registrations, which are fee-waived. */
@@ -12,6 +16,10 @@ interface UpiPaymentSectionProps {
   qrImageUrl?: string;
   /** IITP registrations are always fee-waived (see Event fee logic). */
   isIITP?: boolean;
+  /** Registration this payment is submitted against. Required unless isIITP/waived. */
+  registrationId?: string;
+  /** Called once the screenshot + transaction ID are successfully submitted for review. */
+  onSubmitted?: () => void;
 }
 
 const DEFAULT_QR_IMAGE = "/payment/upi-qr-placeholder.svg";
@@ -30,8 +38,16 @@ export default function UpiPaymentSection({
   payeeName = "Infinito 2K26",
   qrImageUrl = DEFAULT_QR_IMAGE,
   isIITP = false,
+  registrationId,
+  onSubmitted,
 }: UpiPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const isWaived = isIITP || amountDue === 0;
 
   const handleCopyVpa = async () => {
@@ -41,6 +57,50 @@ export default function UpiPaymentSection({
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard API unavailable (e.g. insecure context) - VPA stays selectable as text.
+    }
+  };
+
+  const handleFileChange = (selected: File | null) => {
+    setFileError(null);
+    if (!selected) {
+      setFile(null);
+      return;
+    }
+    if (!ALLOWED_TYPES.includes(selected.type)) {
+      setFileError("Only JPG, PNG, or WEBP screenshots are accepted.");
+      setFile(null);
+      return;
+    }
+    if (selected.size > MAX_FILE_BYTES) {
+      setFileError("Screenshot must be under 5 MB.");
+      setFile(null);
+      return;
+    }
+    setFile(selected);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!registrationId || !file || !transactionId.trim()) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const formData = new FormData();
+      formData.append("registrationId", registrationId);
+      formData.append("transactionId", transactionId.trim());
+      formData.append("idempotencyKey", crypto.randomUUID());
+      formData.append("file", file);
+
+      await api.post("/payments", formData);
+      setSubmitted(true);
+      onSubmitted?.();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to submit payment proof.",
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -87,6 +147,64 @@ export default function UpiPaymentSection({
           </div>
 
           <p className={styles.payee}>Payable to: {payeeName}</p>
+
+          {registrationId && !submitted && (
+            <form className={styles.proofForm} onSubmit={handleSubmit}>
+              <label className={styles.fieldLabel} htmlFor="upi-transaction-id">
+                Transaction ID
+              </label>
+              <input
+                id="upi-transaction-id"
+                type="text"
+                className={styles.textInput}
+                placeholder="e.g. 123456789012"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                required
+              />
+
+              <label className={styles.fieldLabel} htmlFor="upi-screenshot">
+                Payment screenshot
+              </label>
+              <label className={styles.fileDropzone} htmlFor="upi-screenshot">
+                <Upload size={18} aria-hidden="true" />
+                <span>{file ? file.name : "Choose screenshot (JPG, PNG, WEBP, max 5 MB)"}</span>
+              </label>
+              <input
+                id="upi-screenshot"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className={styles.hiddenFileInput}
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+                required
+              />
+              {fileError && <p className={styles.errorText}>{fileError}</p>}
+
+              {submitError && <p className={styles.errorText}>{submitError}</p>}
+
+              <button
+                type="submit"
+                className={styles.submitBtn}
+                disabled={submitting || !file || !transactionId.trim()}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className={styles.spinner} aria-hidden="true" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit payment proof"
+                )}
+              </button>
+            </form>
+          )}
+
+          {submitted && (
+            <div className={styles.successBanner}>
+              Payment proof submitted. Admin will verify it shortly — you can
+              track status on your dashboard.
+            </div>
+          )}
         </>
       )}
     </div>
