@@ -400,6 +400,7 @@ async function main() {
     venue: 'IIT Patna Football Ground',
     hasAccommodation: true,
     accommodationRate: 490.00,
+    messOnlyRate: 200.00,
     prizePool: 20000.00,
     capacity: 32,
     isPublished: true,
@@ -1132,6 +1133,8 @@ async function main() {
 
   // Football team — external college, captain = userExternal
   await upsertById(prisma.team, IDS.teamFootball, {
+    eventId: IDS.eventFootball,
+    declaredSize: 11, // matches Football's teamSizeMin; actual roster fills in below
     name: 'Seed FC',
     captainId: IDS.userExternal,
     collegeName: 'Dev University',
@@ -1144,6 +1147,8 @@ async function main() {
 
   // BGMI team — IITP, captain = userIITP (triggers ₹0 fee)
   await upsertById(prisma.team, IDS.teamBGMI, {
+    eventId: IDS.eventBGMI,
+    declaredSize: 4, // matches BGMI's teamSizeMin; actual roster (below) includes a substitute
     name: 'IITP Squad',
     captainId: IDS.userIITP,
     collegeName: 'IIT Patna',
@@ -1272,6 +1277,8 @@ async function main() {
     accommodationOpted: true,
     accommodationDays: 3,
     accommodationHeadcount: 3,
+    messOnlyOpted: true,
+    messOnlyHeadcount: 2,
     referredById: IDS.caProfile,
     customData: { 'Any special requirements?': 'None' },
   });
