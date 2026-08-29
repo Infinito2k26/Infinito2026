@@ -15,6 +15,7 @@ import { CaModule } from './ca/ca.module';
 import { LeadsModule } from './leads/leads.module';
 import { AdminModule } from './admin/admin.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { RegistrationsModule } from './registrations/registrations.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
@@ -32,6 +33,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     LeadsModule,
     AdminModule,
     LeaderboardModule,
+    RegistrationsModule,
   ],
   controllers: [AppController],
   providers: [
