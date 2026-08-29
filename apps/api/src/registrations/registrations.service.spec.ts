@@ -130,6 +130,7 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
       participants: [{}, {}, {}],
@@ -202,6 +203,7 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'someone-else',
       isIITP: false,
       participants: [{}, {}, {}],
@@ -216,6 +218,7 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
       participants: [{}],
@@ -230,6 +233,7 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
       participants: [{}, {}, {}],
@@ -302,6 +306,7 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: true,
       participants: [{}, {}, {}],
@@ -328,6 +333,7 @@ describe('RegistrationsService.create', () => {
     });
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
       participants: [{}, {}, {}],
@@ -347,6 +353,7 @@ describe('RegistrationsService.create', () => {
     });
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
+      eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
       participants: [{}, {}, {}],

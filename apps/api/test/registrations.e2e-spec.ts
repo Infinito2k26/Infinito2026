@@ -100,11 +100,13 @@ function baseEventData(
 async function createTeamWithRoster(
   prisma: PrismaService,
   captainId: string,
+  eventId: string,
   rosterSize: number,
   overrides: { isIITP?: boolean } = {},
 ) {
   const team = await prisma.team.create({
     data: {
+      eventId,
       name: `E2E Team ${randomUUID().slice(0, 8)}`,
       captainId,
       collegeName: 'E2E College',
@@ -329,7 +331,6 @@ describe('Registrations: capacity and gender-based fees (e2e)', () => {
 
   it('GENDER_BASED events require genderDeclared (422) and price by gender', async () => {
     const user = await registerAndLogin(app, 'E2E Gender Based');
-    const team = await createTeamWithRoster(prisma, user.userId, 3);
 
     const event = await prisma.event.create({
       data: baseEventData({
@@ -343,6 +344,8 @@ describe('Registrations: capacity and gender-based fees (e2e)', () => {
         teamSizeMax: 5,
       }),
     });
+
+    const team = await createTeamWithRoster(prisma, user.userId, event.id, 3);
 
     // Missing genderDeclared -> 422.
     await request(app.getHttpServer())
@@ -399,14 +402,24 @@ describe('Registrations: team flow (e2e)', () => {
       .expect(400);
 
     // Roster below teamSizeMin -> 422.
-    const smallTeam = await createTeamWithRoster(prisma, captain.userId, 2);
+    const smallTeam = await createTeamWithRoster(
+      prisma,
+      captain.userId,
+      event.id,
+      2,
+    );
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
       .send({ eventId: event.id, teamId: smallTeam.id })
       .expect(422);
 
-    const team = await createTeamWithRoster(prisma, captain.userId, 4);
+    const team = await createTeamWithRoster(
+      prisma,
+      captain.userId,
+      event.id,
+      4,
+    );
 
     // Not the captain -> 403.
     await request(app.getHttpServer())
@@ -448,9 +461,13 @@ describe('Registrations: team flow (e2e)', () => {
       }),
     });
 
-    const team = await createTeamWithRoster(prisma, captain.userId, 3, {
-      isIITP: true,
-    });
+    const team = await createTeamWithRoster(
+      prisma,
+      captain.userId,
+      event.id,
+      3,
+      { isIITP: true },
+    );
 
     const res = await request(app.getHttpServer())
       .post('/api/registrations')

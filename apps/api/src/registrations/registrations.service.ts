@@ -95,6 +95,11 @@ export class RegistrationsService {
       if (!team) {
         throw new NotFoundException('Team not found');
       }
+      if (team.eventId !== event.id) {
+        throw new BadRequestException(
+          'This team was not created for this event',
+        );
+      }
       if (team.captainId !== userId) {
         throw new ForbiddenException(
           'Only the team captain can register this team',
