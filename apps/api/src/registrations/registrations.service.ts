@@ -89,7 +89,6 @@ export class RegistrationsService {
     if (isTeamEvent) {
       const team = await this.prisma.team.findUnique({
         where: { id: dto.teamId! },
-        include: { participants: true },
       });
 
       if (!team) {
@@ -106,17 +105,22 @@ export class RegistrationsService {
         );
       }
 
-      participantCount = team.participants.length;
+      // Based on the captain's declared roster size (checked against
+      // Event.teamSizeMin/Max at team-creation time already), not the live
+      // Participant count — teammates are expected to keep joining after
+      // the team registers and pays. Re-checked here as defense-in-depth in
+      // case the event's team size bounds changed after the team was made.
+      participantCount = team.declaredSize;
       isIITP = team.isIITP;
 
       if (event.teamSizeMin != null && participantCount < event.teamSizeMin) {
         throw new UnprocessableEntityException(
-          `Team roster must have at least ${event.teamSizeMin} players before registering (has ${participantCount})`,
+          `Team's declared size must be at least ${event.teamSizeMin} for this event (has ${participantCount})`,
         );
       }
       if (event.teamSizeMax != null && participantCount > event.teamSizeMax) {
         throw new UnprocessableEntityException(
-          `Team roster exceeds the maximum of ${event.teamSizeMax} players (has ${participantCount})`,
+          `Team's declared size exceeds the maximum of ${event.teamSizeMax} for this event (has ${participantCount})`,
         );
       }
     } else {
@@ -141,6 +145,7 @@ export class RegistrationsService {
       event,
       dto.subOptionSelections,
     );
+    this.validateAccommodation(event.hasAccommodation, dto, participantCount);
 
     const amount = calculateRegistrationFee({
       feeStructure: event.feeStructure,
@@ -158,6 +163,10 @@ export class RegistrationsService {
           : null,
       accommodationDays: dto.accommodationDays ?? null,
       accommodationHeadcount: dto.accommodationHeadcount ?? null,
+      messOnlyOpted: dto.messOnlyOpted ?? false,
+      messOnlyRate:
+        event.messOnlyRate != null ? Number(event.messOnlyRate) : null,
+      messOnlyHeadcount: dto.messOnlyHeadcount ?? null,
     });
 
     try {
@@ -172,6 +181,8 @@ export class RegistrationsService {
             accommodationOpted: dto.accommodationOpted ?? false,
             accommodationDays: dto.accommodationDays ?? null,
             accommodationHeadcount: dto.accommodationHeadcount ?? null,
+            messOnlyOpted: dto.messOnlyOpted ?? false,
+            messOnlyHeadcount: dto.messOnlyHeadcount ?? null,
             customData: dto.customData
               ? (dto.customData as Prisma.InputJsonValue)
               : undefined,
@@ -220,6 +231,51 @@ export class RegistrationsService {
         );
       }
       throw err;
+    }
+  }
+
+  private validateAccommodation(
+    hasAccommodation: boolean,
+    dto: CreateRegistrationDto,
+    participantCount: number,
+  ): void {
+    const accommodationOpted = dto.accommodationOpted ?? false;
+    const messOnlyOpted = dto.messOnlyOpted ?? false;
+
+    if (!accommodationOpted && !messOnlyOpted) {
+      return;
+    }
+
+    if (!hasAccommodation) {
+      throw new UnprocessableEntityException(
+        'This event does not offer accommodation or mess-only add-ons',
+      );
+    }
+
+    if (!dto.accommodationDays) {
+      throw new BadRequestException(
+        'accommodationDays is required when opting into accommodation or mess-only',
+      );
+    }
+    if (accommodationOpted && !dto.accommodationHeadcount) {
+      throw new BadRequestException(
+        'accommodationHeadcount is required when accommodationOpted is true',
+      );
+    }
+    if (messOnlyOpted && !dto.messOnlyHeadcount) {
+      throw new BadRequestException(
+        'messOnlyHeadcount is required when messOnlyOpted is true',
+      );
+    }
+
+    const totalHeadcount =
+      (accommodationOpted ? (dto.accommodationHeadcount ?? 0) : 0) +
+      (messOnlyOpted ? (dto.messOnlyHeadcount ?? 0) : 0);
+
+    if (totalHeadcount > participantCount) {
+      throw new UnprocessableEntityException(
+        `accommodationHeadcount and messOnlyHeadcount together (${totalHeadcount}) cannot exceed the team's size (${participantCount})`,
+      );
     }
   }
 

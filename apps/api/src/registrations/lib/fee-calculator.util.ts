@@ -14,6 +14,9 @@ export interface FeeCalculationInput {
   accommodationRate: number | null;
   accommodationDays: number | null;
   accommodationHeadcount: number | null;
+  messOnlyOpted: boolean;
+  messOnlyRate: number | null;
+  messOnlyHeadcount: number | null;
 }
 
 /**
@@ -51,5 +54,13 @@ export function calculateRegistrationFee(input: FeeCalculationInput): number {
       (input.accommodationHeadcount ?? 0)
     : 0;
 
-  return base + accommodation;
+  // Shares accommodationDays with the accommodation package above — both
+  // represent the same length of stay, just with/without lodging.
+  const messOnly = input.messOnlyOpted
+    ? (input.messOnlyRate ?? 0) *
+      (input.accommodationDays ?? 0) *
+      (input.messOnlyHeadcount ?? 0)
+    : 0;
+
+  return base + accommodation + messOnly;
 }

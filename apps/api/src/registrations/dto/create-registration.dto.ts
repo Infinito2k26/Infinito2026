@@ -32,6 +32,10 @@ export class CreateRegistrationDto {
   @IsUUID()
   teamId?: string;
 
+  // Two independent, stackable add-ons (accommodation = lodging + mess;
+  // messOnly = mess only). Both share accommodationDays as the length of
+  // stay. See RegistrationsService.validateAccommodation for the gating
+  // rules (requires Event.hasAccommodation, headcounts capped by team size).
   @IsOptional()
   @IsBoolean()
   accommodationOpted?: boolean;
@@ -45,6 +49,15 @@ export class CreateRegistrationDto {
   @IsInt()
   @Min(1)
   accommodationHeadcount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  messOnlyOpted?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  messOnlyHeadcount?: number;
 
   // Required when the event's feeStructure is GENDER_BASED.
   @IsOptional()

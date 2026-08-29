@@ -111,6 +111,10 @@ export class CreateEventDto {
 
   @IsNumber()
   @IsOptional()
+  messOnlyRate?: number;
+
+  @IsNumber()
+  @IsOptional()
   prizePool?: number;
 
   @IsInt()
@@ -219,6 +223,10 @@ export class UpdateEventDto {
   @IsNumber()
   @IsOptional()
   accommodationRate?: number;
+
+  @IsNumber()
+  @IsOptional()
+  messOnlyRate?: number;
 
   @IsNumber()
   @IsOptional()
