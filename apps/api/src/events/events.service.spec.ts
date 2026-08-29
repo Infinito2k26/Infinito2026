@@ -10,6 +10,7 @@ describe('EventsService', () => {
   let prisma: {
     event: {
       findUnique: jest.Mock;
+      findFirst: jest.Mock;
       update: jest.Mock;
     };
     registration: {
@@ -21,6 +22,7 @@ describe('EventsService', () => {
     prisma = {
       event: {
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         update: jest.fn(),
       },
       registration: {
@@ -33,6 +35,34 @@ describe('EventsService', () => {
     }).compile();
 
     service = moduleRef.get<EventsService>(EventsService);
+  });
+
+  describe('findBySlug', () => {
+    it('throws NotFoundException when no published event matches the slug', async () => {
+      prisma.event.findFirst.mockResolvedValue(null);
+
+      await expect(service.findBySlug('nope')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('returns the event including its active sub-options', async () => {
+      const event = {
+        id: 'evt-1',
+        slug: 'athletics-2k26',
+        subOptions: [{ id: 'sub-1', name: '100m', isActive: true }],
+      };
+      prisma.event.findFirst.mockResolvedValue(event);
+
+      await expect(service.findBySlug('athletics-2k26')).resolves.toEqual(
+        event,
+      );
+      expect(prisma.event.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { subOptions: { where: { isActive: true } } },
+        }),
+      );
+    });
   });
 
   describe('update', () => {
