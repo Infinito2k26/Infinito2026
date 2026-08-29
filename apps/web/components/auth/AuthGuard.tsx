@@ -30,9 +30,9 @@ export default function AuthGuard({
         const user = data.profile || data;
 
         if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-          if (user.role === 'ADMIN') {
+          if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
             router.replace('/admin');
-          } else if (user.role === 'CA') {
+          } else if (user.role === 'CAMPUS_AMBASSADOR') {
             router.replace('/dashboard/ca');
           } else {
             router.replace('/dashboard');
