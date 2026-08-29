@@ -95,6 +95,10 @@ Response `data` shape:
 | PATCH  | `/events/:id`         | Admin/Event Manager | Update event          |
 | PATCH  | `/events/:id/publish` | Admin/Event Manager | Publish/unpublish     |
 
+`GET /events` / `GET /events/:slug` only ever return `isPublished: true` events — there's no admin variant that also returns drafts; admins use the `id` returned from `POST /events` to `PATCH` an unpublished event directly. "Admin/Event Manager" maps to `UserRole.ADMIN` / `SUPER_ADMIN` — no distinct Event Manager role exists.
+
+`PATCH /events/:id` rejects (`400`) lowering `capacity` below the event's current non-cancelled `Registration` count. This is an admin-side safety guard only — full at-registration-time capacity enforcement belongs to the Registration module.
+
 ### Teams and Registrations
 
 | Method | Path                     | Access              | Purpose              |
@@ -105,6 +109,25 @@ Response `data` shape:
 | POST   | `/registrations`         | Authenticated       | Start registration   |
 | GET    | `/registrations/mine`    | Authenticated       | My registrations     |
 | GET    | `/admin/registrations`   | Admin/Event Manager | Filter registrations |
+
+#### `POST /teams`
+
+- `multipart/form-data`: `eventId` (UUID), `name`, `collegeName`, `collegeAddress?`, `isIITP?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
+- `404` if `eventId` doesn't resolve to an event; `400` if that event isn't published.
+- Creates the `Team` (caller becomes `captainId`) and its first `Participant` row (`role: CAPTAIN`) in one transaction. The captain's `Participant.name`/`phone` are copied from their `User` record, not re-entered.
+- Invite code is a 6-character random hex string (same generator convention as `CAProfile.refCode`), retried once on the rare unique-constraint collision.
+
+#### `POST /teams/:id/invitations`
+
+- Only the team's `captainId`, else `403`.
+- No separate `Invitation` model exists — this rotates `Team.inviteCode` in place (old code stops working immediately) and returns the updated team. Use this to reissue a code that leaked.
+
+#### `POST /teams/:id/join`
+
+- `multipart/form-data`: `inviteCode`, `idType`, `idNumber`, plus `photo` and `idFile` (same rules as `POST /teams`).
+- `:id` is the team's UUID. `inviteCode` in the body must match `Team.inviteCode` exactly, else `403` — this is what actually authorizes the join (a guessed team UUID alone isn't sufficient).
+- `409` once the roster (`Participant` count for the team) reaches `Event.teamSizeMax`. `teamSizeMin` is **not** checked here — that's a Registration-submission-time gate, not a join-time one.
+- Adds a `Participant` row with `role: PLAYER`. Role reassignment (`VICE_CAPTAIN`/`SUBSTITUTE`) is not exposed via API yet — fast-follow.
 
 ### Payments
 
