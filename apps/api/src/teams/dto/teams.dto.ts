@@ -5,12 +5,22 @@ import {
   IsBoolean,
   IsEnum,
   IsUUID,
+  IsInt,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { IdentityType } from '@prisma/client';
 
 export class CreateTeamDto {
   @IsUUID()
   eventId!: string;
+
+  // Roster size the captain commits to now; teammates join later via invite
+  // code. Checked against Event.teamSizeMin/Max at creation time.
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  declaredSize!: number;
 
   @IsString()
   @IsNotEmpty()

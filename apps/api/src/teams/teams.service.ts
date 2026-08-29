@@ -5,6 +5,7 @@ import {
   BadRequestException,
   ForbiddenException,
   ConflictException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -41,6 +42,16 @@ export class TeamsService {
         'Cannot create a team for an unpublished event',
       );
     }
+    if (event.teamSizeMin != null && dto.declaredSize < event.teamSizeMin) {
+      throw new UnprocessableEntityException(
+        `declaredSize must be at least ${event.teamSizeMin} for this event`,
+      );
+    }
+    if (event.teamSizeMax != null && dto.declaredSize > event.teamSizeMax) {
+      throw new UnprocessableEntityException(
+        `declaredSize cannot exceed ${event.teamSizeMax} for this event`,
+      );
+    }
 
     const captain = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -68,6 +79,7 @@ export class TeamsService {
           const team = await tx.team.create({
             data: {
               eventId: dto.eventId,
+              declaredSize: dto.declaredSize,
               name: dto.name,
               captainId: userId,
               collegeName: dto.collegeName,
