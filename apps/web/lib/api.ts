@@ -18,6 +18,9 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
 
     const config: RequestInit = {
         method,
+        // The refresh-token cookie only travels cross-origin (web and api run
+        // on separate ports in dev) if credentials are explicitly included.
+        credentials: 'include',
         ...customConfig,
         headers: {
             ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
