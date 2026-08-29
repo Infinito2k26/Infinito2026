@@ -85,11 +85,11 @@ This single server handles our entire backend.
 
 ### Object Storage (QR images, uploaded proofs)
 
-**Cloudflare R2 Free Tier**
+**Cloudinary Free Tier**
 - Cost: **₹0**
-- Free: 10 GB storage + 1 million read operations/month
+- Free: 25 GB storage + 25 GB monthly bandwidth (credit-based)
 - We need < 2 GB — comfortably within free limits
-- No egress fees (unlike AWS S3)
+- Built-in image transformations and delivery CDN, no separate SDK/bucket setup
 
 ---
 
@@ -149,7 +149,7 @@ No paid third-party API is required.
 | VPS snapshots (backup) | DigitalOcean | ₹50 |
 | Frontend | Vercel Free | ₹0 |
 | CDN + DNS + DDoS | Cloudflare Free | ₹0 |
-| Object storage | Cloudflare R2 Free | ₹0 |
+| Object storage | Cloudinary Free | ₹0 |
 | Email | Resend Free (3k/month) | ₹0 |
 | **Total/month** | | **~₹1,060** |
 

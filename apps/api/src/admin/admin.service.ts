@@ -159,20 +159,18 @@ export class AdminService {
       }),
     ]);
 
-    const assignmentsWithSignedProofs = await Promise.all(
-      assignments.map(async (assignment) => {
-        let proofUrl = assignment.proofUrl;
+    const assignmentsWithSignedProofs = assignments.map((assignment) => {
+      let proofUrl = assignment.proofUrl;
 
-        if (proofUrl?.startsWith('ca-proof/')) {
-          proofUrl = await this.uploadsService.getSignedGetUrl(proofUrl, 900);
-        }
+      if (proofUrl?.startsWith('ca-proof/')) {
+        proofUrl = this.uploadsService.getSignedGetUrl(proofUrl, 900);
+      }
 
-        return {
-          ...assignment,
-          proofUrl,
-        };
-      }),
-    );
+      return {
+        ...assignment,
+        proofUrl,
+      };
+    });
 
     return {
       task,
