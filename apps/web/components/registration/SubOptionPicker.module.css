@@ -1,0 +1,54 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.groupLabel {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.optionList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.optionRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.relayRow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.relayInput {
+    margin-left: 1.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+}
+
+.relayInput:focus {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 1px;
+}
