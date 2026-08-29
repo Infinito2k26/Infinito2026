@@ -2,7 +2,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 
 type RequestConfig = Omit<RequestInit, 'body'> & { body?: unknown };
 
-class ApiError extends Error {
+export class ApiError extends Error {
     status: number;
     data: unknown;
 
@@ -48,12 +48,12 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
         throw new ApiError(401, data, 'Session expired. Please log in again.');
     }
 
-    // other backend errors
+    // other backend errors — matches the error envelope { success: false, error: { code, message, details } }
     if (!response.ok) {
         throw new ApiError(
             response.status,
             data,
-            data?.message || data?.error || 'An unexpected error occurred'
+            data?.error?.message || 'An unexpected error occurred'
         );
     }
 
