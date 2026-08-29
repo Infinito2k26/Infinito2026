@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -21,13 +22,15 @@ describe('PaymentsService', () => {
     payment: {
       findUnique: jest.Mock;
       findFirst: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
       updateMany: jest.Mock;
       findUniqueOrThrow: jest.Mock;
     };
     $transaction: jest.Mock;
   };
 
-  let uploadsService: { uploadProof: jest.Mock };
+  let uploadsService: { uploadProof: jest.Mock; getSignedGetUrl: jest.Mock };
   let queue: { add: jest.Mock };
 
   beforeEach(async () => {
@@ -39,6 +42,8 @@ describe('PaymentsService', () => {
       payment: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
         updateMany: jest.fn(),
         findUniqueOrThrow: jest.fn(),
       },
@@ -47,6 +52,9 @@ describe('PaymentsService', () => {
 
     uploadsService = {
       uploadProof: jest.fn().mockResolvedValue({ key: 'payment-proof/abc' }),
+      getSignedGetUrl: jest.fn(
+        (key: string) => `https://signed.example/${key}`,
+      ),
     };
 
     queue = { add: jest.fn() };
@@ -196,6 +204,53 @@ describe('PaymentsService', () => {
 
       await expect(service.submitPayment('user-1', dto, file)).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('listPayments', () => {
+    it('defaults to RECONCILIATION_PENDING and signs screenshot URLs', async () => {
+      const rows = [
+        {
+          id: 'pay-1',
+          screenshotUrl: 'payment-proof/abc',
+          registration: { event: { name: 'Chess' } },
+        },
+        {
+          id: 'pay-2',
+          screenshotUrl: null,
+          registration: { event: { name: 'Football' } },
+        },
+      ];
+
+      prisma.$transaction.mockImplementation((arg: unknown) =>
+        Array.isArray(arg) ? Promise.all(arg) : arg,
+      );
+      prisma.payment.findMany.mockResolvedValue(rows);
+      prisma.payment.count.mockResolvedValue(2);
+
+      const result = await service.listPayments();
+
+      expect(prisma.payment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'RECONCILIATION_PENDING' },
+        }),
+      );
+      expect(result.payments[0].screenshotUrl).toBe(
+        'https://signed.example/payment-proof/abc',
+      );
+      expect(result.payments[1].screenshotUrl).toBeNull();
+      expect(result.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 2,
+        totalPages: 1,
+      });
+    });
+
+    it('throws BadRequestException for an unrecognized status filter', async () => {
+      await expect(service.listPayments(1, 20, 'NOT_A_STATUS')).rejects.toThrow(
+        BadRequestException,
       );
     });
   });

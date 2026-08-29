@@ -113,6 +113,7 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 | Method | Path                          | Access        | Purpose                                                          |
 | ------ | ----------------------------- | ------------- | ----------------------------------------------------------------- |
 | POST   | `/payments`                   | Authenticated | Submit screenshot + transaction ID for a registration's payment |
+| GET    | `/admin/payments`             | Admin         | List payments by status, paginated, for manual review            |
 | PATCH  | `/admin/payments/:id/verify`  | Admin         | Approve or reject a manual payment submission                    |
 
 #### `POST /payments`
@@ -124,6 +125,12 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 - Registration creates a stub `Payment` row (`mode = MANUAL_SCREENSHOT`, `status = INITIATED`, `amount` computed from `Event.feeStructure`) at registration time. This endpoint fills that stub in and moves it to `RECONCILIATION_PENDING` — it does not compute the fee itself. Returns `404` if no `INITIATED` stub exists for the registration yet.
 - If a payment for the registration is already `RECONCILIATION_PENDING` or `SUCCESS`, returns `409` — no second submission until the first is rejected.
 - Idempotent: replaying the same `idempotencyKey` returns the already-created result instead of erroring or duplicating.
+
+#### `GET /admin/payments`
+
+- Only `ADMIN` and `SUPER_ADMIN`.
+- Query: `page` (default 1), `limit` (default 20, max 100), `status` (default `RECONCILIATION_PENDING`; one of `INITIATED` / `RECONCILIATION_PENDING` / `SUCCESS` / `FAILED` / `REFUNDED`, else `400`).
+- Response `data` shape: `{ payments: Payment[], pagination: { page, limit, total, totalPages } }`. Each payment includes its `registration` (event name, individual `user` or `team`+captain) and a time-limited signed `screenshotUrl` (never the raw Cloudinary `public_id`) for admin preview.
 
 #### `PATCH /admin/payments/:id/verify`
 

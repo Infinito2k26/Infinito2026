@@ -1,4 +1,13 @@
-import { Controller, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { VerifyPaymentDto } from './dto/payments.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -12,6 +21,22 @@ import type { AuthenticatedRequest } from '../common/interfaces/authenticated-re
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class AdminPaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Get()
+  async listPayments(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    const parsedPage = page ? Number(page) : 1;
+    const parsedLimit = limit ? Number(limit) : 20;
+
+    return this.paymentsService.listPayments(
+      Number.isFinite(parsedPage) ? parsedPage : 1,
+      Number.isFinite(parsedLimit) ? parsedLimit : 20,
+      status,
+    );
+  }
 
   @Patch(':id/verify')
   async verifyPayment(

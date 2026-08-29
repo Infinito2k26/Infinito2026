@@ -3,12 +3,22 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { SubmitPaymentDto, VerifyPaymentDto } from './dto/payments.dto';
+
+const ALLOWED_LIST_STATUSES: PaymentStatus[] = [
+  'INITIATED',
+  'RECONCILIATION_PENDING',
+  'SUCCESS',
+  'FAILED',
+  'REFUNDED',
+];
 
 @Injectable()
 export class PaymentsService {
@@ -110,6 +120,72 @@ export class PaymentsService {
 
       return tx.payment.findUniqueOrThrow({ where: { id: stub.id } });
     });
+  }
+
+  async listPayments(page = 1, limit = 20, status?: string) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    const resolvedStatus = status ?? 'RECONCILIATION_PENDING';
+    if (!ALLOWED_LIST_STATUSES.includes(resolvedStatus as PaymentStatus)) {
+      throw new BadRequestException(
+        `Invalid payment status. Allowed values: ${ALLOWED_LIST_STATUSES.join(', ')}`,
+      );
+    }
+
+    const where = { status: resolvedStatus as PaymentStatus };
+
+    const [payments, total] = await this.prisma.$transaction([
+      this.prisma.payment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { updatedAt: 'asc' },
+        select: {
+          id: true,
+          amount: true,
+          mode: true,
+          status: true,
+          screenshotUrl: true,
+          transactionId: true,
+          rejectionReason: true,
+          createdAt: true,
+          updatedAt: true,
+          registration: {
+            select: {
+              id: true,
+              status: true,
+              event: { select: { id: true, name: true } },
+              user: { select: { id: true, name: true, email: true } },
+              team: {
+                select: {
+                  id: true,
+                  name: true,
+                  captain: { select: { id: true, name: true, email: true } },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.payment.count({ where }),
+    ]);
+
+    return {
+      payments: payments.map((payment) => ({
+        ...payment,
+        screenshotUrl: payment.screenshotUrl
+          ? this.uploadsService.getSignedGetUrl(payment.screenshotUrl)
+          : null,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async verifyPayment(
