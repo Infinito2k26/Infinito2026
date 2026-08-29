@@ -600,6 +600,7 @@ Every payment attempt against a registration. Supports both Razorpay (online) an
 | `gatewayPaymentId` | String? unique | Set on webhook success |
 | `screenshotUrl` | String? | Uploaded screenshot for manual payments |
 | `transactionId` | String? | User-entered transaction ID for manual payments |
+| `rejectionReason` | String? | Set by admin when `PATCH /admin/payments/:id/verify` sets status to `FAILED` |
 | `webhookVerified` | Boolean | Default false |
 | `idempotencyKey` | String unique | Prevents duplicate payment records |
 | `createdAt` | DateTime | |

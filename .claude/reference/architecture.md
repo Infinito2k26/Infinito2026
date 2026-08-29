@@ -20,11 +20,11 @@ flowchart TD
   Web --> API[NestJS API]
   API --> Postgres[(PostgreSQL 16)]
   API --> Redis[(Redis 7)]
-  API --> MinIO[(MinIO / S3)]
+  API --> Cloudinary[(Cloudinary)]
   API --> Queues[BullMQ Queues]
   Queues --> Workers[NestJS Workers]
   Workers --> Postgres
-  Workers --> MinIO
+  Workers --> Cloudinary
 ```
 
 ## 3. Backend Modules
@@ -39,7 +39,7 @@ flowchart TD
 | Users         | profiles, roles, audit metadata                     |
 | Events        | event catalog and admin event management            |
 | Registration  | teams, participants, registration status            |
-| Payments      | Razorpay orders, webhooks, reconciliation           |
+| Payments      | Manual UPI screenshot submission + admin verification (no gateway) |
 | Identity      | signed QR credential generation and validation      |
 | Notifications | email, push, in-app notifications                   |
 | Schedule      | fixtures, venues, match timelines                   |
@@ -68,16 +68,19 @@ sequenceDiagram
   participant Web
   participant API
   participant DB
+  participant Admin
   participant Queue
 
   User->>Web: Submit registration
   Web->>API: POST /registrations
-  API->>DB: transaction: registration + payment intent
-  API-->>Web: pending payment response
-  Web->>API: payment callback
-  API->>DB: mark verification pending
-  API->>Queue: enqueue payment verification
-  Queue->>DB: confirm idempotently
+  API->>DB: transaction: registration (PENDING_PAYMENT) + stub Payment (INITIATED)
+  API-->>Web: UPI QR / VPA + amount due
+  User->>Web: Pay externally via UPI, upload screenshot + transaction ID
+  Web->>API: POST /payments
+  API->>DB: fill stub Payment, status -> RECONCILIATION_PENDING
+  Admin->>API: PATCH /admin/payments/:id/verify
+  API->>DB: compare-and-swap Payment status; on SUCCESS, Registration -> CONFIRMED
+  API->>Queue: enqueue payment-confirmed
   Queue->>Queue: enqueue QR generation
 ```
 
@@ -124,6 +127,6 @@ Role promotion to `CAMPUS_AMBASSADOR` happens either directly via `PATCH /admin/
 
 ## 6. Deployment Assumptions
 
-- Local development uses Docker Compose for PostgreSQL, Redis, and MinIO.
-- Production should use managed PostgreSQL, managed Redis, S3-compatible storage, HTTPS, and environment-level secrets.
+- Local development uses Docker Compose for PostgreSQL and Redis, and Cloudinary for object storage.
+- Production should use managed PostgreSQL, managed Redis, Cloudinary storage, HTTPS, and environment-level secrets.
 - CI should run lint, typecheck, build, tests, and migration checks before merge.

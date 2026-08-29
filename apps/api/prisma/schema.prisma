@@ -567,6 +567,7 @@ model Payment {
   gatewayPaymentId String?       @unique // set on webhook success
   screenshotUrl    String?       // manual payments
   transactionId    String?       // user-entered transaction ID for manual payments
+  rejectionReason  String?       // set by admin when status is set to FAILED via manual review
   webhookVerified  Boolean       @default(false)
   idempotencyKey   String        @unique
   createdAt        DateTime      @default(now())

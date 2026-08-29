@@ -60,7 +60,7 @@ flowchart TD
   Web --> API[NestJS Modular Monolith]
   API --> DB[(PostgreSQL)]
   API --> Redis[(Redis)]
-  API --> Storage[(MinIO/S3)]
+  API --> Storage[(Cloudinary)]
   API --> Queue[BullMQ Queues]
   Queue --> Worker[NestJS Workers]
   Worker --> DB

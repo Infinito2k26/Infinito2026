@@ -125,6 +125,7 @@ export class CaController {
       const uploaded = await this.uploadsService.uploadProof(
         file.buffer,
         file.mimetype,
+        'ca-proof',
       );
 
       fileKey = uploaded.key;

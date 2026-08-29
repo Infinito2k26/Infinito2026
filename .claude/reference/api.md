@@ -108,12 +108,37 @@ Response `data` shape:
 
 ### Payments
 
-| Method | Path                            | Access                | Purpose                           |
-| ------ | ------------------------------- | --------------------- | --------------------------------- |
-| POST   | `/payments/orders`              | Authenticated         | Create payment order              |
-| POST   | `/payments/verify`              | Authenticated         | Client callback verification      |
-| POST   | `/webhooks/razorpay`            | Public signed webhook | Verify and enqueue reconciliation |
-| POST   | `/admin/payments/:id/reconcile` | Admin                 | Manual reconciliation             |
+No payment gateway — every registration is paid via UPI outside the platform, then proven with a screenshot + transaction ID. Admin manually approves or rejects against that proof (see `.claude/plans/master-roadmap-sept30-launch.md`).
+
+| Method | Path                          | Access        | Purpose                                                          |
+| ------ | ----------------------------- | ------------- | ----------------------------------------------------------------- |
+| POST   | `/payments`                   | Authenticated | Submit screenshot + transaction ID for a registration's payment |
+| GET    | `/admin/payments`             | Admin         | List payments by status, paginated, for manual review            |
+| PATCH  | `/admin/payments/:id/verify`  | Admin         | Approve or reject a manual payment submission                    |
+
+#### `POST /payments`
+
+- Multipart form: `registrationId` (UUID), `transactionId`, `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot).
+- Screenshot rules match CA task proof: max 5 MB, `image/jpeg` / `image/png` / `image/webp` only. Stored under `payment-proof/` via the shared `UploadsService`.
+- Caller must be the registration's `userId`, or the `captainId` of its `team`, else `403`.
+- The registration must currently be `PENDING_PAYMENT`, else `409`.
+- Registration creates a stub `Payment` row (`mode = MANUAL_SCREENSHOT`, `status = INITIATED`, `amount` computed from `Event.feeStructure`) at registration time. This endpoint fills that stub in and moves it to `RECONCILIATION_PENDING` — it does not compute the fee itself. Returns `404` if no `INITIATED` stub exists for the registration yet.
+- If a payment for the registration is already `RECONCILIATION_PENDING` or `SUCCESS`, returns `409` — no second submission until the first is rejected.
+- Idempotent: replaying the same `idempotencyKey` returns the already-created result instead of erroring or duplicating.
+
+#### `GET /admin/payments`
+
+- Only `ADMIN` and `SUPER_ADMIN`.
+- Query: `page` (default 1), `limit` (default 20, max 100), `status` (default `RECONCILIATION_PENDING`; one of `INITIATED` / `RECONCILIATION_PENDING` / `SUCCESS` / `FAILED` / `REFUNDED`, else `400`).
+- Response `data` shape: `{ payments: Payment[], pagination: { page, limit, total, totalPages } }`. Each payment includes its `registration` (event name, individual `user` or `team`+captain) and a time-limited signed `screenshotUrl` (never the raw Cloudinary `public_id`) for admin preview.
+
+#### `PATCH /admin/payments/:id/verify`
+
+- Only `ADMIN` and `SUPER_ADMIN`.
+- The payment must currently be `RECONCILIATION_PENDING` (atomic compare-and-set); a concurrent or already-processed payment returns `409`.
+- Body: `{ status: 'SUCCESS' | 'FAILED', rejectionReason?: string }` — `rejectionReason` is required when rejecting, stored on `Payment.rejectionReason`.
+- `SUCCESS`: transactionally moves `Registration.status` from `PENDING_PAYMENT` to `CONFIRMED`, then enqueues a `payment-confirmed` BullMQ job (consumed by the Identity/Credential module to issue the QR).
+- `FAILED`: `Registration` stays `PENDING_PAYMENT` so the registrant can resubmit; no queue job is enqueued.
 
 ### Identity
 

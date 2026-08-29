@@ -28,6 +28,7 @@ import { LeaderboardModule } from '../leaderboard/leaderboard.module';
       { name: 'referral-flush' },
       { name: 'leaderboard-recalc' },
       { name: 'social-metrics-fetch' },
+      { name: 'payment-confirmed' },
     ),
     LeaderboardModule,
   ],
