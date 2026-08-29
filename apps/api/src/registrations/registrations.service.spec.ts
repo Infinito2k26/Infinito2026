@@ -29,7 +29,9 @@ const flatTeamEvent = {
   feePerHead: null,
   feeMale: null,
   feeFemale: null,
+  hasAccommodation: false,
   accommodationRate: null,
+  messOnlyRate: null,
   customFieldsDef: null,
   subOptions: [],
 };
@@ -47,7 +49,9 @@ const individualEvent = {
   feePerHead: null,
   feeMale: null,
   feeFemale: null,
+  hasAccommodation: false,
   accommodationRate: null,
+  messOnlyRate: null,
   customFieldsDef: null,
   subOptions: [
     {
@@ -133,7 +137,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
 
     const result = await service.create('user-1', {
@@ -206,7 +210,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'someone-else',
       isIITP: false,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
 
     await expect(
@@ -214,14 +218,14 @@ describe('RegistrationsService.create', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('throws 422 when the roster is below teamSizeMin', async () => {
+  it('throws 422 when the declared team size is below teamSizeMin', async () => {
     prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
     prisma.team.findUnique.mockResolvedValue({
       id: 'team-1',
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
-      participants: [{}],
+      declaredSize: 1,
     });
 
     await expect(
@@ -236,7 +240,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
     tx.registration.create.mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError('duplicate', {
@@ -309,7 +313,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: true,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
 
     await service.create('user-1', {
@@ -336,7 +340,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
 
     await expect(
@@ -356,7 +360,7 @@ describe('RegistrationsService.create', () => {
       eventId: 'event-1',
       captainId: 'user-1',
       isIITP: false,
-      participants: [{}, {}, {}],
+      declaredSize: 3,
     });
 
     await expect(
@@ -366,5 +370,108 @@ describe('RegistrationsService.create', () => {
         customData: { 'Roll No.': 'A1', unknownField: 'x' },
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  describe('accommodation and mess-only add-ons', () => {
+    const accommodationTeamEvent = {
+      ...flatTeamEvent,
+      hasAccommodation: true,
+      accommodationRate: new Prisma.Decimal(490),
+      messOnlyRate: new Prisma.Decimal(200),
+    };
+
+    it('rejects accommodationOpted when the event does not offer it', async () => {
+      prisma.event.findUnique.mockResolvedValue(flatTeamEvent); // hasAccommodation: false
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        eventId: 'event-1',
+        captainId: 'user-1',
+        isIITP: false,
+        declaredSize: 3,
+      });
+
+      await expect(
+        service.create('user-1', {
+          eventId: 'event-1',
+          teamId: 'team-1',
+          accommodationOpted: true,
+          accommodationDays: 2,
+          accommodationHeadcount: 1,
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('rejects messOnlyOpted when the event does not offer it', async () => {
+      prisma.event.findUnique.mockResolvedValue(flatTeamEvent);
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        eventId: 'event-1',
+        captainId: 'user-1',
+        isIITP: false,
+        declaredSize: 3,
+      });
+
+      await expect(
+        service.create('user-1', {
+          eventId: 'event-1',
+          teamId: 'team-1',
+          messOnlyOpted: true,
+          accommodationDays: 2,
+          messOnlyHeadcount: 1,
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('rejects when accommodationHeadcount + messOnlyHeadcount exceeds the declared team size', async () => {
+      prisma.event.findUnique.mockResolvedValue(accommodationTeamEvent);
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        eventId: 'event-1',
+        captainId: 'user-1',
+        isIITP: false,
+        declaredSize: 3,
+      });
+
+      await expect(
+        service.create('user-1', {
+          eventId: 'event-1',
+          teamId: 'team-1',
+          accommodationOpted: true,
+          accommodationDays: 2,
+          accommodationHeadcount: 2,
+          messOnlyOpted: true,
+          messOnlyHeadcount: 2,
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('stacks accommodation and mess-only charges for different subsets of the team', async () => {
+      prisma.event.findUnique.mockResolvedValue(accommodationTeamEvent);
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        eventId: 'event-1',
+        captainId: 'user-1',
+        isIITP: false,
+        declaredSize: 5,
+      });
+
+      await service.create('user-1', {
+        eventId: 'event-1',
+        teamId: 'team-1',
+        accommodationOpted: true,
+        accommodationDays: 2,
+        accommodationHeadcount: 3,
+        messOnlyOpted: true,
+        messOnlyHeadcount: 2,
+      });
+
+      // FLAT feeFlat (500) + accommodation (490*2*3=2940) + messOnly (200*2*2=800)
+      expect(tx.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining is untyped in @types/jest
+          data: expect.objectContaining({ amount: 500 + 2940 + 800 }),
+        }),
+      );
+    });
   });
 });

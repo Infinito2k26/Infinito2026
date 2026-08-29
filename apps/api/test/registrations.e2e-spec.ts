@@ -102,11 +102,15 @@ async function createTeamWithRoster(
   captainId: string,
   eventId: string,
   rosterSize: number,
-  overrides: { isIITP?: boolean } = {},
+  overrides: { isIITP?: boolean; declaredSize?: number } = {},
 ) {
   const team = await prisma.team.create({
     data: {
       eventId,
+      // Registration eligibility/fees key off declaredSize, not the actual
+      // Participant rows created below — defaults to rosterSize so existing
+      // callers (which want both in sync) don't need to change.
+      declaredSize: overrides.declaredSize ?? rosterSize,
       name: `E2E Team ${randomUUID().slice(0, 8)}`,
       captainId,
       collegeName: 'E2E College',
@@ -378,7 +382,7 @@ describe('Registrations: team flow (e2e)', () => {
     await app.close();
   });
 
-  it('team registration: happy path, only the captain may register, roster size is enforced', async () => {
+  it('team registration: happy path, only the captain may register, declared size is enforced', async () => {
     const captain = await registerAndLogin(app, 'E2E Team Captain');
     const notCaptain = await registerAndLogin(app, 'E2E Not Captain');
 
@@ -401,7 +405,7 @@ describe('Registrations: team flow (e2e)', () => {
       .send({ eventId: event.id })
       .expect(400);
 
-    // Roster below teamSizeMin -> 422.
+    // Declared size below teamSizeMin -> 422.
     const smallTeam = await createTeamWithRoster(
       prisma,
       captain.userId,

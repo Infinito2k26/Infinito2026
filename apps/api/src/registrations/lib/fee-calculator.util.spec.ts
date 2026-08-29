@@ -17,6 +17,9 @@ const base: FeeCalculationInput = {
   accommodationRate: null,
   accommodationDays: null,
   accommodationHeadcount: null,
+  messOnlyOpted: false,
+  messOnlyRate: null,
+  messOnlyHeadcount: null,
 };
 
 describe('calculateRegistrationFee', () => {
@@ -97,5 +100,44 @@ describe('calculateRegistrationFee', () => {
         accommodationHeadcount: 5,
       }),
     ).toBe(500);
+  });
+
+  it('adds the mess-only surcharge (rate x days x headcount) when opted in', () => {
+    expect(
+      calculateRegistrationFee({
+        ...base,
+        messOnlyOpted: true,
+        messOnlyRate: 200,
+        accommodationDays: 3,
+        messOnlyHeadcount: 4,
+      }),
+    ).toBe(500 + 200 * 3 * 4);
+  });
+
+  it('ignores mess-only fields when messOnlyOpted is false', () => {
+    expect(
+      calculateRegistrationFee({
+        ...base,
+        messOnlyOpted: false,
+        messOnlyRate: 200,
+        accommodationDays: 3,
+        messOnlyHeadcount: 4,
+      }),
+    ).toBe(500);
+  });
+
+  it('stacks accommodation and mess-only for different subsets of the team, sharing accommodationDays', () => {
+    expect(
+      calculateRegistrationFee({
+        ...base,
+        accommodationOpted: true,
+        accommodationRate: 490,
+        accommodationDays: 3,
+        accommodationHeadcount: 5,
+        messOnlyOpted: true,
+        messOnlyRate: 200,
+        messOnlyHeadcount: 4,
+      }),
+    ).toBe(500 + 490 * 3 * 5 + 200 * 3 * 4);
   });
 });
