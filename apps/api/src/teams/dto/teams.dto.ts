@@ -8,7 +8,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IdentityType } from '@prisma/client';
 
 export class CreateTeamDto {
@@ -34,6 +34,10 @@ export class CreateTeamDto {
   @IsOptional()
   collegeAddress?: string;
 
+  // Multipart fields arrive as strings ("true"/"false") — Type(() => Boolean)
+  // would be wrong here (Boolean("false") is true in JS); an explicit string
+  // comparison is required to convert correctly before @IsBoolean() runs.
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : value))
   @IsBoolean()
   @IsOptional()
   isIITP?: boolean;
