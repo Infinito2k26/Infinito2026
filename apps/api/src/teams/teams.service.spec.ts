@@ -4,6 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 import { TeamsService } from './teams.service';
@@ -52,6 +53,7 @@ describe('TeamsService', () => {
   describe('createTeam', () => {
     const dto = {
       eventId: 'evt-1',
+      declaredSize: 4,
       name: 'Team A',
       collegeName: 'IIT Patna',
       idType: 'COLLEGE_ID',
@@ -78,6 +80,36 @@ describe('TeamsService', () => {
       ).rejects.toThrow(BadRequestException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
+    });
+
+    it('rejects a declaredSize below the event teamSizeMin', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        isPublished: true,
+        teamSizeMin: 5,
+        teamSizeMax: 10,
+      });
+
+      await expect(
+        service.createTeam('user-1', dto, file, file),
+      ).rejects.toThrow(UnprocessableEntityException);
+      expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
+    });
+
+    it('rejects a declaredSize above the event teamSizeMax', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        isPublished: true,
+        teamSizeMin: 1,
+        teamSizeMax: 3,
+      });
+
+      await expect(
+        service.createTeam('user-1', dto, file, file),
+      ).rejects.toThrow(UnprocessableEntityException);
+      expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
   });
 
