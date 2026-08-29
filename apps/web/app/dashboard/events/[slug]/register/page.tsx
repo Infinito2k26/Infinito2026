@@ -422,18 +422,21 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
     return (
         <form className={styles.form} onSubmit={handleSubmit}>
             <Input
+                id="name"
                 label="Team name *"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 error={errors.name}
             />
             <Input
+                id="collegeName"
                 label="College name *"
                 value={collegeName}
                 onChange={(e) => setCollegeName(e.target.value)}
                 error={errors.collegeName}
             />
             <Input
+                id="collegeAddress"
                 label="College address"
                 value={collegeAddress}
                 onChange={(e) => setCollegeAddress(e.target.value)}
@@ -445,6 +448,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
 
             {event.teamSizeMin != null && (
                 <Input
+                    id="declaredSize"
                     label="Declared team size *"
                     type="number"
                     min={event.teamSizeMin ?? 1}
@@ -459,11 +463,13 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
             {event.viceCaptainRequired && (
                 <>
                     <Input
+                        id="viceCaptainName"
                         label="Vice-captain name"
                         value={viceCaptainName}
                         onChange={(e) => setViceCaptainName(e.target.value)}
                     />
                     <Input
+                        id="viceCaptainPhone"
                         label="Vice-captain phone"
                         value={viceCaptainPhone}
                         onChange={(e) => setViceCaptainPhone(e.target.value)}
@@ -473,8 +479,14 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
 
             {event.coachAllowed && (
                 <>
-                    <Input label="Coach name" value={coachName} onChange={(e) => setCoachName(e.target.value)} />
                     <Input
+                        id="coachName"
+                        label="Coach name"
+                        value={coachName}
+                        onChange={(e) => setCoachName(e.target.value)}
+                    />
+                    <Input
+                        id="coachPhone"
                         label="Coach phone"
                         value={coachPhone}
                         onChange={(e) => setCoachPhone(e.target.value)}
@@ -500,6 +512,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
                 </select>
             </div>
             <Input
+                id="idNumber"
                 label="Your ID number *"
                 value={idNumber}
                 onChange={(e) => setIdNumber(e.target.value)}
@@ -584,6 +597,7 @@ function JoinTeamForm({
     return (
         <form className={styles.form} onSubmit={handleSubmit}>
             <Input
+                id="join-teamId"
                 label="Team ID *"
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
@@ -591,6 +605,7 @@ function JoinTeamForm({
                 hint="Ask your captain for the join link or team ID"
             />
             <Input
+                id="join-inviteCode"
                 label="Invite code *"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
@@ -615,6 +630,7 @@ function JoinTeamForm({
                 </select>
             </div>
             <Input
+                id="join-idNumber"
                 label="Your ID number *"
                 value={idNumber}
                 onChange={(e) => setIdNumber(e.target.value)}

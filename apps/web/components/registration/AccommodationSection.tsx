@@ -112,6 +112,7 @@ export default function AccommodationSection({
                     </div>
 
                     <Input
+                        id="accommodationDays"
                         label="Number of days"
                         type="number"
                         min={1}
@@ -123,6 +124,7 @@ export default function AccommodationSection({
 
                     {isTeamEvent && (
                         <Input
+                            id="accommodationHeadcount"
                             label="Number of team members"
                             type="number"
                             min={1}

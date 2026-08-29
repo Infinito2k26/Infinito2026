@@ -37,7 +37,9 @@ export class CreateTeamDto {
   // Multipart fields arrive as strings ("true"/"false") — Type(() => Boolean)
   // would be wrong here (Boolean("false") is true in JS); an explicit string
   // comparison is required to convert correctly before @IsBoolean() runs.
-  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value === 'true' : value,
+  )
   @IsBoolean()
   @IsOptional()
   isIITP?: boolean;
