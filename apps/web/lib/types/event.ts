@@ -48,6 +48,8 @@ export interface EventDetail extends EventSummary {
     genderCategory: GenderCategory;
     teamSizeMin: number | null;
     teamSizeMax: number | null;
+    viceCaptainRequired: boolean;
+    coachAllowed: boolean;
     endDate: string | null;
     hasAccommodation: boolean;
     accommodationRate: string | number | null;
