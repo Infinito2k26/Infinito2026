@@ -112,7 +112,8 @@ Response `data` shape:
 
 #### `POST /teams`
 
-- `multipart/form-data`: `eventId` (UUID), `name`, `collegeName`, `collegeAddress?`, `isIITP?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
+- `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `isIITP?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
+- `declaredSize` is the roster size the captain commits to now, not the number of `Participant` rows created by this call (that's always 1, the captain) — teammates join later via `POST /teams/:id/join`. `422` if it falls outside `Event.teamSizeMin`/`teamSizeMax`. This declared number, not the live roster count, is what `POST /registrations` checks against `teamSizeMin`/`teamSizeMax` and uses for `PER_HEAD` fee calculation and accommodation/mess-only headcount caps — the actual roster is allowed to still be incomplete when the team registers and pays.
 - `404` if `eventId` doesn't resolve to an event; `400` if that event isn't published.
 - Creates the `Team` (caller becomes `captainId`) and its first `Participant` row (`role: CAPTAIN`) in one transaction. The captain's `Participant.name`/`phone` are copied from their `User` record, not re-entered.
 - Invite code is a 6-character random hex string (same generator convention as `CAProfile.refCode`), retried once on the rare unique-constraint collision.
@@ -249,6 +250,8 @@ Body:
   "accommodationOpted": false,
   "accommodationDays": 0,
   "accommodationHeadcount": 0,
+  "messOnlyOpted": false,
+  "messOnlyHeadcount": 0,
   "genderDeclared": "MEN",
   "customData": { "Roll No.": "A123" },
   "subOptionSelections": [
@@ -257,13 +260,14 @@ Body:
 }
 ```
 
-- `teamId` is required when `Event.registrationType` is `TEAM` and forbidden when it is `INDIVIDUAL` (400 otherwise). For `TEAM` events the caller must be `Team.captainId` (403 otherwise), and the team's existing `Participant` roster must already satisfy `Event.teamSizeMin`/`teamSizeMax` (422 otherwise) — Registration does not create the roster; that's a Team-module concern.
+- `teamId` is required when `Event.registrationType` is `TEAM` and forbidden when it is `INDIVIDUAL` (400 otherwise). For `TEAM` events the caller must be `Team.captainId` (403 otherwise), and the team's `declaredSize` (set at `POST /teams` time, not the live `Participant` roster count) must satisfy `Event.teamSizeMin`/`teamSizeMax` (422 otherwise) — Registration does not create the roster; that's a Team-module concern, and the roster is allowed to still be incomplete when the team registers and pays.
 - `customData` answers `Event.customFieldsDef` entries scoped `TEAM`, keyed by `label`. Unknown keys, missing required fields, or wrong types return 400.
 - `subOptionSelections` is only meaningful for events with `EventSubOption` rows (e.g. Athletics). Each selection must reference an active sub-option belonging to the event; `RELAY`-type selections require non-empty `relayMembers`. The total count of `INDIVIDUAL`-type and `RELAY`-type selections is capped by the highest `maxSelectionsPerReg` among that event's sub-options of the matching type (422 if exceeded).
 - `genderDeclared` is required when `Event.feeStructure` is `GENDER_BASED` (422 if missing).
+- `accommodationOpted` (lodging + mess) and `messOnlyOpted` (mess only, no lodging) are two independent, stackable add-ons — e.g. 3 teammates in the accommodation package and 2 in mess-only on the same registration. Both share `accommodationDays` as the length of stay. Either requires `Event.hasAccommodation` (422 otherwise), requires `accommodationDays` plus its own headcount field (400 if missing), and the two headcounts together cannot exceed the registration's `participantCount` (the team's `declaredSize`, or 1 for an individual registration) — 422 if they do.
 - 422 if the event isn't published/open for registration, or capacity is reached.
 - 409 if a registration already exists for this event (per-user for `INDIVIDUAL`, per-team for `TEAM`).
-- The registration fee is always computed server-side from `Event.feeStructure`/`feeFlat`/`feePerHead`/`feeMale`/`feeFemale` plus any accommodation surcharge — never trust a client-supplied amount. IITP-affiliated teams/users register for free (`amount: 0`).
+- The registration fee is always computed server-side from `Event.feeStructure`/`feeFlat`/`feePerHead`/`feeMale`/`feeFemale` plus any accommodation/mess-only surcharge (`Event.accommodationRate`/`messOnlyRate` × `accommodationDays` × the respective headcount) — never trust a client-supplied amount. For `TEAM` events, `PER_HEAD` fees are computed from the team's `declaredSize`, not the live roster count. IITP-affiliated teams/users register for free (`amount: 0`).
 - Creates a `Registration` (`status: PENDING_PAYMENT`) and a stub `Payment` (`mode: MANUAL_SCREENSHOT`, `status: INITIATED`) atomically in one transaction.
 
 Response `data` shape:
