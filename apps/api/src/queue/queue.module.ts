@@ -6,6 +6,8 @@ import { Queue } from 'bullmq';
 import { ReferralFlushProcessor } from './jobs/referral-flush.processor';
 import { LeaderboardProcessor } from './jobs/leaderboard.processor';
 import { LeaderboardModule } from '../leaderboard/leaderboard.module';
+import { CredentialIssueProcessor } from '../identity/jobs/credential-issue.processor';
+import { IdentityModule } from '../identity/identity.module';
 
 @Module({
   imports: [
@@ -31,8 +33,13 @@ import { LeaderboardModule } from '../leaderboard/leaderboard.module';
       { name: 'payment-confirmed' },
     ),
     LeaderboardModule,
+    IdentityModule,
   ],
-  providers: [ReferralFlushProcessor, LeaderboardProcessor],
+  providers: [
+    ReferralFlushProcessor,
+    LeaderboardProcessor,
+    CredentialIssueProcessor,
+  ],
   exports: [BullModule],
 })
 export class QueueModule implements OnModuleInit {
