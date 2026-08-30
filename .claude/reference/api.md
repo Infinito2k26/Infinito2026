@@ -97,6 +97,8 @@ Response `data` shape:
 
 `GET /events` / `GET /events/:slug` only ever return `isPublished: true` events — there's no admin variant that also returns drafts; admins use the `id` returned from `POST /events` to `PATCH` an unpublished event directly. "Admin/Event Manager" maps to `UserRole.ADMIN` / `SUPER_ADMIN` — no distinct Event Manager role exists.
 
+`GET /events/:slug` additionally includes `subOptions` (only the `isActive: true` rows) so the registration form can render Athletics-style discipline pickers without a second request. `GET /events` (the list) does not include `subOptions`.
+
 `PATCH /events/:id` rejects (`400`) lowering `capacity` below the event's current non-cancelled `Registration` count. This is an admin-side safety guard only — full at-registration-time capacity enforcement belongs to the Registration module.
 
 ### Teams and Registrations
