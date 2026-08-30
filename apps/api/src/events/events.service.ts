@@ -37,6 +37,7 @@ export class EventsService {
   async findBySlug(slug: string) {
     const event = await this.prisma.event.findFirst({
       where: { slug, isPublished: true, deletedAt: null },
+      include: { subOptions: { where: { isActive: true } } },
     });
 
     if (!event) {

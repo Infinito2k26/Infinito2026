@@ -1,0 +1,41 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.selectWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.required {
+    color: var(--color-danger, #dc2626);
+}
+
+.select {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    font-family: inherit;
+}
+
+.select:focus {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 1px;
+}
+
+.error {
+    font-size: 0.75rem;
+    color: var(--color-danger, #dc2626);
+}
