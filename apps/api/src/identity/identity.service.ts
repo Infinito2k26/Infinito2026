@@ -212,4 +212,52 @@ export class IdentityService {
       };
     });
   }
+
+  async listScans(page = 1, limit = 20, gate?: string) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    const where = gate ? { gate } : {};
+
+    const [scans, total] = await this.prisma.$transaction([
+      this.prisma.scanLog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          gate: true,
+          direction: true,
+          result: true,
+          createdAt: true,
+          scannedBy: { select: { id: true, name: true } },
+          credential: {
+            select: {
+              id: true,
+              user: { select: { name: true } },
+              participant: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.scanLog.count({ where }),
+    ]);
+
+    return {
+      scans: scans.map(({ credential, ...scan }) => ({
+        ...scan,
+        credentialId: credential.id,
+        holderName:
+          credential.user?.name ?? credential.participant?.name ?? null,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 }

@@ -22,6 +22,7 @@ describe('IdentityService', () => {
       create: jest.Mock;
     };
     participant: { findFirst: jest.Mock };
+    scanLog: { findMany: jest.Mock; count: jest.Mock };
     $transaction: jest.Mock;
   };
 
@@ -35,6 +36,7 @@ describe('IdentityService', () => {
         create: jest.fn(),
       },
       participant: { findFirst: jest.fn() },
+      scanLog: { findMany: jest.fn(), count: jest.fn() },
       $transaction: jest.fn(),
     };
 
@@ -344,6 +346,64 @@ describe('IdentityService', () => {
       });
 
       expect(result.result).toBe('VALID');
+    });
+  });
+
+  describe('listScans', () => {
+    it('paginates and resolves the holder name from user or participant', async () => {
+      prisma.$transaction.mockImplementation((arg: unknown) =>
+        Array.isArray(arg) ? Promise.all(arg) : arg,
+      );
+      prisma.scanLog.findMany.mockResolvedValue([
+        {
+          id: 'log-1',
+          gate: 'Gate 1',
+          direction: 'ENTRY',
+          result: 'VALID',
+          createdAt: new Date('2026-08-30'),
+          scannedBy: { id: 'vol-1', name: 'Volunteer One' },
+          credential: {
+            id: 'cred-1',
+            user: { name: 'Jane Doe' },
+            participant: null,
+          },
+        },
+        {
+          id: 'log-2',
+          gate: 'Gate 1',
+          direction: 'ENTRY',
+          result: 'VALID',
+          createdAt: new Date('2026-08-30'),
+          scannedBy: { id: 'vol-1', name: 'Volunteer One' },
+          credential: {
+            id: 'cred-2',
+            user: null,
+            participant: { name: 'John Roe' },
+          },
+        },
+      ]);
+      prisma.scanLog.count.mockResolvedValue(2);
+
+      const result = await service.listScans();
+
+      expect(result.scans[0]).toEqual(
+        expect.objectContaining({
+          credentialId: 'cred-1',
+          holderName: 'Jane Doe',
+        }),
+      );
+      expect(result.scans[1]).toEqual(
+        expect.objectContaining({
+          credentialId: 'cred-2',
+          holderName: 'John Roe',
+        }),
+      );
+      expect(result.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        total: 2,
+        totalPages: 1,
+      });
     });
   });
 });
