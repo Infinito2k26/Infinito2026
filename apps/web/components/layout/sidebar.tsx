@@ -44,6 +44,14 @@ const BarChartIcon = () => (
     <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
   </svg>
 );
+const QrCodeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" /><line x1="14" y1="14" x2="14" y2="14.01" />
+    <line x1="21" y1="14" x2="21" y2="14.01" /><line x1="14" y1="21" x2="14" y2="21.01" />
+    <line x1="21" y1="21" x2="21" y2="21.01" /><line x1="17.5" y1="17.5" x2="17.5" y2="17.51" />
+  </svg>
+);
 const SettingsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -55,6 +63,7 @@ const SIDE_ITEMS: SideItem[] = [
   { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
   { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events", status: "Upcoming" },
   { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams", status: "Upcoming" },
+  { label: "My Credential", icon: <QrCodeIcon />, href: "/dashboard/credential" },
   { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics", status: "Upcoming" },
   { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings", status: "Upcoming" },
 ];

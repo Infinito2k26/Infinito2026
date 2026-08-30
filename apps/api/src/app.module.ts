@@ -17,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 import { PaymentsModule } from './payments/payments.module';
+import { IdentityModule } from './identity/identity.module';
 import { EventsModule } from './events/events.module';
 import { TeamsModule } from './teams/teams.module';
 import { APP_FILTER } from '@nestjs/core';
@@ -38,6 +39,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     LeaderboardModule,
     RegistrationsModule,
     PaymentsModule,
+    IdentityModule,
     EventsModule,
     TeamsModule,
   ],
