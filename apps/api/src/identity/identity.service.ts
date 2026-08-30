@@ -1,9 +1,16 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
 import * as QRCode from 'qrcode';
+import { ScanResult } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { TokenService } from './token.service';
+import { ScanDto } from './dto/scan.dto';
 
 function hashToken(rawToken: string): string {
   return createHash('sha256').update(rawToken).digest('hex');
@@ -148,6 +155,109 @@ export class IdentityService {
       holderName: credential.user?.name ?? credential.participant?.name ?? null,
       scanCount: credential.scanCount,
       lastScannedAt: credential.lastScannedAt,
+    };
+  }
+
+  async scan(scannedById: string, dto: ScanDto) {
+    const verification = this.tokenService.verifyToken(dto.token);
+    if (!verification.valid) {
+      throw new BadRequestException('Invalid or tampered credential token');
+    }
+
+    const credential = await this.prisma.credential.findUnique({
+      where: { tokenHash: hashToken(dto.token) },
+    });
+
+    if (!credential) {
+      throw new NotFoundException('Credential not found');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const lastScan = await tx.scanLog.findFirst({
+        where: { credentialId: credential.id },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // A gate direction can't repeat without the opposite direction in
+      // between (e.g. two ENTRY scans in a row with no EXIT) — that's a
+      // re-used/shared QR, not a legitimate second pass through the gate.
+      const isDuplicate =
+        lastScan?.result === ScanResult.VALID &&
+        lastScan.direction === dto.direction;
+      const result = isDuplicate ? ScanResult.DUPLICATE : ScanResult.VALID;
+
+      const scanLog = await tx.scanLog.create({
+        data: {
+          credentialId: credential.id,
+          scannedById,
+          gate: dto.gate,
+          direction: dto.direction,
+          result,
+        },
+      });
+
+      if (result === ScanResult.VALID) {
+        await tx.credential.update({
+          where: { id: credential.id },
+          data: { scanCount: { increment: 1 }, lastScannedAt: new Date() },
+        });
+      }
+
+      return {
+        result,
+        scanLogId: scanLog.id,
+        credentialId: credential.id,
+        gate: dto.gate,
+        direction: dto.direction,
+      };
+    });
+  }
+
+  async listScans(page = 1, limit = 20, gate?: string) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    const where = gate ? { gate } : {};
+
+    const [scans, total] = await this.prisma.$transaction([
+      this.prisma.scanLog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          gate: true,
+          direction: true,
+          result: true,
+          createdAt: true,
+          scannedBy: { select: { id: true, name: true } },
+          credential: {
+            select: {
+              id: true,
+              user: { select: { name: true } },
+              participant: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.scanLog.count({ where }),
+    ]);
+
+    return {
+      scans: scans.map(({ credential, ...scan }) => ({
+        ...scan,
+        credentialId: credential.id,
+        holderName:
+          credential.user?.name ?? credential.participant?.name ?? null,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }

@@ -1,0 +1,116 @@
+/* ---------- Base Layout Structure (Mobile First: 375px) ---------- */
+.container {
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.pageSubtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.tableCard {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.table {
+    width: 100%;
+    min-width: 40rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    color: var(--color-text-secondary);
+}
+
+.headCell {
+    padding: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: 0.75rem;
+    color: var(--color-text-primary);
+}
+
+.cellNowrap {
+    padding: 0.75rem;
+    white-space: nowrap;
+    color: var(--color-text-primary);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.badgeValid {
+    color: #059669;
+}
+
+.badgeDuplicate {
+    color: #d97706;
+}
+
+.badgeInvalid {
+    color: var(--color-danger);
+}
+
+/* ---------- Desktop Scaling Grid Adjustments ---------- */
+@media (min-width: 768px) {
+    .container {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .pageTitle {
+        font-size: 1.875rem;
+    }
+
+    .pageSubtitle {
+        font-size: 1rem;
+    }
+
+    .table {
+        font-size: 0.875rem;
+    }
+}

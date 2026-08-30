@@ -173,6 +173,21 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 | GET    | `/identity/mine`            | Authenticated   | Get QR credential                  |
 | POST   | `/identity/scan`            | Volunteer/Admin | Scan and log credential            |
 | GET    | `/identity/validate/:token` | Public          | Offline-safe credential validation |
+| GET    | `/admin/scans`               | Admin           | List scan logs, paginated, for gate audit |
+
+#### `POST /identity/scan`
+
+- Only `VOLUNTEER`, `ADMIN`, `SUPER_ADMIN`.
+- Body: `{ token: string, gate: string, direction: 'ENTRY' | 'EXIT' }`.
+- Verifies the token's HMAC signature first; a tampered or malformed token is rejected (`400`) before any `ScanLog` write, since `ScanLog.credentialId` is a required foreign key and a structurally invalid token has no real credential to attach a log to. An unknown/revoked credential (valid signature, no matching `tokenHash` row) returns `404`, also without a write.
+- On a known credential: writes exactly one `ScanLog` row. If the most recent prior scan for that credential was `VALID` in the *same* `direction` (e.g. two `ENTRY` scans with no `EXIT` between them), this scan is recorded as `DUPLICATE` and `Credential.scanCount` is not incremented. Otherwise it's recorded as `VALID` and `Credential.scanCount`/`lastScannedAt` are updated in the same transaction.
+- `ScanResult.EXPIRED` is modeled in the schema but not yet produced by any code path — there's no credential expiry/revocation mechanism yet.
+
+#### `GET /admin/scans`
+
+- Only `ADMIN` and `SUPER_ADMIN`.
+- Query: `page` (default 1), `limit` (default 20, max 100), `gate` (optional exact match).
+- Response `data` shape: `{ scans: ScanLog[], pagination: { page, limit, total, totalPages } }`. Each scan includes `holderName` (resolved from the credential's linked `user` or `participant`) and `scannedBy` (the volunteer/admin who performed the scan).
 
 ### CA Portal (Phase 3-5 Additions)
 
