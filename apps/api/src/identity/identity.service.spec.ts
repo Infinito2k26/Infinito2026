@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { IdentityService } from './identity.service';
@@ -22,6 +22,7 @@ describe('IdentityService', () => {
       create: jest.Mock;
     };
     participant: { findFirst: jest.Mock };
+    $transaction: jest.Mock;
   };
 
   let uploadsService: { uploadProof: jest.Mock; getSignedGetUrl: jest.Mock };
@@ -34,6 +35,7 @@ describe('IdentityService', () => {
         create: jest.fn(),
       },
       participant: { findFirst: jest.fn() },
+      $transaction: jest.fn(),
     };
 
     uploadsService = {
@@ -200,6 +202,148 @@ describe('IdentityService', () => {
       const result = await service.validateToken(rawToken);
 
       expect(result).toEqual({ valid: false });
+    });
+  });
+
+  describe('scan', () => {
+    const scanDto = { token: '', gate: 'Gate 1', direction: 'ENTRY' as const };
+
+    function mockTransaction(tx: {
+      scanLog: { findFirst: jest.Mock; create: jest.Mock };
+      credential: { update: jest.Mock };
+    }) {
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn(tx),
+      );
+      return tx;
+    }
+
+    it('rejects a tampered token before any DB write (critical test #9)', async () => {
+      await expect(
+        service.scan('volunteer-1', { ...scanDto, token: 'tampered.token' }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(prisma.credential.findUnique).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the credential does not exist', async () => {
+      const rawToken = tokenService.signToken('missing-cred');
+      prisma.credential.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.scan('volunteer-1', { ...scanDto, token: rawToken }),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('records exactly one scan log and increments scanCount on a fresh scan (critical test #8)', async () => {
+      const rawToken = tokenService.signToken('cred-1');
+      prisma.credential.findUnique.mockResolvedValue({
+        id: 'cred-1',
+        scanCount: 0,
+      });
+
+      const scanLogCreate = jest
+        .fn()
+        .mockResolvedValue({ id: 'log-1', result: 'VALID' });
+      const credentialUpdate = jest.fn().mockResolvedValue({});
+      mockTransaction({
+        scanLog: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: scanLogCreate,
+        },
+        credential: { update: credentialUpdate },
+      });
+
+      const result = await service.scan('volunteer-1', {
+        ...scanDto,
+        token: rawToken,
+      });
+
+      expect(scanLogCreate).toHaveBeenCalledTimes(1);
+      expect(scanLogCreate).toHaveBeenCalledWith({
+        data: {
+          credentialId: 'cred-1',
+          scannedById: 'volunteer-1',
+          gate: 'Gate 1',
+          direction: 'ENTRY',
+          result: 'VALID',
+        },
+      });
+      expect(credentialUpdate).toHaveBeenCalledWith({
+        where: { id: 'cred-1' },
+        data: {
+          scanCount: { increment: 1 },
+          lastScannedAt: expect.any(Date) as Date,
+        },
+      });
+      expect(result.result).toBe('VALID');
+    });
+
+    it('marks a repeated same-direction scan as DUPLICATE without incrementing scanCount', async () => {
+      const rawToken = tokenService.signToken('cred-1');
+      prisma.credential.findUnique.mockResolvedValue({
+        id: 'cred-1',
+        scanCount: 1,
+      });
+
+      const scanLogCreate = jest
+        .fn()
+        .mockResolvedValue({ id: 'log-2', result: 'DUPLICATE' });
+      const credentialUpdate = jest.fn();
+      mockTransaction({
+        scanLog: {
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ result: 'VALID', direction: 'ENTRY' }),
+          create: scanLogCreate,
+        },
+        credential: { update: credentialUpdate },
+      });
+
+      const result = await service.scan('volunteer-1', {
+        ...scanDto,
+        token: rawToken,
+      });
+
+      expect(scanLogCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ result: 'DUPLICATE' }) as unknown,
+        }),
+      );
+      expect(credentialUpdate).not.toHaveBeenCalled();
+      expect(result.result).toBe('DUPLICATE');
+    });
+
+    it('does not treat an opposite-direction scan as a duplicate', async () => {
+      const rawToken = tokenService.signToken('cred-1');
+      prisma.credential.findUnique.mockResolvedValue({
+        id: 'cred-1',
+        scanCount: 1,
+      });
+
+      const scanLogCreate = jest
+        .fn()
+        .mockResolvedValue({ id: 'log-3', result: 'VALID' });
+      mockTransaction({
+        scanLog: {
+          findFirst: jest
+            .fn()
+            .mockResolvedValue({ result: 'VALID', direction: 'EXIT' }),
+          create: scanLogCreate,
+        },
+        credential: { update: jest.fn().mockResolvedValue({}) },
+      });
+
+      const result = await service.scan('volunteer-1', {
+        ...scanDto,
+        token: rawToken,
+        direction: 'ENTRY',
+      });
+
+      expect(result.result).toBe('VALID');
     });
   });
 });
