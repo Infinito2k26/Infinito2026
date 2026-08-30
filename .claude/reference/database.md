@@ -261,8 +261,9 @@ One row per event. Admin-created. All fields drive the registration form dynamic
 | `startDate` | DateTime | |
 | `endDate` | DateTime? | Multi-day events |
 | `venue` | String? | e.g. "IIT Patna Cricket Ground" |
-| `hasAccommodation` | Boolean | Default false. Adds opt-in to registration form. |
-| `accommodationRate` | Decimal? | Per person per day (₹490 standard). Informational only at launch. |
+| `hasAccommodation` | Boolean | Default false. Gates both accommodation and mess-only opt-ins on the registration form. |
+| `accommodationRate` | Decimal? | Per person per day, lodging + mess (₹490 standard). |
+| `messOnlyRate` | Decimal? | Per person per day, mess only, no lodging (₹200 standard). Added 2026-08-30 alongside `Registration.messOnlyOpted`/`messOnlyHeadcount`. |
 | `prizePool` | Decimal? | Displayed on event page |
 | `capacity` | Int? | Registration cap |
 | `customFieldsDef` | Json? | Array of `{ label, inputType: CustomFieldType, required, scope: CustomFieldScope, options? }`. TEAM fields collected once per registration; PARTICIPANT fields collected once per player. |
@@ -319,6 +320,7 @@ A group of players from one college entering a **single** event. Captain is the 
 |-------|------|-------|
 | `id` | UUID PK | |
 | `eventId` | UUID FK → Event | The single event this team is entering. Set at creation — required so roster size can be validated against `Event.teamSizeMin/Max` before a `Registration` exists. Added 2026-08-29 (v2.2 originally shipped without it). |
+| `declaredSize` | Int | Roster size the captain commits to at team creation, checked against `Event.teamSizeMin/Max`. This — not the live `Participant` count — is what `POST /registrations` uses for the `teamSizeMin/Max` gate, `PER_HEAD` fee calculation, and accommodation/mess-only headcount caps, since teammates are expected to keep joining via invite code after the team has already registered and paid. Added 2026-08-30. |
 | `name` | String | Team name |
 | `captainId` | UUID FK → User | Must have a platform account |
 | `collegeName` | String | |
@@ -545,9 +547,11 @@ Official record linking a team or individual to an event. Must have exactly one 
 | `status` | RegistrationStatus | |
 | `isIITP` | Boolean | Default false. Set from Team.isIITP or User.isIITP at submission. Triggers ₹0 fee. |
 | `genderDeclared` | GenderCategory? | Required for MEN / WOMEN events |
-| `accommodationOpted` | Boolean | Default false. Accommodation is allocated team-wise, not per person. |
-| `accommodationDays` | Int? | How many days the team needs accommodation |
-| `accommodationHeadcount` | Int? | Number of team members needing accommodation |
+| `accommodationOpted` | Boolean | Default false. Lodging + mess package. Stackable with `messOnlyOpted` for different subsets of the same team. |
+| `accommodationDays` | Int? | Length of stay, shared between the accommodation and mess-only packages (same trip, just with/without lodging) |
+| `accommodationHeadcount` | Int? | Number of team members in the accommodation (lodging + mess) package |
+| `messOnlyOpted` | Boolean | Default false. Mess-only package (no lodging). Added 2026-08-30. |
+| `messOnlyHeadcount` | Int? | Number of team members in the mess-only package. Added 2026-08-30. |
 | `referredById` | UUID FK → CAProfile? | CA who referred this registration |
 | `customData` | Json? | Responses to Event.customFieldsDef (key → value map) |
 | `createdAt` | DateTime | |
@@ -557,7 +561,7 @@ Official record linking a team or individual to an event. Must have exactly one 
 | Unique | `teamId` (where not null) | One team = one event. Hard DB constraint. |
 | Unique | `(eventId, userId)` (where not null) | One individual per event |
 
-**Accommodation note:** Allocation is team-wise. If a participant is in two teams both with `accommodationOpted = true`, admin identifies the duplication via their scan history and allocates the room to one team only. The participant sleeps with one team — resolved at check-in by the volunteer.
+**Accommodation note:** Allocation is team-wise. If a participant is in two teams both with `accommodationOpted = true`, admin identifies the duplication via their scan history and allocates the room to one team only. The participant sleeps with one team — resolved at check-in by the volunteer. `accommodationOpted` and `messOnlyOpted` can both be true on the same registration (different team members in each package), but `accommodationHeadcount + messOnlyHeadcount` can never exceed the registration's `participantCount` (the team's `declaredSize`, or 1 for an individual) — enforced by `RegistrationsService`, not a DB constraint. Either opt-in requires `Event.hasAccommodation = true`.
 
 ---
 

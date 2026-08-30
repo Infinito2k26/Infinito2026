@@ -218,7 +218,10 @@ model Event {
   endDate              DateTime?
   venue                String?
   hasAccommodation     Boolean               @default(false)
+  // Per-day, per-head rate for the accommodation package (lodging + mess).
   accommodationRate    Decimal?              @db.Decimal(10, 2)
+  // Per-day, per-head rate for the mess-only package (no lodging).
+  messOnlyRate         Decimal?              @db.Decimal(10, 2)
   prizePool            Decimal?              @db.Decimal(10, 2)
   capacity             Int?
   // Array of { label, inputType: CustomFieldType, required, scope: CustomFieldScope, options? }
@@ -273,6 +276,11 @@ model EventRulebook {
 model Team {
   id               String    @id @default(uuid()) @db.Uuid
   eventId          String    @db.Uuid // the single event this team is entering; set at creation
+  // Roster size the captain commits to at team creation, checked against
+  // Event.teamSizeMin/Max. Registration eligibility and PER_HEAD fee
+  // calculation are both based on this, not the live Participant count,
+  // since teammates are expected to keep joining after registration.
+  declaredSize     Int
   name             String
   captainId        String    @db.Uuid
   collegeName      String
@@ -513,9 +521,13 @@ model Registration {
   status                RegistrationStatus @default(PENDING_PAYMENT)
   isIITP                Boolean            @default(false)
   genderDeclared        GenderCategory?
+  // Two mutually-stackable add-ons, sharing accommodationDays as the length
+  // of stay: accommodation (lodging + mess) and mess-only (no lodging).
   accommodationOpted    Boolean            @default(false)
   accommodationDays     Int?
   accommodationHeadcount Int?
+  messOnlyOpted         Boolean            @default(false)
+  messOnlyHeadcount     Int?
   referredById          String?            @db.Uuid
   // Responses to TEAM-scoped Event.customFieldsDef fields
   customData            Json?

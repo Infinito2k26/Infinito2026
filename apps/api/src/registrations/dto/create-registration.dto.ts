@@ -1,0 +1,78 @@
+import { Type } from 'class-transformer';
+import {
+  IsUUID,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
+  IsEnum,
+  IsObject,
+  IsArray,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { GenderCategory } from '@prisma/client';
+
+export class SubOptionSelectionDto {
+  @IsUUID()
+  subOptionId!: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  relayMembers?: string[];
+}
+
+export class CreateRegistrationDto {
+  @IsUUID()
+  eventId!: string;
+
+  // Required for TEAM events, forbidden for INDIVIDUAL events.
+  @IsOptional()
+  @IsUUID()
+  teamId?: string;
+
+  // Two independent, stackable add-ons (accommodation = lodging + mess;
+  // messOnly = mess only). Both share accommodationDays as the length of
+  // stay. See RegistrationsService.validateAccommodation for the gating
+  // rules (requires Event.hasAccommodation, headcounts capped by team size).
+  @IsOptional()
+  @IsBoolean()
+  accommodationOpted?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  accommodationDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  accommodationHeadcount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  messOnlyOpted?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  messOnlyHeadcount?: number;
+
+  // Required when the event's feeStructure is GENDER_BASED.
+  @IsOptional()
+  @IsEnum(GenderCategory)
+  genderDeclared?: GenderCategory;
+
+  // Responses to Event.customFieldsDef entries scoped TEAM, keyed by label.
+  @IsOptional()
+  @IsObject()
+  customData?: Record<string, unknown>;
+
+  // Athletics-shaped events only: picks from Event.subOptions.
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SubOptionSelectionDto)
+  subOptionSelections?: SubOptionSelectionDto[];
+}
