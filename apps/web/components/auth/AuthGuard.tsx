@@ -25,9 +25,9 @@ export default function AuthGuard({
       }
 
       try {
-        const data = await api.get('/auth/me');
-        // The backend auth/me typically returns the user object directly, or wrapped in a profile property.
-        const user = data.profile || data;
+        const res = await api.get('/auth/me');
+        // The backend envelope wraps the payload as { success, data, meta } — see .claude/reference/api.md.
+        const user = res.data;
 
         if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
           if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
