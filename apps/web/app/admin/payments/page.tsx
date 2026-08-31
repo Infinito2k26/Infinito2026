@@ -136,8 +136,8 @@ export default function AdminPaymentsPage() {
     const fetchPayments = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/admin/payments?status=RECONCILIATION_PENDING');
-            setPayments(data?.payments ?? []);
+            const res = await api.get('/admin/payments?status=RECONCILIATION_PENDING');
+            setPayments(res?.data?.payments ?? []);
         } catch (err) {
             console.error(err);
         } finally {
