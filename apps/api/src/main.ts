@@ -13,7 +13,7 @@ async function bootstrap() {
   // Web app runs on a separate origin/port in dev; refresh-token cookies
   // require an explicit origin (not '*') plus credentials: true.
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
+    origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001',
     credentials: true,
   });
   app.useGlobalPipes(
