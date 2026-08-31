@@ -7,7 +7,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-import Card from '@/components/ui/card';
+import AuthLayout from '@/components/layout/auth-layout';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -63,14 +63,14 @@ export default function RegisterWaitlistPage() {
     };
 
     return (
-        <div className={styles.pageWrapper}>
-            <Card className={styles.registerCard}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Register</h1>
-                    <p className={styles.subtitle}>
-                            Leave your details and you&apos;ll be emailed the moment it&apos;s live. No payment is required today.
-                     </p>
-                </div>
+        <AuthLayout>
+            <div className={styles.header}>
+                <h1 className={styles.title}>Register</h1>
+                <p className={styles.subtitle}>
+                    Leave your details and you&apos;ll be emailed the moment it&apos;s live. No payment
+                    is required today.
+                </p>
+            </div>
 
                 {isSuccess && (
                     <div className={styles.successAlert}>
@@ -171,7 +171,6 @@ export default function RegisterWaitlistPage() {
                         </Link>
                     </p>
                 </div>
-            </Card>
-        </div>
+        </AuthLayout>
     );
 }

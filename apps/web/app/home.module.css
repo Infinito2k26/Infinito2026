@@ -1,46 +1,222 @@
-.hero {
-    display: flex;
-    min-height: calc(100vh - 60px);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 0 1rem;
+/* ---------------------------------------------------------------------------
+   Landing page.
+
+   The art's own structure sets the page's: a bone sky, then a ridge, then the
+   dark ruin below it. Sections alternate between bone-100 and bone-200 so the
+   page has rhythm without needing decoration, and the one dark band at the
+   bottom is where the closing call to action lives.
+   ------------------------------------------------------------------------- */
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: var(--space-7) var(--spacing-container);
 }
 
-.title {
-    font-size: 2.25rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
-}
-
-.accent {
-    color: var(--color-accent-primary);
-}
-
-.subtitle {
-    font-size: 1.125rem;
-    color: var(--color-text-secondary);
-    margin-bottom: 2rem;
-    max-width: 42rem;
-}
-
-.actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
+.statsInner {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5) var(--space-4);
+  width: 100%;
 }
 
 @media (min-width: 768px) {
-    .title {
-        font-size: 3.75rem;
-    }
+  .statsInner {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 
-    .subtitle {
-        font-size: 1.25rem;
-    }
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--f-display);
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--crimson-800);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+/* --- Shared section frame ------------------------------------------------ */
+
+.section,
+.schedule {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: var(--space-8) var(--spacing-container);
+}
+
+.schedule {
+  max-width: none;
+  background: var(--bone-200);
+}
+
+.schedule > * {
+  max-width: var(--container);
+  margin-inline: auto;
+}
+
+.sectionHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  font-size: var(--fs-h2);
+}
+
+.sectionLede {
+  color: var(--char-700);
+  max-width: var(--measure);
+}
+
+.posterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-4);
+}
+
+.sectionFoot {
+  margin-top: var(--space-6);
+}
+
+.textLink {
+  font-family: var(--f-caps);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--crimson-700);
+}
+
+.textLink:hover {
+  color: var(--ember-600);
+}
+
+/* --- Schedule ------------------------------------------------------------ */
+
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-4);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--bone-50);
+  border: var(--hairline);
+  border-left: 3px solid var(--ember-500);
+  border-radius: var(--radius-sm);
+}
+
+.dayLabel {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--ember-600);
+}
+
+.dayTitle {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--crimson-800);
+}
+
+.dayBody {
+  font-size: var(--fs-small);
+  color: var(--char-700);
+  line-height: 1.7;
+}
+
+/* --- Legacy band --------------------------------------------------------- */
+
+.legacy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+  background: var(--char-900);
+  padding: var(--space-8) var(--spacing-container) var(--space-9);
+  /* The ridge above this section already carries char-900, so they meet with no
+     seam. Pull it up by a hair to defend against sub-pixel rounding. */
+  margin-top: -1px;
+}
+
+.legacyMark {
+  color: var(--ember-300);
+  opacity: 0.35;
+  width: 56px;
+  height: 56px;
+}
+
+.legacyTitle {
+  font-family: var(--f-display);
+  font-size: var(--fs-display);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  color: var(--bone-100);
+  max-width: 16ch;
+}
+
+.legacyBody {
+  color: var(--mist-400);
+  max-width: 52ch;
+}
+
+.legacyCta {
+  margin-top: var(--space-2);
+  font-family: var(--f-caps);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  padding: 0.875rem 1.75rem;
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: background var(--t-state) var(--ease);
+}
+
+.legacyCta:hover {
+  background: var(--crimson-600);
+  color: var(--bone-50);
+}
+
+.legacyCta:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
 }

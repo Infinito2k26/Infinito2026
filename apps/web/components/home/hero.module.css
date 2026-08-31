@@ -1,0 +1,80 @@
+.hero {
+  position: relative;
+  background: var(--bone-100);
+}
+
+.art {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* The actions sit in the dark ruin band along the bottom of every crop, which is
+   the only region of the art with guaranteed contrast. On phones the mobile crop
+   is 4:5 and tall, so they drop below the image instead of over it. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  padding: var(--space-5) var(--spacing-container) var(--space-6);
+  background: var(--char-900);
+}
+
+@media (min-width: 769px) {
+  .actions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(1.5rem, 4vw, 3.5rem);
+    background: transparent;
+    padding-block: 0;
+  }
+}
+
+.primary,
+.secondary {
+  font-family: var(--f-caps);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
+}
+
+.primary {
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  border-color: var(--crimson-700);
+}
+
+.primary:hover {
+  background: var(--crimson-600);
+  border-color: var(--crimson-600);
+  color: var(--bone-50);
+}
+
+.secondary {
+  background: rgba(27, 23, 21, 0.55);
+  color: var(--bone-100);
+  border-color: var(--bone-300);
+  backdrop-filter: blur(6px);
+}
+
+.secondary:hover {
+  background: var(--bone-100);
+  color: var(--char-900);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
+}

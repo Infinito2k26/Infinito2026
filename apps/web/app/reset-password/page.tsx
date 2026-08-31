@@ -7,7 +7,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import Card from '@/components/ui/card';
+import AuthLayout from '@/components/layout/auth-layout';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -59,12 +59,11 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div className={styles.pageWrapper}>
-            <Card className={styles.card}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Reset Password</h1>
-                    <p className={styles.subtitle}>Choose a new password for your account.</p>
-                </div>
+        <AuthLayout>
+            <div className={styles.header}>
+                <h1 className={styles.title}>Reset Password</h1>
+                <p className={styles.subtitle}>Choose a new password for your account.</p>
+            </div>
 
                 {apiError && <div className={styles.errorAlert}>{apiError}</div>}
 
@@ -128,7 +127,6 @@ export default function ResetPasswordPage() {
                         </Link>
                     </p>
                 </div>
-            </Card>
-        </div>
+        </AuthLayout>
     );
 }

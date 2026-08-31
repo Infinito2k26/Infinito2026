@@ -1,21 +1,28 @@
-import Link from 'next/link';
-import PublicLayout from '@/components/layout/public-layout';
-import Button from '@/components/ui/button';
-import styles from './sports.module.css';
+import type { Metadata } from "next";
+import PublicLayout from "@/components/layout/public-layout";
+import SportsGrid from "@/components/sports/sports-grid";
+import { SPORTS } from "@/lib/sports";
+import styles from "./sports.module.css";
+
+export const metadata: Metadata = {
+    title: "Sports",
+    description:
+        "Every sport at Infinito 2026 — Ruins of Ragnarok. Team and individual events across boys, girls and open categories, 9–11 October at IIT Patna.",
+};
 
 export default function SportsPage() {
     return (
         <PublicLayout>
-            <div className={styles.wrapper}>
-                <h1 className={styles.title}>Sports</h1>
+            <header className={styles.header}>
+                <p className="eyebrow">The battlefield awaits</p>
+                <h1 className={`${styles.title} glow`}>Choose your sport</h1>
                 <p className={styles.description}>
-                    Get ready for intense competition and thrilling sports action. The full sports
-                    calendar is being finalized — in the meantime, browse the events already open.
+                    Team and individual events across three categories. Pick your
+                    ground, gather your side, and register before entries close.
                 </p>
-                <Link href="/events">
-                    <Button variant="secondary">Browse Events</Button>
-                </Link>
-            </div>
+            </header>
+
+            <SportsGrid sports={SPORTS} />
         </PublicLayout>
     );
 }

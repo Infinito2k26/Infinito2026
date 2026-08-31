@@ -1,28 +1,373 @@
+/* ============================================================================
+   Infinito 2026 — "Ruins of Ragnarok" design tokens
+   ----------------------------------------------------------------------------
+   Every colour here is sampled from the official key art in /public. The art is
+   LIGHT: a bone sky with charcoal figures, crimson blackletter, and an ember-lit
+   band of ruin along the bottom. So the site is light-themed throughout, and
+   dark is only ever used as a deliberate band (footer, credential pass, gate
+   scanner). There is no dark mode and no theme toggle — do not add one.
+
+   Plan: .claude/plans/ui-design-ruins-of-ragnarok.md
+   ========================================================================== */
+
 :root {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f4f4f5;
-  --color-surface: #ffffff;
-  --color-accent-primary: #27272a;
-  --color-accent-secondary: #52525b;
-  --color-text-primary: #18181b;
-  --color-text-secondary: #71717a;
-  --color-border: #e4e4e7;
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
-  --radius-md: 0.5rem;
-  --spacing-container: 1rem;
+  /* --- Bone: the sky. Page ground everywhere. ---------------------------- */
+  --bone-50: #faf5ec;
+  --bone-100: #f5ede2;
+  --bone-200: #ece2d4;
+  --bone-300: #d9ccb9;
+  --mist-400: #b8ada0;
+
+  /* --- Crimson: display type and primary action -------------------------- */
+  --crimson-900: #5e0f11;
+  --crimson-800: #7a1315;
+  --crimson-700: #8b1a1a;
+  --crimson-600: #a3272a;
+
+  /* --- Ember: accent, from the fire and the arena floor ------------------ */
+  --ember-600: #c1442a;
+  --ember-500: #d4622f;
+  --ember-300: #f0a06a;
+  --glow-200: #f7d9b8;
+
+  /* --- Charcoal: figures, ornament line art, the dark bands -------------- */
+  --char-900: #1b1715;
+  --char-800: #241f1e;
+  --char-700: #38302c;
+  --char-500: #6b5f56;
+
+  /* --- Semantic text ----------------------------------------------------- */
+  --text: var(--char-800);
+  --text-muted: var(--char-500);
+  --text-faint: var(--mist-400);
+  --text-on-dark: var(--bone-100);
+
+  /* --- Status. Desaturated so they sit inside the palette. --------------- */
+  --ok: #4a6b3f;
+  --ok-bg: #eef2e9;
+  --warn: #a3701c;
+  --warn-bg: #f7eddb;
+  --err: #a3272a;
+  --err-bg: #f7e6e4;
+  --info: #3f5a6b;
+  --info-bg: #e9eef1;
+
+  /* --- Illustration only. Never use these for UI. ------------------------ */
+  --armour-purple: #4a3358;
+  --armour-gold: #b8873f;
+
+  /* --- Typography -------------------------------------------------------- */
+  /* --font-* vars are injected by next/font in app/layout.tsx. */
+  --f-display: var(--font-display), "Grenze Gotisch", Georgia, serif;
+  --f-caps: var(--font-caps), "Cinzel", Georgia, serif;
+  --f-ui: var(--font-ui), "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+
+  --fs-display: clamp(2.25rem, 7vw, 4.5rem);
+  --fs-h1: clamp(1.75rem, 4.6vw, 3rem);
+  --fs-h2: clamp(1.375rem, 3.2vw, 2.125rem);
+  --fs-h3: clamp(1.125rem, 2vw, 1.5rem);
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --fs-micro: 0.6875rem;
+
+  --lh-tight: 1.1;
+  --lh-heading: 1.25;
+  --lh-body: 1.65;
+
+  --track-caps: 0.16em;
+  --track-micro: 0.22em;
+
+  /* --- Space ------------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* --- Radius. Carved, not soft. ----------------------------------------- */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-full: 999px;
+
+  /* --- Elevation. Warm and shallow; no Material shadows on bone. --------- */
+  --shadow-sm: 0 1px 2px rgba(36, 31, 30, 0.06);
+  --shadow-md: 0 1px 2px rgba(36, 31, 30, 0.06), 0 6px 18px rgba(36, 31, 30, 0.045);
+  --shadow-lg: 0 2px 4px rgba(36, 31, 30, 0.08), 0 16px 40px rgba(36, 31, 30, 0.09);
+  --hairline: 1px solid var(--bone-300);
+
+  /* --- Motion ------------------------------------------------------------ */
+  --t-state: 120ms;
+  --t-enter: 180ms;
+  --t-reveal: 240ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* --- Layout ------------------------------------------------------------ */
+  --container: 1200px;
+  --measure: 68ch;
+  --spacing-container: clamp(1rem, 4vw, 3rem);
+  --navbar-h: 64px;
+  --z-nav: 100;
+  --z-modal: 200;
+  --z-grain: 9999;
+
+  /* ======================================================================
+     Legacy alias layer.
+     The app was built against a placeholder zinc palette. Rather than edit
+     40+ CSS modules at once, the old names are remapped onto the new
+     palette here, so every existing screen re-themes immediately. New code
+     should use the tokens above. Several of these were referenced by
+     components but never actually defined, which is why they previously
+     rendered as nothing.
+     ====================================================================== */
+  --color-bg-primary: var(--bone-100);
+  --color-bg-secondary: var(--bone-200);
+  --color-surface: var(--bone-50);
+  --color-accent-primary: var(--crimson-700);
+  --color-accent-secondary: var(--ember-600);
+  --color-on-accent: var(--bone-100);
+  --color-text-primary: var(--char-800);
+  --color-text-secondary: var(--char-500);
+  --color-border: var(--bone-300);
+  --color-danger: var(--err);
+  --color-danger-hover: var(--crimson-800);
+  --color-error: var(--err);
+  --color-accent-primary-rgb: 139, 26, 26;
+  --color-bg-secondary-rgb: 236, 226, 212;
+}
+
+/* ============================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bone-100);
+  color: var(--text);
+  font-family: var(--f-ui);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   max-width: 100vw;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* A fine charcoal tooth over the whole page. Without it, flat CSS beige sits
+   badly next to the illustrated art it has to share a screen with. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: radial-gradient(var(--char-700) 0.7px, transparent 0.7px);
+  background-size: 7px 7px;
+}
+
+/* ============================================================================
+   Typography
+   ========================================================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: var(--lh-heading);
+  text-wrap: balance;
+}
+
+/* Blackletter is display-only. It must never appear below 24px, inside a
+   table, or in a form label — it stops being readable. */
+h1,
+h2 {
+  font-family: var(--f-display);
+  color: var(--crimson-800);
+  line-height: var(--lh-tight);
+}
+
+h1 {
+  font-size: var(--fs-h1);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+}
+
+h3 {
+  font-family: var(--f-caps);
+  font-size: var(--fs-h3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crimson-800);
+}
+
+h4,
+h5,
+h6 {
+  font-family: var(--f-caps);
+  font-size: 0.8125rem;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--char-700);
+}
+
+p {
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--crimson-700);
+  text-decoration: none;
+  transition: color var(--t-state) var(--ease);
+}
+
+a:hover {
+  color: var(--crimson-600);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+ul,
+ol {
+  padding-left: 1.15em;
+}
+
+li::marker {
+  color: var(--ember-600);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/* ============================================================================
+   Focus
+   ========================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--crimson-700);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--glow-200);
+  color: var(--char-900);
+}
+
+/* ============================================================================
+   Utilities
+   ========================================================================== */
+
+/* The landing hero art already contains the wordmark, theme title and dates as
+   pixels. The page still needs a real <h1> for search and screen readers, so it
+   is rendered with this and hidden visually. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--spacing-container);
+}
+
+.eyebrow {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--ember-600);
+}
+
+/* The halo behind the blackletter in the source art. */
+.glow {
+  text-shadow: 0 0 20px var(--glow-200), 0 0 48px rgba(247, 217, 184, 0.65);
+}
+
+/* ============================================================================
+   Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* A loading spinner frozen mid-turn reads as a hung page, which is worse than
+     the motion it was meant to spare. Anything marked essential keeps moving,
+     just slowly. Use this sparingly — a spinner is close to the only fair case. */
+  [data-motion="essential"] {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: infinite !important;
+  }
 }

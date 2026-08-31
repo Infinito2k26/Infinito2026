@@ -1,38 +1,47 @@
+/* Status pills. Each variant pairs a colour with a word in the caller's label —
+   colour alone never carries the meaning. */
+
 .badge {
-    display: inline-flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
-/* Badge-specific color pairs — no semantic status tokens exist in
-   globals.css yet, so these are scoped to this component only. */
 .default {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-secondary);
+  background: var(--bone-200);
+  color: var(--char-700);
+  border-color: var(--bone-300);
 }
 
 .success {
-    background-color: #dcfce7;
-    color: #15803d;
+  background: var(--ok-bg);
+  color: var(--ok);
+  border-color: rgba(74, 107, 63, 0.3);
 }
 
 .warning {
-    background-color: #fef3c7;
-    color: #b45309;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-color: rgba(163, 112, 28, 0.3);
 }
 
 .danger {
-    background-color: #fee2e2;
-    color: #b91c1c;
+  background: var(--err-bg);
+  color: var(--err);
+  border-color: rgba(163, 39, 42, 0.3);
 }
 
 .info {
-    background-color: #dbeafe;
-    color: #1d4ed8;
+  background: var(--info-bg);
+  color: var(--info);
+  border-color: rgba(63, 90, 107, 0.3);
 }

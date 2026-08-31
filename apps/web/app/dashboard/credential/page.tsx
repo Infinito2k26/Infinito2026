@@ -5,6 +5,7 @@ import { Download, QrCode, ScanLine } from "lucide-react";
 import { api } from "@/lib/api";
 import Card from "@/components/ui/card";
 import Spinner from "@/components/ui/spinner";
+import Ornament from "@/components/ui/ornament";
 import styles from "./credential.module.css";
 
 interface Credential {
@@ -72,13 +73,19 @@ export default function CredentialPage() {
       )}
 
       {credential && (
-        <Card className={styles.credentialCard}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={credential.qrImageUrl}
-            alt="Your entry QR credential"
-            className={styles.qrImage}
-          />
+        <div className={styles.pass}>
+          <Ornament variant="valknut" className={styles.passMark} />
+
+          <p className={styles.passEyebrow}>Infinito 2026 · Entry Credential</p>
+
+          <div className={styles.qrChip}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={credential.qrImageUrl}
+              alt="Your entry QR credential"
+              className={styles.qrImage}
+            />
+          </div>
 
           <div className={styles.metaGroup}>
             <p className={styles.metaLine}>
@@ -101,7 +108,7 @@ export default function CredentialPage() {
             <Download size={16} />
             Download QR
           </a>
-        </Card>
+        </div>
       )}
     </div>
   );

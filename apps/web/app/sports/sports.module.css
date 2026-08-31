@@ -1,23 +1,17 @@
-.wrapper {
+.header {
     display: flex;
-    min-height: 60vh;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 4rem 1.5rem;
+    gap: var(--space-3);
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-5);
 }
 
 .title {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
+    font-size: var(--fs-h1);
 }
 
 .description {
-    font-size: 1.125rem;
-    color: var(--color-text-secondary);
-    max-width: 36rem;
-    margin-bottom: 1.5rem;
+    color: var(--char-700);
+    max-width: var(--measure);
 }

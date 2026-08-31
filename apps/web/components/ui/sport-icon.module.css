@@ -1,0 +1,4 @@
+.icon {
+  color: var(--char-700);
+  flex-shrink: 0;
+}

@@ -1,17 +1,15 @@
-/* ---------- Base Layout (Mobile First: 375px) ---------- */
 .pageWrapper {
-    min-height: 100vh;
     width: 100%;
-    background-color: var(--color-bg-primary);
-    padding: 2rem 1rem;
+    background-color: var(--bone-100);
 }
 
 .container {
-    max-width: 900px;
+    max-width: var(--container);
     margin: 0 auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-9);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-6);
 }
 
 .header {
@@ -19,41 +17,99 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-}
-
-.titleIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 4rem;
-    height: 4rem;
-    background-color: rgba(var(--color-accent-primary-rgb), 0.1);
-    border-radius: 50%;
-    color: var(--color-accent-primary);
+    gap: var(--space-2);
 }
 
 .title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    line-height: 1.2;
+    margin-top: var(--space-1);
 }
 
 .subtitle {
-    font-size: 0.9375rem;
-    color: var(--color-text-secondary);
-    max-width: 500px;
-    line-height: 1.5;
+    color: var(--text-muted);
+    max-width: 44ch;
 }
+
+/* --- Podium: the top three, elevated by rank ----------------------------- */
+
+.podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: end;
+    gap: var(--space-3);
+    max-width: 640px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.podiumSpot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-align: center;
+    padding: var(--space-4) var(--space-2) 0;
+}
+
+.podiumTrophy {
+    color: var(--ember-600);
+    margin-bottom: var(--space-1);
+}
+
+.podiumRankNumber {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    letter-spacing: var(--track-micro);
+    color: var(--text-muted);
+}
+
+.podiumName {
+    font-weight: 700;
+    color: var(--char-800);
+}
+
+.podiumCollege {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+}
+
+.podiumPoints {
+    font-family: var(--f-caps);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--crimson-700);
+    margin-top: var(--space-1);
+}
+
+.podiumBase {
+    width: 100%;
+    margin-top: var(--space-3);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: var(--char-900);
+}
+
+.podiumRank1 .podiumBase {
+    height: 88px;
+    background: var(--crimson-800);
+}
+
+.podiumRank2 .podiumBase {
+    height: 60px;
+}
+
+.podiumRank3 .podiumBase {
+    height: 44px;
+    background: var(--char-700);
+}
+
+/* --- Table: ranks below the podium ---------------------------------------- */
 
 .tableCard {
     padding: 0;
-    /* Remove default card padding to let the table span edge-to-edge */
     overflow: hidden;
 }
 
-/* Horizontal scroll wrapper for 375px viewports */
 .tableWrapper {
     width: 100%;
     overflow-x: auto;
@@ -63,25 +119,25 @@
 .table {
     width: 100%;
     min-width: 600px;
-    /* Forces scrolling on mobile rather than squishing columns */
     border-collapse: collapse;
     text-align: left;
 }
 
 .table th {
-    background-color: var(--color-bg-secondary);
-    padding: 1rem;
-    font-size: 0.75rem;
+    background-color: var(--bone-200);
+    padding: var(--space-4);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: var(--track-micro);
     font-weight: 700;
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-border);
+    color: var(--char-500);
+    border-bottom: 1px solid var(--bone-300);
 }
 
 .table td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--bone-300);
     vertical-align: middle;
 }
 
@@ -90,7 +146,7 @@
 }
 
 .row:hover {
-    background-color: rgba(var(--color-bg-secondary-rgb), 0.5);
+    background-color: var(--bone-100);
 }
 
 .thRank,
@@ -109,7 +165,7 @@
 .tdMetrics {
     width: 7rem;
     font-variant-numeric: tabular-nums;
-    color: var(--color-text-secondary);
+    color: var(--text-muted);
 }
 
 .thPoints,
@@ -120,7 +176,7 @@
 
 .tdPoints {
     font-weight: 800;
-    color: var(--color-accent-primary);
+    color: var(--crimson-700);
     font-variant-numeric: tabular-nums;
 }
 
@@ -132,60 +188,44 @@
 
 .ambassadorName {
     font-weight: 600;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .collegeName {
-    font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    font-size: var(--fs-small);
+    color: var(--text-muted);
 }
 
-/* Rank Badges */
 .rankBadge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 50%;
-    font-size: 0.875rem;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-small);
     font-weight: 700;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-secondary);
-}
-
-.rank1 {
-    background-color: #fef08a;
-    /* Gold */
-    color: #854d0e;
-}
-
-.rank2 {
-    background-color: #e2e8f0;
-    /* Silver */
-    color: #475569;
-}
-
-.rank3 {
-    background-color: #fed7aa;
-    /* Bronze */
-    color: #9a3412;
+    background-color: var(--bone-200);
+    color: var(--text-muted);
 }
 
 .emptyState {
-    padding: 3rem 1rem;
+    padding: var(--space-8) var(--space-4);
     text-align: center;
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    color: var(--text-muted);
 }
 
-/* ---------- Desktop Scaling ---------- */
+/* --- Desktop ---------------------------------------------------------- */
 @media (min-width: 768px) {
-    .pageWrapper {
-        padding: 4rem 2rem;
+    .podiumRank1 .podiumBase {
+        height: 120px;
     }
 
-    .title {
-        font-size: 2.25rem;
+    .podiumRank2 .podiumBase {
+        height: 84px;
+    }
+
+    .podiumRank3 .podiumBase {
+        height: 60px;
     }
 }

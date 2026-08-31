@@ -1,83 +1,116 @@
-"use client"
-import React, { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./layout.module.css";
 
 const NAV_ITEMS = [
-    { label: 'Home', href: '/' },
-    { label: 'Events', href: '/events' },
-    { label: 'Sports', href: '/sports', status: 'Upcoming' },
-    { label: 'About', href: '/about', status: 'Upcoming' },
+  { label: "Home", href: "/" },
+  { label: "Sports", href: "/sports" },
+  { label: "Events", href: "/events" },
+  { label: "About", href: "/about" },
 ];
 
 const Navbar = () => {
-    const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-    const toggleMenu = () => setMenuOpen((prev) => !prev);
-    const closeMenu = () => setMenuOpen(false);
+  // Close the panel on navigation, otherwise it stays open over the new page.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
-    return (
-        <nav className={styles.navbar}>
-            <div className={styles.navbar_inner}>
-                <div className={styles.navbar_list_left}>
-                    {NAV_ITEMS.map(({ label, href, status }) => (
-                        <Link 
-                            key={label}
-                            href={href} 
-                            className={styles.navbar_item}
-                            style={status ? { display: 'flex', alignItems: 'center', gap: '4px' } : {}}
-                        >
-                            {label}
-                            {status && (
-                                <span style={{ fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
-                                    {status}
-                                </span>
-                            )}
-                        </Link>
-                    ))}
-                </div>
+  // The panel covers the viewport on mobile; letting the page scroll behind it
+  // is disorienting on a phone.
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
-                <div className={styles.navbar_list_right}>
-                    <Link href="/signup" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Register</Link>
-                    <Link href="/login" className={styles.navbar_item}>Login</Link>
-                </div>
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-                <button
-                    className={`${styles.hamburger} ${menuOpen ? styles.hamburger_active : ""}`}
-                    type="button"
-                    aria-label={menuOpen ? "Close menu" : "Open menu"}
-                    aria-expanded={menuOpen}
-                    aria-controls="mobile-menu"
-                    onClick={toggleMenu}
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-            
-            <div id="mobile-menu" className={`${styles.mobile_menu} ${menuOpen ? styles.mobile_menu_active : ""}`}>
-                {NAV_ITEMS.map(({ label, href, status }) => (
-                    <Link 
-                        key={label}
-                        href={href} 
-                        className={styles.mobile_menu_item} 
-                        onClick={() => closeMenu()}
-                        style={status ? { display: 'flex', alignItems: 'center', gap: '8px' } : {}}
-                    >
-                        {label}
-                        {status && (
-                            <span style={{ fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
-                                {status}
-                            </span>
-                        )}
-                    </Link>
-                ))}
-                <Link href="/signup" className={styles.mobile_menu_item} onClick={closeMenu}>Register</Link>
-                <Link href="/login" className={styles.mobile_menu_item} onClick={closeMenu}>Login</Link>
-            </div>
-        </nav>
-    );
+  return (
+    <nav className={styles.navbar}>
+      <div className={styles.navbar_inner}>
+        <Link href="/" className={styles.brand} aria-label="Infinito 2026, home">
+          <span className={styles.brandMark}>Infinito</span>
+          <span className={styles.brandSub}>Ruins of Ragnarok</span>
+        </Link>
+
+        <div className={styles.navbar_list_left}>
+          {NAV_ITEMS.map(({ label, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className={`${styles.navbar_item} ${
+                isActive(href) ? styles.navbar_item_active : ""
+              }`}
+              aria-current={isActive(href) ? "page" : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        <div className={styles.navbar_list_right}>
+          <Link href="/login" className={styles.navbar_item}>
+            Login
+          </Link>
+          <Link href="/register" className={styles.navbar_signup}>
+            Register
+          </Link>
+        </div>
+
+        <button
+          className={`${styles.hamburger} ${
+            menuOpen ? styles.hamburger_active : ""
+          }`}
+          type="button"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMenuOpen((prev) => !prev)}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      <div
+        id="mobile-menu"
+        className={`${styles.mobile_menu} ${
+          menuOpen ? styles.mobile_menu_active : ""
+        }`}
+        hidden={!menuOpen}
+      >
+        {NAV_ITEMS.map(({ label, href }) => (
+          <Link
+            key={label}
+            href={href}
+            className={`${styles.mobile_menu_item} ${
+              isActive(href) ? styles.mobile_menu_item_active : ""
+            }`}
+            aria-current={isActive(href) ? "page" : undefined}
+          >
+            {label}
+          </Link>
+        ))}
+        <div className={styles.mobile_menu_actions}>
+          <Link href="/login" className={styles.mobile_menu_login}>
+            Login
+          </Link>
+          <Link href="/register" className={styles.mobile_menu_register}>
+            Register
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;
