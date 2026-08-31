@@ -9,8 +9,6 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
-  ParseFilePipeBuilder,
-  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -27,25 +25,36 @@ const ROSTER_FILE_FIELDS = FileFieldsInterceptor(
   { limits: { fileSize: 5 * 1024 * 1024 } },
 );
 
-const ROSTER_FILE_PIPE = new ParseFilePipeBuilder()
-  .addFileTypeValidator({ fileType: /^(image\/jpeg|image\/png|image\/webp)$/ })
-  .build({
-    fileIsRequired: false,
-    errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-  });
+const ALLOWED_ROSTER_FILE_TYPES = /^(image\/jpeg|image\/png|image\/webp)$/;
 
 type RosterFiles = {
   photo?: Express.Multer.File[];
   idFile?: Express.Multer.File[];
 };
 
-function requireRosterFiles(files: RosterFiles) {
+// ponytail: NestJS's ParseFilePipeBuilder validators only understand a flat
+// array or a single file — @UploadedFiles() from FileFieldsInterceptor
+// returns {photo: [File], idFile: [File]}, an object, which the pipe's
+// validateFilesOrFile() silently treats as ONE file with no .mimetype,
+// so every upload failed type validation regardless of the real file type.
+// Validating manually here instead of via a pipe sidesteps that entirely.
+export function requireRosterFiles(files: RosterFiles) {
   const photo = files.photo?.[0];
   const idFile = files.idFile?.[0];
   if (!photo || !idFile) {
     throw new BadRequestException(
       'Both "photo" and "idFile" files are required',
     );
+  }
+  for (const [field, file] of [
+    ['photo', photo],
+    ['idFile', idFile],
+  ] as const) {
+    if (!ALLOWED_ROSTER_FILE_TYPES.test(file.mimetype)) {
+      throw new BadRequestException(
+        `"${field}" must be a JPEG, PNG, or WEBP image`,
+      );
+    }
   }
   return { photo, idFile };
 }
@@ -65,7 +74,7 @@ export class TeamsController {
   async create(
     @Req() req: AuthenticatedRequest,
     @Body() body: CreateTeamDto,
-    @UploadedFiles(ROSTER_FILE_PIPE) uploaded: RosterFiles,
+    @UploadedFiles() uploaded: RosterFiles,
   ) {
     const { photo, idFile } = requireRosterFiles(uploaded);
     return this.teamsService.createTeam(req.user.id, body, photo, idFile);
@@ -85,7 +94,7 @@ export class TeamsController {
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: JoinTeamDto,
-    @UploadedFiles(ROSTER_FILE_PIPE) uploaded: RosterFiles,
+    @UploadedFiles() uploaded: RosterFiles,
   ) {
     const { photo, idFile } = requireRosterFiles(uploaded);
     return this.teamsService.join(id, body, req.user.id, photo, idFile);
