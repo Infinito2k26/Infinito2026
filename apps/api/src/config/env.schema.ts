@@ -21,6 +21,11 @@ export const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('Infinito 2K26 <no-reply@infinito2k26.dev>'),
   SENTRY_DSN: z.string().optional(),
+  // Public-endpoint rate limit. Defaults match the production-sane values
+  // from readiness-phase-1-backend-infra.md item 2 — override locally
+  // (much higher) so manual UI testing doesn't get 429'd constantly.
+  THROTTLE_TTL_MS: z.coerce.number().default(60_000),
+  THROTTLE_LIMIT: z.coerce.number().default(10),
 });
 
 export type Env = z.infer<typeof envSchema>;
