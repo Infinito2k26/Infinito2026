@@ -125,7 +125,7 @@ export default function CATasksPage() {
 
             <div className={styles.taskList}>
                 {tasks.length === 0 ? (
-                    <p className="text-muted-foreground p-4">No active tasks right now.</p>
+                    <p className={styles.emptyState}>No active tasks right now.</p>
                 ) : tasks.map((task) => {
                     const assignment = task.assignments[0];
                     // Backend only allows a first submission — once an assignment exists

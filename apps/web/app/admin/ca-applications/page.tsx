@@ -133,9 +133,9 @@ export default function AdminCAApplicationsPage() {
 
             <div className={styles.listContainer}>
                 {isLoading ? (
-                    <p className="text-muted-foreground p-4">Loading applications...</p>
+                    <p className={styles.emptyState}>Loading applications...</p>
                 ) : applications.length === 0 ? (
-                    <p className="text-muted-foreground p-4">No applications found.</p>
+                    <p className={styles.emptyState}>No applications found.</p>
                 ) : applications.map((application) => (
                     <Card key={application.id} className={styles.applicationCard}>
                         <div className={styles.cardTop}>

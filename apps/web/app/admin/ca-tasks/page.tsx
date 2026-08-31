@@ -215,9 +215,9 @@ export default function AdminTasksPage() {
 
       <div className={styles.listContainer}>
         {isLoading ? (
-            <p className="text-muted-foreground p-4">Loading tasks...</p>
+            <p className={styles.emptyState}>Loading tasks...</p>
         ) : tasks.length === 0 ? (
-            <p className="text-muted-foreground p-4">No tasks found.</p>
+            <p className={styles.emptyState}>No tasks found.</p>
         ) : tasks.map((task) => (
           <Card key={task.id} className={`${styles.taskCard} ${task.status === 'ARCHIVED' ? styles.archivedCard : ''}`}>
             <div className={styles.taskMeta}>

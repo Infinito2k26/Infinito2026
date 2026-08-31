@@ -160,9 +160,9 @@ export default function AdminPaymentsPage() {
 
             <div className={styles.listContainer}>
                 {isLoading ? (
-                    <p className="text-muted-foreground p-4">Loading payments...</p>
+                    <p className={styles.emptyState}>Loading payments...</p>
                 ) : payments.length === 0 ? (
-                    <p className="text-muted-foreground p-4">No payments awaiting review.</p>
+                    <p className={styles.emptyState}>No payments awaiting review.</p>
                 ) : payments.map((payment) => (
                     <Card key={payment.id} className={styles.paymentCard}>
                         <div className={styles.cardTop}>
