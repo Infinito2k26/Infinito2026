@@ -44,6 +44,7 @@
 .metaRow {
     display: flex;
     justify-content: space-between;
+    gap: 0.75rem;
     font-size: 0.8125rem;
     color: var(--color-text-secondary);
     margin-top: 0.5rem;
@@ -53,6 +54,8 @@
     font-family: monospace;
     font-weight: 700;
     color: var(--color-accent-primary);
+    word-break: break-all;
+    text-align: right;
 }
 
 @media (min-width: 768px) {

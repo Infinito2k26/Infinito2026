@@ -75,6 +75,11 @@ export default function TeamsPage() {
                             </div>
 
                             <div className={styles.metaRow}>
+                                <span>Team ID</span>
+                                <span className={styles.inviteCode}>{team.id}</span>
+                            </div>
+
+                            <div className={styles.metaRow}>
                                 <span>Invite code</span>
                                 <span className={styles.inviteCode}>{team.inviteCode}</span>
                             </div>
