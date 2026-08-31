@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -31,12 +32,18 @@ export class AdminEventsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateEventDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateEventDto,
+  ) {
     return this.eventsService.update(id, dto);
   }
 
   @Patch(':id/publish')
-  async publish(@Param('id') id: string, @Body() dto: PublishEventDto) {
+  async publish(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: PublishEventDto,
+  ) {
     return this.eventsService.setPublished(id, dto.isPublished);
   }
 }

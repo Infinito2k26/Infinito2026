@@ -5,6 +5,7 @@ import {
   Body,
   Req,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   UseInterceptors,
   UploadedFiles,
@@ -73,7 +74,7 @@ export class TeamsController {
   @Post(':id/invitations')
   async rotateInvite(
     @Req() req: AuthenticatedRequest,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.teamsService.rotateInviteCode(id, req.user.id);
   }
@@ -82,7 +83,7 @@ export class TeamsController {
   @UseInterceptors(ROSTER_FILE_FIELDS)
   async join(
     @Req() req: AuthenticatedRequest,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: JoinTeamDto,
     @UploadedFiles(ROSTER_FILE_PIPE) uploaded: RosterFiles,
   ) {

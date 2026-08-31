@@ -4,6 +4,7 @@ import {
   Patch,
   Body,
   Param,
+  ParseUUIDPipe,
   Query,
   UseGuards,
   Req,
@@ -42,7 +43,7 @@ export class AdminPaymentsController {
 
   @Patch(':id/verify')
   async verifyPayment(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyPaymentDto,
     @Req() req: AuthenticatedRequest,
   ) {

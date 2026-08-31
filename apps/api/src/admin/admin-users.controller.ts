@@ -1,4 +1,11 @@
-import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Param,
+  ParseUUIDPipe,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -15,7 +22,10 @@ export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
   @Patch(':id/role')
-  async updateRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
+  async updateRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserRoleDto,
+  ) {
     return this.adminUsersService.updateRole(id, dto.role);
   }
 }
