@@ -232,6 +232,21 @@ The only entity that can authenticate. Team players do **not** need a User accou
 
 ---
 
+### PasswordResetToken
+
+One row per forgot-password request. The raw token is emailed to the user (via the `password-reset-email` BullMQ queue) and never stored — only its SHA-256 hash is, matching the same pattern `RedisRefreshTokenStore` uses for refresh tokens.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `userId` | UUID FK → User | |
+| `tokenHash` | String unique | SHA-256 of the raw token sent by email |
+| `expiresAt` | DateTime | 30 minutes from creation |
+| `usedAt` | DateTime? | Set on successful reset; a used or expired token is rejected |
+| `createdAt` | DateTime | |
+
+---
+
 ### Event
 
 One row per event. Admin-created. All fields drive the registration form dynamically — no code change required to add a sport or esports title.

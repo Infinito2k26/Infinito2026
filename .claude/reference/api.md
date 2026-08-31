@@ -84,6 +84,8 @@ Response `data` shape:
 | POST   | `/auth/refresh`  | Refresh cookie | Rotate refresh token                  |
 | DELETE | `/auth/logout`   | Authenticated  | Revoke session                        |
 | GET    | `/auth/me`       | Authenticated  | Current user                          |
+| POST   | `/auth/forgot-password` | Public | Request a reset link (enumeration-safe: always 200) |
+| POST   | `/auth/reset-password`  | Public | Consume a reset token, set new password |
 
 ### Events
 
@@ -106,6 +108,7 @@ Response `data` shape:
 | Method | Path                     | Access              | Purpose              |
 | ------ | ------------------------ | ------------------- | -------------------- |
 | POST   | `/teams`                 | Authenticated       | Create team          |
+| GET    | `/teams/mine`            | Authenticated       | Teams I captain      |
 | POST   | `/teams/:id/invitations` | Team Captain        | Create invite        |
 | POST   | `/teams/:id/join`        | Authenticated       | Join team            |
 | POST   | `/registrations`         | Authenticated       | Start registration   |
@@ -124,6 +127,10 @@ Response `data` shape:
 
 - Only the team's `captainId`, else `403`.
 - No separate `Invitation` model exists — this rotates `Team.inviteCode` in place (old code stops working immediately) and returns the updated team. Use this to reissue a code that leaked.
+
+#### `GET /teams/mine`
+
+- Returns teams where the caller is `captainId` only — a teammate who joins by invite code often has no `User` link at all (`Participant.userId` is typically null for non-captains), so "my teams" is necessarily captain-scoped.
 
 #### `POST /teams/:id/join`
 
