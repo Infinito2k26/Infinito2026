@@ -67,6 +67,7 @@ Full rules are in `CONSTITUTION.md`. The non-negotiables:
 | Senior Frontend | Anjney-Lawaniya |
 | Junior Frontend / Design | jamanrao-beep |
 | Junior Frontend | Himanshi-05 |
+| Payments | hind-shikhar |
 
 ## Current Sprint
 
