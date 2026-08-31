@@ -18,6 +18,7 @@ export const envSchema = z.object({
   WEB_ORIGIN: z.string().url().default('http://localhost:3001'),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('Infinito 2K26 <no-reply@infinito2k26.dev>'),
+  SENTRY_DSN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
