@@ -15,7 +15,7 @@ export default function Error({
     }, [error])
 
     return (
-        <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
+        <div style={{ display: 'flex', minHeight: '100vh', width: '100%', alignItems: 'center', justifyContent: 'center', padding: '0 1rem', backgroundColor: 'var(--color-bg-primary)' }}>
             <ErrorState onRetry={reset} />
         </div>
     )

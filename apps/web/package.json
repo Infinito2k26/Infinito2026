@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
-    "@repo/ui": "*",
     "lucide-react": "^1.31.0",
     "next": "16.3.3",
     "react": "^19.2.0",

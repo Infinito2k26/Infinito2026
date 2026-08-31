@@ -3,7 +3,17 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Infinito 2K26",
-  description: "IIT Patna annual sports fest platform",
+  description: "IIT Patna's annual sports fest — browse events, register your team, and get your entry credential.",
+  openGraph: {
+    title: "Infinito 2K26",
+    description: "IIT Patna's annual sports fest — browse events, register your team, and get your entry credential.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Infinito 2K26",
+    description: "IIT Patna's annual sports fest — browse events, register your team, and get your entry credential.",
+  },
 };
 
 export default function RootLayout({
