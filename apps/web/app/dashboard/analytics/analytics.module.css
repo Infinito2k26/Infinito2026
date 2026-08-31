@@ -1,0 +1,19 @@
+.page {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    margin-top: 0.5rem;
+    color: var(--color-text-secondary);
+}
