@@ -1,0 +1,64 @@
+# Single-VM production stack: API + Postgres + Redis.
+# The web app deploys separately to Vercel — this compose file is API-side only.
+#
+# Usage on the deploy target:
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# .env.prod must set: POSTGRES_PASSWORD, DATABASE_URL, REDIS_URL,
+# CLOUDINARY_*, JWT_*_SECRET, QR_SIGNING_SECRET, WEB_ORIGIN, and optionally
+# RESEND_API_KEY / SENTRY_DSN — see apps/api/.env.example for the full list.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: infinito_prod
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - infinito_prod_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d infinito_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - infinito_prod_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ${API_IMAGE:-infinito-api:latest}
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - infinito_prod_network
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+
+networks:
+  infinito_prod_network:
+    driver: bridge
