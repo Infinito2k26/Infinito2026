@@ -117,7 +117,11 @@ export default function SignupPage() {
                             <Link href="/privacy-policy" className={styles.link} target="_blank">
                                 Privacy Policy
                             </Link>{' '}
-                            and consent to data collection.
+                            and{' '}
+                            <Link href="/terms-and-conditions" className={styles.link} target="_blank">
+                                Terms &amp; Conditions
+                            </Link>
+                            , and consent to data collection.
                         </label>
                     </div>
                     {errors.consent && (
