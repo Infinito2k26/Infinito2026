@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   app.setGlobalPrefix('api');
+  app.use(helmet());
   app.use(cookieParser());
   // Web app runs on a separate origin/port in dev; refresh-token cookies
   // require an explicit origin (not '*') plus credentials: true.
