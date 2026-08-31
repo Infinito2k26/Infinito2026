@@ -57,6 +57,15 @@ export class EventsService {
     };
   }
 
+  async findById(id: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    if (!event || event.deletedAt) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return event;
+  }
+
   async findBySlug(slug: string) {
     const event = await this.prisma.event.findFirst({
       where: { slug, isPublished: true, deletedAt: null },

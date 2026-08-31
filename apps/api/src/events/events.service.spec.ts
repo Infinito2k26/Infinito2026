@@ -37,6 +37,34 @@ describe('EventsService', () => {
     service = moduleRef.get<EventsService>(EventsService);
   });
 
+  describe('findById', () => {
+    it('throws NotFoundException when the event does not exist', async () => {
+      prisma.event.findUnique.mockResolvedValue(null);
+
+      await expect(service.findById('evt-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws NotFoundException for a soft-deleted event', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: new Date(),
+      });
+
+      await expect(service.findById('evt-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('returns an unpublished draft event (unlike findBySlug)', async () => {
+      const event = { id: 'evt-1', isPublished: false, deletedAt: null };
+      prisma.event.findUnique.mockResolvedValue(event);
+
+      await expect(service.findById('evt-1')).resolves.toEqual(event);
+    });
+  });
+
   describe('findBySlug', () => {
     it('throws NotFoundException when no published event matches the slug', async () => {
       prisma.event.findFirst.mockResolvedValue(null);

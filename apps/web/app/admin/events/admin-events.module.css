@@ -5,6 +5,14 @@
     gap: 1.5rem;
 }
 
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 .title {
     font-size: 1.875rem;
     font-weight: 800;

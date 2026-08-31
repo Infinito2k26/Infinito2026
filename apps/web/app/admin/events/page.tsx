@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
@@ -69,11 +70,16 @@ export default function AdminEventsPage() {
 
     return (
         <div className={styles.page}>
-            <div>
-                <h1 className={styles.title}>Events</h1>
-                <p className={styles.subtitle}>
-                    Create events via the API for now (POST /admin/events) — publish/registration toggles below.
-                </p>
+            <div className={styles.header}>
+                <div>
+                    <h1 className={styles.title}>Events</h1>
+                    <p className={styles.subtitle}>
+                        Publish/registration toggles below — create a new event from a template or blank.
+                    </p>
+                </div>
+                <Link href="/admin/events/new">
+                    <Button variant="primary">+ Create Event</Button>
+                </Link>
             </div>
 
             <Card className={styles.tableCard} padding="none">
@@ -112,6 +118,11 @@ export default function AdminEventsPage() {
                                         </Badge>
                                     </td>
                                     <td className={styles.actionsCell}>
+                                        <Link href={`/admin/events/${event.id}/edit`}>
+                                            <Button variant="outline" size="sm" className={styles.toggleBtn}>
+                                                Edit
+                                            </Button>
+                                        </Link>
                                         <Button
                                             variant="outline"
                                             size="sm"

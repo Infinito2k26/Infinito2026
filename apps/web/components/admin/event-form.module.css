@@ -1,0 +1,102 @@
+.formCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sectionTitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-secondary);
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.form > .sectionTitle:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rowInput {
+    flex: 1;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.select,
+.textarea {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    font-family: inherit;
+}
+
+.select:focus,
+.textarea:focus {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 1px;
+}
+
+.textarea {
+    resize: vertical;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--color-danger, #dc2626);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .row {
+        flex-direction: row;
+    }
+
+    .row > * {
+        flex: 1;
+    }
+}

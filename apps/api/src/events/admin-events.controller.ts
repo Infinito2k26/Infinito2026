@@ -39,6 +39,11 @@ export class AdminEventsController {
     );
   }
 
+  @Get(':id')
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.eventsService.findById(id);
+  }
+
   @Post()
   async create(@Body() dto: CreateEventDto) {
     return this.eventsService.create(dto);
