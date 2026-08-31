@@ -9,6 +9,7 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
 import {
   CreateBrandDto,
@@ -27,6 +28,7 @@ import type { AuthenticatedRequest } from '../common/interfaces/authenticated-re
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@SkipThrottle()
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 

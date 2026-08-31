@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { VerifyPaymentDto } from './dto/payments.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,6 +20,7 @@ import type { AuthenticatedRequest } from '../common/interfaces/authenticated-re
 @Controller('admin/payments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@SkipThrottle()
 export class AdminPaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 

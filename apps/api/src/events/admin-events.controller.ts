@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { EventsService } from './events.service';
 import {
@@ -20,6 +21,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 @Controller('events')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@SkipThrottle()
 export class AdminEventsController {
   constructor(private readonly eventsService: EventsService) {}
 

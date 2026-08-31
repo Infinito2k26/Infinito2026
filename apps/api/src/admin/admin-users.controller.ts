@@ -1,4 +1,5 @@
 import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -9,6 +10,7 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@SkipThrottle()
 export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
