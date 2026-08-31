@@ -1,0 +1,14 @@
+.wrapper {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3rem 0;
+}
+
+.message {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
