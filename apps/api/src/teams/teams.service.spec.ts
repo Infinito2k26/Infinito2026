@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { getQueueToken } from '@nestjs/bullmq';
 import {
   BadRequestException,
   ConflictException,
@@ -17,11 +18,17 @@ describe('TeamsService', () => {
   let prisma: {
     event: { findUnique: jest.Mock };
     user: { findUniqueOrThrow: jest.Mock };
-    team: { findUnique: jest.Mock; update: jest.Mock; findMany: jest.Mock };
+    team: {
+      findUnique: jest.Mock;
+      findFirst: jest.Mock;
+      update: jest.Mock;
+      findMany: jest.Mock;
+    };
     $transaction: jest.Mock;
   };
 
   let uploadsService: { uploadProof: jest.Mock };
+  let paymentConfirmedQueue: { add: jest.Mock };
 
   const file = { buffer: Buffer.from('fake'), mimetype: 'image/png' };
 
@@ -29,7 +36,12 @@ describe('TeamsService', () => {
     prisma = {
       event: { findUnique: jest.fn() },
       user: { findUniqueOrThrow: jest.fn() },
-      team: { findUnique: jest.fn(), update: jest.fn(), findMany: jest.fn() },
+      team: {
+        findUnique: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
+        findMany: jest.fn(),
+      },
       $transaction: jest.fn(),
     };
 
@@ -39,11 +51,17 @@ describe('TeamsService', () => {
         .mockResolvedValue({ key: 'participant-photo/abc' }),
     };
 
+    paymentConfirmedQueue = { add: jest.fn() };
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         TeamsService,
         { provide: PrismaService, useValue: prisma },
         { provide: UploadsService, useValue: uploadsService },
+        {
+          provide: getQueueToken('payment-confirmed'),
+          useValue: paymentConfirmedQueue,
+        },
       ],
     }).compile();
 
@@ -111,6 +129,23 @@ describe('TeamsService', () => {
       ).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
+
+    it('rejects a second team for the same event and captain', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        isPublished: true,
+        teamSizeMin: 1,
+        teamSizeMax: 10,
+      });
+      prisma.team.findFirst.mockResolvedValue({ id: 'existing-team' });
+
+      await expect(
+        service.createTeam('user-1', dto, file, file),
+      ).rejects.toThrow(ConflictException);
+      expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
+      expect(uploadsService.uploadProof).not.toHaveBeenCalled();
+    });
   });
 
   describe('rotateInviteCode', () => {
@@ -143,25 +178,15 @@ describe('TeamsService', () => {
       idNumber: '999',
     } as never;
 
-    it('throws NotFoundException when the team does not exist', async () => {
+    it('throws NotFoundException when no team matches the invite code', async () => {
       prisma.team.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.join('team-1', dto, 'user-1', file, file),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('rejects a wrong invite code', async () => {
-      prisma.team.findUnique.mockResolvedValue({
-        id: 'team-1',
-        deletedAt: null,
-        inviteCode: 'DIFFERENT',
-        event: { teamSizeMax: 5 },
-      });
-
-      await expect(
-        service.join('team-1', dto, 'user-1', file, file),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.team.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { inviteCode: 'ABC123' } }),
+      );
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
 
@@ -186,9 +211,9 @@ describe('TeamsService', () => {
         }),
       );
 
-      await expect(
-        service.join('team-1', dto, 'user-1', file, file),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('adds a PLAYER participant when the roster has room', async () => {
@@ -218,33 +243,91 @@ describe('TeamsService', () => {
         }),
       );
 
-      const result = await service.join('team-1', dto, 'user-1', file, file);
+      const result = await service.join(dto, 'user-1', file, file);
 
       expect(result).toEqual(createdParticipant);
       expect(capturedData).toMatchObject({ teamId: 'team-1', role: 'PLAYER' });
+      expect(paymentConfirmedQueue.add).not.toHaveBeenCalled();
+    });
+
+    it('re-enqueues credential issuance when joining an already-confirmed team', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        inviteCode: 'ABC123',
+        event: { teamSizeMax: 5 },
+        registration: { id: 'reg-1', status: 'CONFIRMED' },
+      });
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        name: 'Player One',
+        phone: '9999999999',
+      });
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          participant: {
+            count: jest.fn().mockResolvedValue(2),
+            create: jest.fn().mockResolvedValue({ id: 'p-1', role: 'PLAYER' }),
+          },
+        }),
+      );
+
+      await service.join(dto, 'user-1', file, file);
+
+      expect(paymentConfirmedQueue.add).toHaveBeenCalledWith(
+        'payment-confirmed',
+        { registrationId: 'reg-1' },
+      );
     });
   });
 
   describe('listMine', () => {
-    it('queries teams by captainId, not by any other user relation', async () => {
+    it('queries teams captained OR joined by the user', async () => {
       prisma.team.findMany.mockResolvedValue([]);
 
-      await service.listMine('captain-1');
+      await service.listMine('user-1');
 
       expect(prisma.team.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { captainId: 'captain-1' },
+          where: {
+            deletedAt: null,
+            OR: [
+              { captainId: 'user-1' },
+              { participants: { some: { userId: 'user-1' } } },
+            ],
+          },
         }),
       );
     });
 
-    it('returns whatever prisma resolves', async () => {
-      const teams = [{ id: 'team-1', name: 'Team A' }];
-      prisma.team.findMany.mockResolvedValue(teams);
+    it('tags the caller as CAPTAIN and keeps the invite code visible', async () => {
+      prisma.team.findMany.mockResolvedValue([
+        {
+          id: 'team-1',
+          name: 'Team A',
+          captainId: 'user-1',
+          inviteCode: 'ABC123',
+        },
+      ]);
 
-      const result = await service.listMine('captain-1');
+      const [result] = await service.listMine('user-1');
 
-      expect(result).toBe(teams);
+      expect(result).toMatchObject({ role: 'CAPTAIN', inviteCode: 'ABC123' });
+      expect(result).not.toHaveProperty('captainId');
+    });
+
+    it('tags a joined-but-not-captain caller as MEMBER and strips the invite code', async () => {
+      prisma.team.findMany.mockResolvedValue([
+        {
+          id: 'team-1',
+          name: 'Team A',
+          captainId: 'someone-else',
+          inviteCode: 'ABC123',
+        },
+      ]);
+
+      const [result] = await service.listMine('user-1');
+
+      expect(result).toMatchObject({ role: 'MEMBER', inviteCode: null });
     });
   });
 });

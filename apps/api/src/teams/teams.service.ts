@@ -1,4 +1,4 @@
-import { Prisma, ParticipantRole } from '@prisma/client';
+import { Prisma, ParticipantRole, RegistrationStatus } from '@prisma/client';
 import {
   Injectable,
   NotFoundException,
@@ -8,6 +8,8 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { CreateTeamDto, JoinTeamDto } from './dto/teams.dto';
@@ -23,11 +25,16 @@ export class TeamsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadsService: UploadsService,
+    @InjectQueue('payment-confirmed')
+    private readonly paymentConfirmedQueue: Queue,
   ) {}
 
   async listMine(userId: string) {
-    return this.prisma.team.findMany({
-      where: { captainId: userId },
+    const teams = await this.prisma.team.findMany({
+      where: {
+        deletedAt: null,
+        OR: [{ captainId: userId }, { participants: { some: { userId } } }],
+      },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -35,11 +42,21 @@ export class TeamsService {
         declaredSize: true,
         inviteCode: true,
         createdAt: true,
+        captainId: true,
         event: { select: { id: true, name: true, slug: true } },
-        participants: { select: { id: true } },
+        participants: { select: { id: true, name: true, role: true } },
         registration: { select: { id: true, status: true } },
       },
     });
+
+    // Members only need their captain's invite code to invite others if
+    // they *are* the captain — showing it to every joined member leaks a
+    // credential that lets anyone claim a roster slot.
+    return teams.map(({ captainId, ...team }) => ({
+      ...team,
+      role: captainId === userId ? ('CAPTAIN' as const) : ('MEMBER' as const),
+      inviteCode: captainId === userId ? team.inviteCode : null,
+    }));
   }
 
   async listAll(page = 1, limit = 20) {
@@ -102,6 +119,37 @@ export class TeamsService {
     if (event.teamSizeMax != null && dto.declaredSize > event.teamSizeMax) {
       throw new UnprocessableEntityException(
         `declaredSize cannot exceed ${event.teamSizeMax} for this event`,
+      );
+    }
+
+    // Without this, a captain could create a new team for the same event on
+    // every click, registering (and paying for) each one — unlimited
+    // registrations into one event. Only a cancelled/refunded prior team
+    // frees up a retry.
+    const existingTeam = await this.prisma.team.findFirst({
+      where: {
+        eventId: dto.eventId,
+        captainId: userId,
+        deletedAt: null,
+        OR: [
+          { registration: null },
+          {
+            registration: {
+              status: {
+                notIn: [
+                  RegistrationStatus.CANCELLED,
+                  RegistrationStatus.REFUNDED,
+                ],
+              },
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (existingTeam) {
+      throw new ConflictException(
+        'You already have a team for this event — use that one instead of creating another',
       );
     }
 
@@ -218,23 +266,26 @@ export class TeamsService {
   }
 
   async join(
-    teamId: string,
     dto: JoinTeamDto,
     userId: string,
     photoFile: UploadedFile,
     idFile: UploadedFile,
   ) {
+    // Invite code is already a unique, unguessable credential — asking for
+    // the raw team ID as well just makes the join form harder to fill in
+    // for no added safety.
     const team = await this.prisma.team.findUnique({
-      where: { id: teamId },
-      include: { event: { select: { teamSizeMax: true } } },
+      where: { inviteCode: dto.inviteCode },
+      include: {
+        event: { select: { teamSizeMax: true } },
+        registration: { select: { id: true, status: true } },
+      },
     });
     if (!team || team.deletedAt) {
-      throw new NotFoundException('Team not found');
-    }
-    if (team.inviteCode !== dto.inviteCode) {
-      throw new ForbiddenException('Invalid invite code');
+      throw new NotFoundException('Invalid invite code');
     }
 
+    const teamId = team.id;
     const joiner = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { name: true, phone: true },
@@ -253,7 +304,7 @@ export class TeamsService {
       ),
     ]);
 
-    return this.prisma.$transaction(async (tx) => {
+    const participant = await this.prisma.$transaction(async (tx) => {
       const rosterCount = await tx.participant.count({ where: { teamId } });
       const teamSizeMax = team.event.teamSizeMax;
 
@@ -276,5 +327,19 @@ export class TeamsService {
         },
       });
     });
+
+    // The captain's payment confirmation fires credential issuance once,
+    // for whoever's on the roster at that moment — someone joining later
+    // (the flow explicitly lets teammates join after the captain
+    // registers) would otherwise never get a QR credential at all. Same
+    // job, re-enqueued; issueCredentialsForPayment() skips anyone who
+    // already has one, so this is a safe no-op for the rest of the team.
+    if (team.registration && team.registration.status === 'CONFIRMED') {
+      await this.paymentConfirmedQueue.add('payment-confirmed', {
+        registrationId: team.registration.id,
+      });
+    }
+
+    return participant;
   }
 }

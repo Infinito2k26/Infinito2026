@@ -88,15 +88,14 @@ export class TeamsController {
     return this.teamsService.rotateInviteCode(id, req.user.id);
   }
 
-  @Post(':id/join')
+  @Post('join')
   @UseInterceptors(ROSTER_FILE_FIELDS)
   async join(
     @Req() req: AuthenticatedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: JoinTeamDto,
     @UploadedFiles() uploaded: RosterFiles,
   ) {
     const { photo, idFile } = requireRosterFiles(uploaded);
-    return this.teamsService.join(id, body, req.user.id, photo, idFile);
+    return this.teamsService.join(body, req.user.id, photo, idFile);
   }
 }

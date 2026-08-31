@@ -50,6 +50,14 @@
     margin-top: 0.5rem;
 }
 
+.rosterList {
+    margin-top: 0.5rem;
+    padding-left: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    list-style: disc;
+}
+
 .inviteCode {
     font-family: monospace;
     font-weight: 700;
