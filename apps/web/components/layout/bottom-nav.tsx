@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 import styles from "./layout.module.css";
 
 type NavItem = {
@@ -43,25 +43,24 @@ const ProfileIcon = () => (
 );
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",    href: "#home", icon: <HomeIcon /> },
-  { label: "Events",  href: "#events",    icon: <CalendarIcon /> },
-  { label: "Teams",   href: "#teams",     icon: <UsersIcon /> },
-  { label: "Profile", href: "#profile",   icon: <ProfileIcon /> },
+  { label: "Home",    href: "/dashboard", icon: <HomeIcon /> },
+  { label: "Events",  href: "/dashboard/events", icon: <CalendarIcon /> },
+  { label: "Teams",   href: "/dashboard/teams", icon: <UsersIcon /> },
+  { label: "Profile", href: "/dashboard/settings", icon: <ProfileIcon /> },
 ];
 
 export default function BottomNav() {
-  const [activeLabel, setActiveLabel] = useState("Home");
+  const pathname = usePathname();
 
   return (
     <nav className={styles.bottomNav} >
       {NAV_ITEMS.map(({ label, href, icon }) => {
-        const active = activeLabel === label;
+        const active = pathname === href;
         return (
           <Link
             key={label}
             href={href}
             className={`${styles.bottomNavItem} ${active ? styles.bottomNavItemActive : ""}`}
-            onClick={() => setActiveLabel(label)}
           >
             <span className={styles.bottomNavIcon} >{icon}</span>
             <span className={styles.bottomNavLabel}>{label}</span>

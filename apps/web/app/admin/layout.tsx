@@ -1,4 +1,6 @@
 import AuthGuard from "../../components/auth/AuthGuard";
+import AdminSidebar from "../../components/layout/admin-sidebar";
+import styles from "../../components/layout/layout.module.css";
 
 export default function AdminLayout({
   children,
@@ -7,7 +9,12 @@ export default function AdminLayout({
 }) {
   return (
     <AuthGuard allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
-      {children}
+      <div className={styles.dashboardShell}>
+        <AdminSidebar />
+        <main className={styles.dashboardMain}>
+          {children}
+        </main>
+      </div>
     </AuthGuard>
   );
 }
