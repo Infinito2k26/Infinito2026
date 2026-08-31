@@ -2,8 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as Sentry from '@sentry/node';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { LOCAL_UPLOAD_DIR } from './uploads/uploads.service';
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -18,6 +20,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.use(helmet());
   app.use(cookieParser());
+  // Serves UploadsService's local-disk fallback (used when no Cloudinary
+  // credentials are configured) — no-op path if that directory is empty.
+  app.use('/local-uploads', express.static(LOCAL_UPLOAD_DIR));
   // Web app runs on a separate origin/port in dev; refresh-token cookies
   // require an explicit origin (not '*') plus credentials: true.
   app.enableCors({

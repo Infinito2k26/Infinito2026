@@ -30,6 +30,9 @@ out/
 build
 dist
 
+# UploadsService's local-disk fallback when Cloudinary isn't configured
+/apps/api/local-uploads
+
 
 # Debug
 npm-debug.log*
