@@ -6,9 +6,10 @@ import { AuthService } from './auth.service';
 import { RedisRefreshTokenStore } from './redis-refresh-token-store';
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { QueueModule } from '../queue/queue.module';
 
 @Module({
-  imports: [PassportModule, JwtModule.register({})],
+  imports: [PassportModule, JwtModule.register({}), QueueModule],
   controllers: [AuthController],
   providers: [
     AuthService,

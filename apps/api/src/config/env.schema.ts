@@ -15,6 +15,9 @@ export const envSchema = z.object({
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
   QR_SIGNING_SECRET: z.string().min(32),
+  WEB_ORIGIN: z.string().url().default('http://localhost:3001'),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('Infinito 2K26 <no-reply@infinito2k26.dev>'),
 });
 
 export type Env = z.infer<typeof envSchema>;

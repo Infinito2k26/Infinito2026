@@ -1,4 +1,8 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
@@ -8,7 +12,16 @@ const ENV = {
   JWT_REFRESH_SECRET: 'refresh-secret-at-least-32-characters-long',
   JWT_ACCESS_EXPIRY: '15m',
   JWT_REFRESH_EXPIRY: '7d',
+  WEB_ORIGIN: 'http://localhost:3001',
 };
+
+interface MockResetToken {
+  id: string;
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+}
 
 const baseUser = {
   id: 'user-1',
@@ -26,7 +39,14 @@ interface MockPrisma {
   user: {
     findUnique: jest.Mock<Promise<MockUser | null>, [unknown]>;
     create: jest.Mock<Promise<MockUser>, [{ data: Partial<MockUser> }]>;
+    update: jest.Mock<Promise<MockUser>, [{ data: Partial<MockUser> }]>;
   };
+  passwordResetToken: {
+    create: jest.Mock<Promise<MockResetToken>, [unknown]>;
+    findUnique: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
+    update: jest.Mock<Promise<MockResetToken>, [unknown]>;
+  };
+  $transaction: jest.Mock<Promise<unknown[]>, [Promise<unknown>[]]>;
 }
 
 interface MockRefreshStore {
@@ -38,6 +58,12 @@ interface MockRefreshStore {
 describe('AuthService', () => {
   let prisma: MockPrisma;
   let refreshStore: MockRefreshStore;
+  let passwordResetEmailQueue: {
+    add: jest.Mock<
+      Promise<void>,
+      [string, { email: string; resetLink: string }]
+    >;
+  };
   let service: AuthService;
 
   beforeEach(async () => {
@@ -47,7 +73,14 @@ describe('AuthService', () => {
       user: {
         findUnique: jest.fn<Promise<MockUser | null>, [unknown]>(),
         create: jest.fn<Promise<MockUser>, [{ data: Partial<MockUser> }]>(),
+        update: jest.fn<Promise<MockUser>, [{ data: Partial<MockUser> }]>(),
       },
+      passwordResetToken: {
+        create: jest.fn<Promise<MockResetToken>, [unknown]>(),
+        findUnique: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
+        update: jest.fn<Promise<MockResetToken>, [unknown]>(),
+      },
+      $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
     };
     refreshStore = {
       save: jest.fn<Promise<void>, [string, string, Date]>(),
@@ -58,11 +91,19 @@ describe('AuthService', () => {
       get: jest.fn((key: keyof typeof ENV) => ENV[key]),
     };
 
+    passwordResetEmailQueue = {
+      add: jest.fn<
+        Promise<void>,
+        [string, { email: string; resetLink: string }]
+      >(),
+    };
+
     service = new AuthService(
       prisma as never,
       new JwtService(),
       config as never,
       refreshStore,
+      passwordResetEmailQueue as never,
     );
   });
 
@@ -160,6 +201,107 @@ describe('AuthService', () => {
       await expect(service.refresh(refreshToken)).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('creates a reset token and enqueues an email when the user exists', async () => {
+      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.passwordResetToken.create.mockResolvedValue({
+        id: 'reset-1',
+        userId: baseUser.id,
+        tokenHash: 'hash',
+        expiresAt: new Date(Date.now() + 1000),
+        usedAt: null,
+      });
+
+      await service.forgotPassword({ email: baseUser.email });
+
+      expect(prisma.passwordResetToken.create).toHaveBeenCalledTimes(1);
+      const [jobName, jobData] = passwordResetEmailQueue.add.mock.calls[0];
+      expect(jobName).toBe('send');
+      expect(jobData.email).toBe(baseUser.email);
+      expect(
+        jobData.resetLink.startsWith(`${ENV.WEB_ORIGIN}/reset-password?token=`),
+      ).toBe(true);
+    });
+
+    it('does nothing (no token, no email) for an unregistered address, to avoid enumeration', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await service.forgotPassword({ email: 'nobody@infinito.dev' });
+
+      expect(prisma.passwordResetToken.create).not.toHaveBeenCalled();
+      expect(passwordResetEmailQueue.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    const validResetToken: MockResetToken = {
+      id: 'reset-1',
+      userId: baseUser.id,
+      tokenHash: 'irrelevant-because-findUnique-is-mocked',
+      expiresAt: new Date(Date.now() + 1000 * 60),
+      usedAt: null,
+    };
+
+    it('updates the password and revokes existing sessions on a valid token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(validResetToken);
+
+      await service.resetPassword({
+        token: 'raw-token',
+        newPassword: 'new-plaintext-password',
+      });
+
+      const updateData = prisma.user.update.mock.calls[0][0].data;
+      expect(
+        await bcrypt.compare(
+          'new-plaintext-password',
+          updateData.passwordHash!,
+        ),
+      ).toBe(true);
+      expect(refreshStore.revoke).toHaveBeenCalledWith(baseUser.id);
+    });
+
+    it('rejects an expired token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue({
+        ...validResetToken,
+        expiresAt: new Date(Date.now() - 1000),
+      });
+
+      await expect(
+        service.resetPassword({
+          token: 'raw-token',
+          newPassword: 'x'.repeat(8),
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects an already-used token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue({
+        ...validResetToken,
+        usedAt: new Date(),
+      });
+
+      await expect(
+        service.resetPassword({
+          token: 'raw-token',
+          newPassword: 'x'.repeat(8),
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.resetPassword({
+          token: 'raw-token',
+          newPassword: 'x'.repeat(8),
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });
