@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   Req,
@@ -52,6 +53,11 @@ function requireRosterFiles(files: RosterFiles) {
 @UseGuards(JwtAuthGuard)
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
+
+  @Get('mine')
+  async listMine(@Req() req: AuthenticatedRequest) {
+    return this.teamsService.listMine(req.user.id);
+  }
 
   @Post()
   @UseInterceptors(ROSTER_FILE_FIELDS)

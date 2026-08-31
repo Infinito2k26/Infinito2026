@@ -17,7 +17,7 @@ describe('TeamsService', () => {
   let prisma: {
     event: { findUnique: jest.Mock };
     user: { findUniqueOrThrow: jest.Mock };
-    team: { findUnique: jest.Mock; update: jest.Mock };
+    team: { findUnique: jest.Mock; update: jest.Mock; findMany: jest.Mock };
     $transaction: jest.Mock;
   };
 
@@ -29,7 +29,7 @@ describe('TeamsService', () => {
     prisma = {
       event: { findUnique: jest.fn() },
       user: { findUniqueOrThrow: jest.fn() },
-      team: { findUnique: jest.fn(), update: jest.fn() },
+      team: { findUnique: jest.fn(), update: jest.fn(), findMany: jest.fn() },
       $transaction: jest.fn(),
     };
 
@@ -222,6 +222,29 @@ describe('TeamsService', () => {
 
       expect(result).toEqual(createdParticipant);
       expect(capturedData).toMatchObject({ teamId: 'team-1', role: 'PLAYER' });
+    });
+  });
+
+  describe('listMine', () => {
+    it('queries teams by captainId, not by any other user relation', async () => {
+      prisma.team.findMany.mockResolvedValue([]);
+
+      await service.listMine('captain-1');
+
+      expect(prisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { captainId: 'captain-1' },
+        }),
+      );
+    });
+
+    it('returns whatever prisma resolves', async () => {
+      const teams = [{ id: 'team-1', name: 'Team A' }];
+      prisma.team.findMany.mockResolvedValue(teams);
+
+      const result = await service.listMine('captain-1');
+
+      expect(result).toBe(teams);
     });
   });
 });

@@ -25,6 +25,23 @@ export class TeamsService {
     private readonly uploadsService: UploadsService,
   ) {}
 
+  async listMine(userId: string) {
+    return this.prisma.team.findMany({
+      where: { captainId: userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        declaredSize: true,
+        inviteCode: true,
+        createdAt: true,
+        event: { select: { id: true, name: true, slug: true } },
+        participants: { select: { id: true } },
+        registration: { select: { id: true, status: true } },
+      },
+    });
+  }
+
   async createTeam(
     userId: string,
     dto: CreateTeamDto,

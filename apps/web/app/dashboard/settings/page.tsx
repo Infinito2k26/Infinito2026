@@ -1,13 +1,43 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
+import { SectionSpinner } from "@/components/ui/section-spinner";
+import { ErrorState } from "@/components/ui/error-state";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import styles from "./settings.module.css";
+
+interface UserProfile {
+  name: string;
+  email: string;
+  college: string | null;
+}
 
 export default function SettingsPage() {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await api.get('/auth/me');
+      setProfile(res.data);
+    } catch (err) {
+      console.error("Failed to load profile", err);
+      setError(err instanceof Error ? err.message : "Failed to load your profile.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -21,42 +51,49 @@ export default function SettingsPage() {
       }
     }
   };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8 p-6">
+    <div className={styles.page}>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className={styles.title}>Settings</h1>
+        <p className={styles.subtitle}>
           Manage your account preferences and portal settings.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 max-w-2xl">
-        <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-gray-500">Name</span>
-                <span className="font-medium">Campus Ambassador</span>
+      <div className={styles.cardGroup}>
+        {isLoading ? (
+          <SectionSpinner message="Loading profile..." />
+        ) : error || !profile ? (
+          <ErrorState description={error ?? "Could not load your profile."} onRetry={fetchProfile} />
+        ) : (
+          <Card className={styles.card}>
+            <h3 className={styles.cardTitle}>Profile Information</h3>
+            <div>
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>Name</span>
+                <span className={styles.fieldValue}>{profile.name}</span>
               </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-gray-500">Email</span>
-                <span className="font-medium">ca@college.edu</span>
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>Email</span>
+                <span className={styles.fieldValue}>{profile.email}</span>
               </div>
-              <div className="flex justify-between pb-2">
-                <span className="text-gray-500">College</span>
-                <span className="font-medium">AMU Aligarh</span>
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>College</span>
+                <span className={styles.fieldValue}>{profile.college ?? '—'}</span>
               </div>
             </div>
-        </Card>
+          </Card>
+        )}
 
-        <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 text-red-600">Danger Zone</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Logging out will clear your session and you will need to log in again.
-            </p>
-            <Button variant="outline" onClick={handleLogout} className="border-red-200 text-red-600 hover:bg-red-50">
-              Sign Out
-            </Button>
+        <Card className={styles.card}>
+          <h3 className={styles.dangerTitle}>Danger Zone</h3>
+          <p className={styles.dangerText}>
+            Logging out will clear your session and you will need to log in again.
+          </p>
+          <Button variant="outline" onClick={handleLogout} className={styles.signOutBtn}>
+            Sign Out
+          </Button>
         </Card>
       </div>
     </div>
