@@ -8,7 +8,7 @@ This file is Claude Code's fast-boot instructions for this repository. It is int
 2. `.claude/reference/architecture.md` — module boundaries and runtime diagram
 3. `.claude/reference/api.md` — envelope contract and endpoint map
 4. `.claude/reference/database.md` — schema and indexing rules
-5. Relevant `.claude/plans/<issue>.md` for the active issue
+5. `.claude/plans/README.md` — plans index; start there to find the active readiness phase or issue plan before reading anything else in `.claude/plans/`
 
 Then run:
 ```bash

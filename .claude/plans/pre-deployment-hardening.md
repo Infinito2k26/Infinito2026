@@ -1,3 +1,5 @@
+> **Superseded 2026-08-31** by [readiness-phase-1-backend-infra.md](readiness-phase-1-backend-infra.md) — its P0/P1/P2 items are folded in there, re-verified live against current code. Kept here for history only; work from the phase file, not this one. See [README.md](README.md) for the full index.
+
 # Pre-Deployment Hardening — Fix & Patch Plan
 
 **Written:** 2026-08-31. **Follows:** a full audit of `master-roadmap-sept30-launch.md` run the morning after that sprint's own Aug 30 deadline.
