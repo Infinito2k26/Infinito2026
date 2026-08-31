@@ -135,9 +135,9 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
     const fetchAssignments = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
-            setTaskInfo(data?.task ?? null);
-            setAssignments(data?.assignments ?? []);
+            const res = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
+            setTaskInfo(res?.data?.task ?? null);
+            setAssignments(res?.data?.assignments ?? []);
         } catch (err) {
             console.error("Failed to load assignments", err);
         } finally {

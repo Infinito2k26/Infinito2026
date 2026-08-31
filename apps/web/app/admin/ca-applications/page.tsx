@@ -109,8 +109,8 @@ export default function AdminCAApplicationsPage() {
     const fetchApplications = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/admin/ca-applications?status=PENDING');
-            setApplications(data?.applications ?? []);
+            const res = await api.get('/admin/ca-applications?status=PENDING');
+            setApplications(res?.data?.applications ?? []);
         } catch (err) {
             console.error(err);
         } finally {

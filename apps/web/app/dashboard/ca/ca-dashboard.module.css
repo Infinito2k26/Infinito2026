@@ -1,0 +1,60 @@
+.page {
+    max-width: 64rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    margin-top: 0.5rem;
+    color: var(--color-text-secondary);
+}
+
+.actionRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.referralCol {
+    grid-column: span 1;
+}
+
+.metricsRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.leaderboardSection {
+    margin-top: 1rem;
+}
+
+.leaderboardTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
+}
+
+@media (min-width: 768px) {
+    .actionRow {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .referralCol {
+        grid-column: span 2;
+    }
+
+    .metricsRow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -62,12 +62,12 @@ export default function AdminTasksPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-        const [brandsData, tasksData] = await Promise.all([
-            api.get('/admin/brands').catch(() => []),
-            api.get('/admin/ca-tasks').catch(() => [])
+        const [brandsRes, tasksRes] = await Promise.all([
+            api.get('/admin/brands').catch(() => null),
+            api.get('/admin/ca-tasks').catch(() => null)
         ]);
-        if (brandsData) setBrands(brandsData);
-        if (tasksData) setTasks(tasksData);
+        setBrands(brandsRes?.data ?? []);
+        setTasks(tasksRes?.data ?? []);
     } catch (e) {
         console.error(e);
     } finally {

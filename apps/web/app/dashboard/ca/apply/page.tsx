@@ -6,6 +6,7 @@ import { CAApplicationForm } from "@/components/ca/CAApplicationForm";
 import { PendingStateView } from "@/components/ca/PendingStateView";
 import { RejectedStateView } from "@/components/ca/RejectedStateView";
 import { api } from "@/lib/api";
+import styles from "./apply.module.css";
 
 interface CAApplication {
     id: string;
@@ -23,8 +24,8 @@ export default function CAApplyPage() {
     const fetchApplication = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/ca/apply/me');
-            setApplication(data);
+            const res = await api.get('/ca/apply/me');
+            setApplication(res.data);
         } catch (err) {
             console.error("Failed to load application status", err);
         } finally {
@@ -61,7 +62,7 @@ export default function CAApplyPage() {
 
     if (application?.status === 'PENDING') {
         return (
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className={styles.page}>
                 <CAHeroSection />
                 <PendingStateView />
             </div>
@@ -70,7 +71,7 @@ export default function CAApplyPage() {
 
     if (application?.status === 'REJECTED') {
         return (
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className={styles.page}>
                 <CAHeroSection />
                 <RejectedStateView
                     rejectionReason={application.rejectionReason}
@@ -81,13 +82,13 @@ export default function CAApplyPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className={styles.page}>
             <CAHeroSection />
 
-            <div className="bg-white/5 border border-white/10 p-6 rounded-lg">
-                <h2 className="text-xl font-bold mb-4">Submit Your Application</h2>
+            <div className={styles.formCard}>
+                <h2 className={styles.formTitle}>Submit Your Application</h2>
                 {error && (
-                    <div className="text-red-500 text-sm mb-4">{error}</div>
+                    <div className={styles.errorText}>{error}</div>
                 )}
                 <CAApplicationForm
                     onSubmit={handleApply}

@@ -55,8 +55,8 @@ export default function CATasksPage() {
     const fetchTasks = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/ca/tasks');
-            setTasks(data ?? []);
+            const res = await api.get('/ca/tasks');
+            setTasks(res?.data ?? []);
         } catch (err) {
             console.error("Failed to load tasks", err);
         } finally {
