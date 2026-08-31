@@ -34,6 +34,29 @@ export class EventsService {
     };
   }
 
+  async listAll(page = 1, limit = 20) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    const where = { deletedAt: null };
+
+    const [events, total] = await this.prisma.$transaction([
+      this.prisma.event.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      events,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
   async findBySlug(slug: string) {
     const event = await this.prisma.event.findFirst({
       where: { slug, isPublished: true, deletedAt: null },

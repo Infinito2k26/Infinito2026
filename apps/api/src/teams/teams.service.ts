@@ -42,6 +42,41 @@ export class TeamsService {
     });
   }
 
+  async listAll(page = 1, limit = 20) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    const select = {
+      id: true,
+      name: true,
+      declaredSize: true,
+      inviteCode: true,
+      createdAt: true,
+      collegeName: true,
+      captain: { select: { id: true, name: true, email: true } },
+      event: { select: { id: true, name: true, slug: true } },
+      participants: { select: { id: true } },
+      registration: { select: { id: true, status: true } },
+    } as const;
+
+    const [teams, total] = await this.prisma.$transaction([
+      this.prisma.team.findMany({
+        where: { deletedAt: null },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select,
+      }),
+      this.prisma.team.count({ where: { deletedAt: null } }),
+    ]);
+
+    return {
+      teams,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
   async createTeam(
     userId: string,
     dto: CreateTeamDto,
