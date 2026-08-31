@@ -128,15 +128,22 @@ const ReviewActionForm = ({
     );
 };
 
+const STATUS_TABS = [
+    { label: 'Pending Review', status: 'RECONCILIATION_PENDING' },
+    { label: 'Approved', status: 'SUCCESS' },
+    { label: 'Rejected', status: 'FAILED' },
+] as const;
+
 export default function AdminPaymentsPage() {
     const [payments, setPayments] = useState<AdminPayment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<(typeof STATUS_TABS)[number]['status']>('RECONCILIATION_PENDING');
 
     const fetchPayments = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/admin/payments?status=RECONCILIATION_PENDING');
+            const res = await api.get(`/admin/payments?status=${statusFilter}`);
             setPayments(res?.data?.payments ?? []);
         } catch (err) {
             console.error(err);
@@ -147,22 +154,40 @@ export default function AdminPaymentsPage() {
 
     useEffect(() => {
         fetchPayments();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statusFilter]);
 
     return (
         <div className={styles.pageWrapper}>
             <header className={styles.header}>
                 <div>
-                    <h1 className={styles.pageTitle}>Pending Payments</h1>
+                    <h1 className={styles.pageTitle}>Payments</h1>
                     <p className={styles.pageSubtitle}>Review UPI screenshot + transaction ID submissions.</p>
                 </div>
             </header>
+
+            <div className={styles.tabRow}>
+                {STATUS_TABS.map((tab) => (
+                    <button
+                        key={tab.status}
+                        type="button"
+                        className={statusFilter === tab.status ? styles.tabActive : styles.tab}
+                        onClick={() => setStatusFilter(tab.status)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
             <div className={styles.listContainer}>
                 {isLoading ? (
                     <p className={styles.emptyState}>Loading payments...</p>
                 ) : payments.length === 0 ? (
-                    <p className={styles.emptyState}>No payments awaiting review.</p>
+                    <p className={styles.emptyState}>
+                        {statusFilter === 'RECONCILIATION_PENDING'
+                            ? 'No payments awaiting review.'
+                            : `No ${STATUS_TABS.find((t) => t.status === statusFilter)?.label.toLowerCase()} payments yet.`}
+                    </p>
                 ) : payments.map((payment) => (
                     <Card key={payment.id} className={styles.paymentCard}>
                         <div className={styles.cardTop}>
