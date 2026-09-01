@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { EventsService } from './events.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -16,7 +17,14 @@ describe('EventsService', () => {
     registration: {
       count: jest.Mock;
     };
+    eventRulebook: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+      findUnique: jest.Mock;
+      delete: jest.Mock;
+    };
   };
+  let uploadsService: { getSignedGetUrl: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -28,10 +36,26 @@ describe('EventsService', () => {
       registration: {
         count: jest.fn(),
       },
+      eventRulebook: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        delete: jest.fn(),
+      },
+    };
+
+    uploadsService = {
+      getSignedGetUrl: jest.fn(
+        (key: string) => `https://signed.example/${key}`,
+      ),
     };
 
     const moduleRef = await Test.createTestingModule({
-      providers: [EventsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        EventsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: UploadsService, useValue: uploadsService },
+      ],
     }).compile();
 
     service = moduleRef.get<EventsService>(EventsService);
@@ -158,6 +182,164 @@ describe('EventsService', () => {
         { id: 'evt-1', capacity: 100 },
       );
       expect(prisma.registration.count).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('addRulebook', () => {
+    it('throws NotFoundException when the event does not exist', async () => {
+      prisma.event.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.addRulebook(
+          'evt-1',
+          { title: 'Rules' },
+          'admin-1',
+          'rulebooks/a.pdf',
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException when neither fileUrl nor a file is given', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.addRulebook('evt-1', { title: 'Rules' }, 'admin-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.eventRulebook.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a malformed fileUrl', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.addRulebook(
+          'evt-1',
+          { title: 'Rules', fileUrl: 'not a url' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects a non-http(s) fileUrl scheme', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+      });
+
+      await expect(
+        service.addRulebook(
+          'evt-1',
+          { title: 'Rules', fileUrl: 'ftp://example.com/rules.pdf' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('creates a rulebook from a pasted https fileUrl', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+      });
+      prisma.eventRulebook.create.mockResolvedValue({
+        id: 'rb-1',
+        eventId: 'evt-1',
+        title: 'Rules',
+        version: null,
+        fileUrl: 'https://drive.google.com/rules.pdf',
+        uploadedById: 'admin-1',
+        createdAt: new Date(),
+      });
+
+      const result = await service.addRulebook(
+        'evt-1',
+        { title: 'Rules', fileUrl: 'https://drive.google.com/rules.pdf' },
+        'admin-1',
+      );
+
+      expect(uploadsService.getSignedGetUrl).not.toHaveBeenCalled();
+      expect(result.fileUrl).toBe('https://drive.google.com/rules.pdf');
+    });
+
+    it('creates a rulebook from an uploaded file key and signs it on return', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+      });
+      prisma.eventRulebook.create.mockResolvedValue({
+        id: 'rb-1',
+        eventId: 'evt-1',
+        title: 'Rules',
+        version: null,
+        fileUrl: 'rulebooks/abc.pdf',
+        uploadedById: 'admin-1',
+        createdAt: new Date(),
+      });
+
+      const result = await service.addRulebook(
+        'evt-1',
+        { title: 'Rules' },
+        'admin-1',
+        'rulebooks/abc.pdf',
+      );
+
+      expect(result.fileUrl).toBe('https://signed.example/rulebooks/abc.pdf');
+    });
+  });
+
+  describe('listRulebooksBySlug', () => {
+    it('throws NotFoundException for an unpublished/unknown event slug', async () => {
+      prisma.event.findFirst.mockResolvedValue(null);
+
+      await expect(service.listRulebooksBySlug('nope')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.eventRulebook.findMany).not.toHaveBeenCalled();
+    });
+
+    it('signs uploaded file keys but leaves external URLs untouched', async () => {
+      prisma.event.findFirst.mockResolvedValue({ id: 'evt-1', slug: 'chess' });
+      prisma.eventRulebook.findMany.mockResolvedValue([
+        { id: 'rb-1', fileUrl: 'rulebooks/abc.pdf' },
+        { id: 'rb-2', fileUrl: 'https://drive.google.com/rules.pdf' },
+      ]);
+
+      const result = await service.listRulebooksBySlug('chess');
+
+      expect(result.rulebooks[0].fileUrl).toBe(
+        'https://signed.example/rulebooks/abc.pdf',
+      );
+      expect(result.rulebooks[1].fileUrl).toBe(
+        'https://drive.google.com/rules.pdf',
+      );
+    });
+  });
+
+  describe('deleteRulebook', () => {
+    it('throws NotFoundException when the rulebook does not exist', async () => {
+      prisma.eventRulebook.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteRulebook('rb-1')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.eventRulebook.delete).not.toHaveBeenCalled();
+    });
+
+    it('deletes an existing rulebook', async () => {
+      prisma.eventRulebook.findUnique.mockResolvedValue({ id: 'rb-1' });
+      prisma.eventRulebook.delete.mockResolvedValue({ id: 'rb-1' });
+
+      const result = await service.deleteRulebook('rb-1');
+
+      expect(prisma.eventRulebook.delete).toHaveBeenCalledWith({
+        where: { id: 'rb-1' },
+      });
+      expect(result).toEqual({ id: 'rb-1' });
     });
   });
 });

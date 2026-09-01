@@ -4,9 +4,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHash, randomUUID } from 'crypto';
 import * as QRCode from 'qrcode';
 import { ScanResult } from '@prisma/client';
+import { Env } from '../config/env.schema';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { TokenService } from './token.service';
@@ -24,6 +26,7 @@ export class IdentityService {
     private readonly prisma: PrismaService,
     private readonly uploadsService: UploadsService,
     private readonly tokenService: TokenService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   async issueCredentialsForPayment(registrationId: string): Promise<void> {
@@ -75,7 +78,11 @@ export class IdentityService {
     const credentialId = randomUUID();
     const rawToken = this.tokenService.signToken(credentialId);
     const tokenHash = hashToken(rawToken);
-    const qrBuffer = await QRCode.toBuffer(rawToken, {
+    // Encode a full URL, not the bare token, so a guard's stock camera app
+    // opens the scan dashboard directly — no custom scanner UI needed.
+    const webOrigin = this.config.get('WEB_ORIGIN', { infer: true });
+    const scanUrl = `${webOrigin}/scan/${rawToken}`;
+    const qrBuffer = await QRCode.toBuffer(scanUrl, {
       type: 'png',
       errorCorrectionLevel: 'M',
     });
@@ -131,30 +138,73 @@ export class IdentityService {
     };
   }
 
-  async validateToken(rawToken: string) {
-    const result = this.tokenService.verifyToken(rawToken);
-    if (!result.valid) {
-      return { valid: false };
+  // Behind the gate guard's own JWT (VOLUNTEER/ADMIN/SUPER_ADMIN) — the QR
+  // itself only encodes a URL, so anyone with a camera can open it; the
+  // detailed profile below must not be reachable without that login.
+  async getScanDashboard(rawToken: string) {
+    const verification = this.tokenService.verifyToken(rawToken);
+    if (!verification.valid) {
+      throw new BadRequestException('Invalid or tampered credential token');
     }
 
     const credential = await this.prisma.credential.findUnique({
       where: { tokenHash: hashToken(rawToken) },
       include: {
-        user: { select: { name: true } },
-        participant: { select: { name: true } },
+        registration: { include: { event: true } },
+        user: true,
+        participant: { include: { team: true } },
+        scanLogs: { orderBy: { createdAt: 'desc' }, take: 5 },
       },
     });
 
     if (!credential) {
-      return { valid: false };
+      throw new NotFoundException('Credential not found');
     }
 
+    const holder = credential.participant
+      ? {
+          name: credential.participant.name,
+          phone: credential.participant.phone,
+          photoUrl: this.uploadsService.getSignedGetUrl(
+            credential.participant.photoUrl,
+          ),
+          college: credential.participant.team.collegeName,
+          isIITP: credential.participant.team.isIITP,
+          teamName: credential.participant.team.name,
+          role: credential.participant.role,
+          idType: credential.participant.idType,
+          idNumber: credential.participant.idNumber,
+        }
+      : {
+          name: credential.user!.name,
+          phone: credential.user!.phone,
+          photoUrl: null,
+          college: credential.user!.college,
+          isIITP: credential.user!.isIITP,
+          teamName: null,
+          role: null,
+          idType: null,
+          idNumber: null,
+        };
+
     return {
-      valid: true,
       credentialId: credential.id,
-      holderName: credential.user?.name ?? credential.participant?.name ?? null,
+      holder,
+      event: {
+        name: credential.registration.event.name,
+        sportCategory: credential.registration.event.sportCategory,
+        venue: credential.registration.event.venue,
+      },
+      accommodationOpted: credential.registration.accommodationOpted,
+      messOnlyOpted: credential.registration.messOnlyOpted,
       scanCount: credential.scanCount,
       lastScannedAt: credential.lastScannedAt,
+      recentScans: credential.scanLogs.map((scan) => ({
+        gate: scan.gate,
+        direction: scan.direction,
+        result: scan.result,
+        createdAt: scan.createdAt,
+      })),
     };
   }
 

@@ -25,9 +25,11 @@ export class IdentityController {
     return this.identityService.getMyCredential(req.user.id);
   }
 
-  @Get('validate/:token')
-  async validate(@Param('token') token: string) {
-    return this.identityService.validateToken(token);
+  @Get('scan/:token')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.VOLUNTEER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async getScanDashboard(@Param('token') token: string) {
+    return this.identityService.getScanDashboard(token);
   }
 
   @Post('scan')

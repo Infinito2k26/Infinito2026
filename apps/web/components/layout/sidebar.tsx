@@ -63,11 +63,18 @@ const ShieldIcon = () => (
   </svg>
 );
 
+const ShoppingBagIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" />
+  </svg>
+);
+
 const SIDE_ITEMS: SideItem[] = [
   { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
   { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events" },
   { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams" },
   { label: "My Credential", icon: <QrCodeIcon />, href: "/dashboard/credential" },
+  { label: "My Orders", icon: <ShoppingBagIcon />, href: "/dashboard/orders" },
   { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics" },
   { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings" },
 ];

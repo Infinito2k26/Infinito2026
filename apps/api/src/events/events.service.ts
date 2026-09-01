@@ -5,11 +5,18 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CreateEventDto, UpdateEventDto } from './dto/events.dto';
+import { CreateRulebookDto } from './dto/rulebooks.dto';
+
+export const RULEBOOK_UPLOAD_FOLDER = 'rulebooks';
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async listPublished(page = 1, limit = 20) {
     page = Math.max(1, page);
@@ -123,5 +130,88 @@ export class EventsService {
     }
 
     return this.prisma.event.update({ where: { id }, data: { isPublished } });
+  }
+
+  private signRulebookUrl(fileUrl: string): string {
+    return fileUrl.startsWith(`${RULEBOOK_UPLOAD_FOLDER}/`)
+      ? this.uploadsService.getSignedGetUrl(fileUrl)
+      : fileUrl;
+  }
+
+  async addRulebook(
+    eventId: string,
+    dto: CreateRulebookDto,
+    adminId: string,
+    fileKey?: string,
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+    });
+    if (!event || event.deletedAt) {
+      throw new NotFoundException('Event not found');
+    }
+
+    if (dto.fileUrl) {
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(dto.fileUrl);
+      } catch {
+        throw new BadRequestException('Invalid file URL');
+      }
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new BadRequestException(
+          'Invalid URL scheme. Only http and https are allowed.',
+        );
+      }
+    }
+
+    const finalFileUrl = dto.fileUrl || fileKey;
+    if (!finalFileUrl) {
+      throw new BadRequestException(
+        'Either fileUrl or an uploaded file is required',
+      );
+    }
+
+    const rulebook = await this.prisma.eventRulebook.create({
+      data: {
+        eventId,
+        title: dto.title,
+        version: dto.version,
+        fileUrl: finalFileUrl,
+        uploadedById: adminId,
+      },
+    });
+    return { ...rulebook, fileUrl: this.signRulebookUrl(rulebook.fileUrl) };
+  }
+
+  async listRulebooksBySlug(slug: string) {
+    const event = await this.findBySlug(slug);
+    return this.listRulebooksByEventId(event.id);
+  }
+
+  // Admin variant — unlike listRulebooksBySlug, works for an unpublished
+  // draft event too, so admins can manage rulebooks before publishing.
+  async listRulebooksByEventId(eventId: string) {
+    const rulebooks = await this.prisma.eventRulebook.findMany({
+      where: { eventId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return {
+      rulebooks: rulebooks.map((rulebook) => ({
+        ...rulebook,
+        fileUrl: this.signRulebookUrl(rulebook.fileUrl),
+      })),
+    };
+  }
+
+  async deleteRulebook(id: string) {
+    const existing = await this.prisma.eventRulebook.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('Rulebook not found');
+    }
+    await this.prisma.eventRulebook.delete({ where: { id } });
+    return { id };
   }
 }

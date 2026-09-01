@@ -18,6 +18,11 @@ const ADMIN_ITEMS: AdminItem[] = [
   { label: "Gate Scans", href: "/admin/scans" },
   { label: "CA Applications", href: "/admin/ca-applications" },
   { label: "CA Tasks", href: "/admin/ca-tasks" },
+  { label: "Team", href: "/admin/content/team" },
+  { label: "Sponsors", href: "/admin/content/sponsors" },
+  { label: "Gallery", href: "/admin/content/gallery" },
+  { label: "Merch Products", href: "/admin/merch/products" },
+  { label: "Merch Orders", href: "/admin/merch/orders" },
 ];
 
 export default function AdminSidebar() {

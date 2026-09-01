@@ -1,15 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash } from 'crypto';
 import { IdentityService } from './identity.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { TokenService } from './token.service';
 import { Env } from '../config/env.schema';
-
-function hashToken(rawToken: string): string {
-  return createHash('sha256').update(rawToken).digest('hex');
-}
 
 describe('IdentityService', () => {
   let service: IdentityService;
@@ -48,7 +43,10 @@ describe('IdentityService', () => {
     };
 
     const config = {
-      get: () => 'test-qr-signing-secret-at-least-32-chars-long',
+      get: (key: string) =>
+        key === 'WEB_ORIGIN'
+          ? 'https://scan.example'
+          : 'test-qr-signing-secret-at-least-32-chars-long',
     } as unknown as ConfigService<Env, true>;
     tokenService = new TokenService(config);
 
@@ -56,6 +54,7 @@ describe('IdentityService', () => {
       prisma as unknown as PrismaService,
       uploadsService as unknown as UploadsService,
       tokenService,
+      config,
     );
   });
 
@@ -161,49 +160,94 @@ describe('IdentityService', () => {
     });
   });
 
-  describe('validateToken', () => {
+  describe('getScanDashboard', () => {
     it('rejects a tampered token before any DB lookup', async () => {
-      const result = await service.validateToken('tampered.token');
+      await expect(service.getScanDashboard('tampered.token')).rejects.toThrow(
+        BadRequestException,
+      );
 
-      expect(result).toEqual({ valid: false });
       expect(prisma.credential.findUnique).not.toHaveBeenCalled();
     });
 
-    it('validates a correctly signed token against its stored hash', async () => {
+    it('throws NotFoundException when the credential does not exist', async () => {
+      const rawToken = tokenService.signToken('missing-cred');
+      prisma.credential.findUnique.mockResolvedValue(null);
+
+      await expect(service.getScanDashboard(rawToken)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('builds the holder profile from the participant/team for a team credential', async () => {
       const rawToken = tokenService.signToken('cred-1');
       prisma.credential.findUnique.mockResolvedValue({
         id: 'cred-1',
         scanCount: 2,
         lastScannedAt: null,
-        user: { name: 'Jane Doe' },
-        participant: null,
-      });
-
-      const result = await service.validateToken(rawToken);
-
-      expect(prisma.credential.findUnique).toHaveBeenCalledWith({
-        where: { tokenHash: hashToken(rawToken) },
-        include: {
-          user: { select: { name: true } },
-          participant: { select: { name: true } },
+        registration: {
+          event: {
+            name: 'Football 2K26',
+            sportCategory: 'Football',
+            venue: 'Ground A',
+          },
+          accommodationOpted: true,
+          messOnlyOpted: false,
         },
+        user: null,
+        participant: {
+          name: 'Jane Doe',
+          phone: '9999999999',
+          photoUrl: 'photos/jane.jpg',
+          role: 'CAPTAIN',
+          idType: 'COLLEGE_ID',
+          idNumber: 'CID123',
+          team: { name: 'Blazers', collegeName: 'IIT Patna', isIITP: true },
+        },
+        scanLogs: [],
       });
-      expect(result).toEqual({
-        valid: true,
-        credentialId: 'cred-1',
-        holderName: 'Jane Doe',
-        scanCount: 2,
-        lastScannedAt: null,
+
+      const result = await service.getScanDashboard(rawToken);
+
+      expect(result.holder).toEqual({
+        name: 'Jane Doe',
+        phone: '9999999999',
+        photoUrl: 'https://signed.example/photos/jane.jpg',
+        college: 'IIT Patna',
+        isIITP: true,
+        teamName: 'Blazers',
+        role: 'CAPTAIN',
+        idType: 'COLLEGE_ID',
+        idNumber: 'CID123',
       });
+      expect(result.event.name).toBe('Football 2K26');
+      expect(result.accommodationOpted).toBe(true);
     });
 
-    it('returns invalid when the token is structurally valid but revoked/unknown', async () => {
-      const rawToken = tokenService.signToken('missing-cred');
-      prisma.credential.findUnique.mockResolvedValue(null);
+    it('falls back to the user for an individual credential (no photo)', async () => {
+      const rawToken = tokenService.signToken('cred-2');
+      prisma.credential.findUnique.mockResolvedValue({
+        id: 'cred-2',
+        scanCount: 0,
+        lastScannedAt: null,
+        registration: {
+          event: { name: 'Chess 2K26', sportCategory: 'Chess', venue: null },
+          accommodationOpted: false,
+          messOnlyOpted: false,
+        },
+        user: {
+          name: 'John Roe',
+          phone: null,
+          college: 'NIT Patna',
+          isIITP: false,
+        },
+        participant: null,
+        scanLogs: [],
+      });
 
-      const result = await service.validateToken(rawToken);
+      const result = await service.getScanDashboard(rawToken);
 
-      expect(result).toEqual({ valid: false });
+      expect(result.holder.photoUrl).toBeNull();
+      expect(result.holder.name).toBe('John Roe');
     });
   });
 

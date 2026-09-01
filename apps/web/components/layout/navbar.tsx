@@ -10,6 +10,10 @@ const NAV_ITEMS = [
   { label: "Sports", href: "/sports" },
   { label: "Events", href: "/events" },
   { label: "About", href: "/about" },
+  { label: "Team", href: "/team" },
+  { label: "Sponsors", href: "/sponsors" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Merch", href: "/merch" },
 ];
 
 const Navbar = () => {

@@ -103,6 +103,17 @@ Response `data` shape:
 
 `PATCH /events/:id` rejects (`400`) lowering `capacity` below the event's current non-cancelled `Registration` count. This is an admin-side safety guard only — full at-registration-time capacity enforcement belongs to the Registration module.
 
+#### Event Rulebooks
+
+| Method | Path                              | Access | Purpose                                          |
+| ------ | --------------------------------- | ------ | ------------------------------------------------- |
+| GET    | `/events/:slug/rulebooks`         | Public | List rulebooks for a published event               |
+| GET    | `/admin/events/:eventId/rulebooks`| Admin  | List rulebooks for any event, including drafts     |
+| POST   | `/admin/events/:eventId/rulebooks`| Admin  | Attach a rulebook (multipart — link or PDF upload) |
+| DELETE | `/admin/rulebooks/:id`            | Admin  | Remove a rulebook                                  |
+
+`POST /admin/events/:eventId/rulebooks` body: `title`, `version?`, and **exactly one of** `fileUrl` (pasted external link, `http`/`https` only) or `file` (multipart PDF upload, max 10 MB). `400` if neither is given; a malformed or non-http(s) `fileUrl` is also rejected. Response `fileUrl` is the raw stored value for an external link, or a time-limited signed URL when it was an uploaded file — same treatment on every list response.
+
 ### Teams and Registrations
 
 | Method | Path                     | Access              | Purpose              |
@@ -178,9 +189,15 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 | Method | Path                        | Access          | Purpose                            |
 | ------ | --------------------------- | --------------- | ---------------------------------- |
 | GET    | `/identity/mine`            | Authenticated   | Get QR credential                  |
+| GET    | `/identity/scan/:token`     | Volunteer/Admin | Gate-scan dashboard for a credential |
 | POST   | `/identity/scan`            | Volunteer/Admin | Scan and log credential            |
-| GET    | `/identity/validate/:token` | Public          | Offline-safe credential validation |
 | GET    | `/admin/scans`               | Admin           | List scan logs, paginated, for gate audit |
+
+#### `GET /identity/scan/:token`
+
+- Only `VOLUNTEER`, `ADMIN`, `SUPER_ADMIN` — the QR itself now encodes a full URL (`<WEB_ORIGIN>/scan/:token`, see `IdentityService.issueCredential`), not a bare token, so a guard's stock camera app opens `apps/web/app/scan/[token]/page.tsx` directly. Login-gating this endpoint is what keeps a photographed QR from leaking participant PII to anyone who isn't a logged-in guard.
+- `400` if the token's HMAC signature is invalid; `404` if the signature is valid but no credential matches.
+- Response `data` shape: `{ credentialId, holder: { name, phone, photoUrl, college, isIITP, teamName, role, idType, idNumber }, event: { name, sportCategory, venue }, accommodationOpted, messOnlyOpted, scanCount, lastScannedAt, recentScans: [{ gate, direction, result, createdAt }] }`. `holder.photoUrl` is a time-limited signed URL (participant credentials only; individual/user credentials have no photo).
 
 #### `POST /identity/scan`
 
@@ -195,6 +212,80 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 - Only `ADMIN` and `SUPER_ADMIN`.
 - Query: `page` (default 1), `limit` (default 20, max 100), `gate` (optional exact match).
 - Response `data` shape: `{ scans: ScanLog[], pagination: { page, limit, total, totalPages } }`. Each scan includes `holderName` (resolved from the credential's linked `user` or `participant`) and `scannedBy` (the volunteer/admin who performed the scan).
+
+### Content (Team / Sponsors / Gallery)
+
+| Method | Path                | Access | Purpose                                    |
+| ------ | ------------------- | ------ | ------------------------------------------- |
+| GET    | `/team`             | Public | List team/committee members, grouped by department |
+| GET    | `/gallery`          | Public | Paginated public photo gallery              |
+| GET    | `/sponsors`         | Public | List publicly-listed, tiered sponsor brands |
+| POST   | `/admin/team`       | Admin  | Create a team member (multipart, `photo` optional) |
+| PATCH  | `/admin/team/:id`   | Admin  | Update a team member (multipart, `photo` optional) |
+| DELETE | `/admin/team/:id`   | Admin  | Remove a team member                       |
+| POST   | `/admin/gallery`    | Admin  | Add a gallery photo (multipart, `image` required) |
+| PATCH  | `/admin/gallery/:id`| Admin  | Update a gallery item's caption            |
+| DELETE | `/admin/gallery/:id`| Admin  | Remove a gallery item                      |
+
+#### `GET /team`
+
+Response `data` shape: `{ departments: [{ department, members: [{ id, name, department, role, photoUrl, displayOrder }] }] }`. `photoUrl` is a time-limited signed URL when set.
+
+#### `GET /gallery`
+
+Query: `page` (default 1), `limit` (default 20, max 100). Response `data` shape: `{ items: [{ id, imageUrl, caption, publishedAt }], pagination: { page, limit, total, totalPages } }`, newest (`publishedAt`) first.
+
+#### `GET /sponsors`
+
+Response `data` shape: `{ sponsors: [{ id, name, logoUrl, tier }] }`. Only `Brand` rows with `tier` set, `isPubliclyListed: true`, and `status: ACTIVE`; ordered by tier (`TITLE` first).
+
+#### Sponsor tier management
+
+Sponsor tier/listing is managed via the existing Brand admin endpoints, not a separate route: `POST /admin/brands` / `PATCH /admin/brands/:id` now also accept `tier` (`SponsorTier` enum) and `isPubliclyListed` (boolean).
+
+### Merch
+
+No payment gateway here either — same manual UPI-screenshot flow as event registrations, reusing the `PaymentStatus` enum directly on `MerchOrder` rather than the `Payment` table (see `.claude/reference/database.md`'s `MerchOrder` entry for why).
+
+| Method | Path                              | Access        | Purpose                                    |
+| ------ | ---------------------------------- | ------------- | ------------------------------------------- |
+| GET    | `/merch/products`                  | Public        | List in-stock, published products           |
+| GET    | `/merch/products/:id`              | Public        | Product detail (published only)             |
+| POST   | `/merch/orders`                    | Authenticated | Place an order                              |
+| GET    | `/merch/orders/mine`               | Authenticated | My order history                            |
+| POST   | `/merch/orders/:id/payment`        | Authenticated | Submit screenshot + transaction ID          |
+| GET    | `/admin/merch/products`            | Admin         | List all products, any stock/publish state  |
+| POST   | `/admin/merch/products`            | Admin         | Create a product (always starts unpublished) |
+| PATCH  | `/admin/merch/products/:id`        | Admin         | Update a product                            |
+| PATCH  | `/admin/merch/products/:id/publish`| Admin         | Publish or unpublish a product              |
+| GET    | `/admin/merch/orders`              | Admin         | List orders, paginated, filter by `status`  |
+| PATCH  | `/admin/merch/orders/:id/verify`   | Admin         | Approve or reject an order's payment        |
+| PATCH  | `/admin/merch/orders/:id/status`   | Admin         | Advance fulfillment status                  |
+
+#### Product publishing
+
+Mirrors `Event.isPublished`/`PATCH /events/:id/publish` exactly: `POST /admin/merch/products` always creates a draft (`isPublished: false`, regardless of any other field), and `PATCH /admin/merch/products/:id/publish` (`{ isPublished: boolean }`) is the only way to make it live. `GET /merch/products` and `GET /merch/products/:id` never return an unpublished product (`404` on the detail route); `POST /merch/orders` also rejects (`404`) an order referencing an unpublished product, so a stale product ID a buyer already has (e.g. from a shared link) can't be ordered after unpublishing.
+
+#### `POST /merch/orders`
+
+- Body: `{ shippingName, shippingPhone, shippingAddress, shippingPincode, items: [{ productId, size?, quantity }] }`.
+- `totalAmount` is always computed server-side from each item's *live* `Product.price` at order time — a client-supplied amount is never trusted, same rule as event registration fees. `404` if any `productId` doesn't resolve or isn't published; `400` if it isn't `inStock` or the items array is empty.
+- Creates the `MerchOrder` (`status: PENDING_PAYMENT`, `paymentStatus: INITIATED`) and its `MerchOrderItem` rows in one transaction. No credential/QR is issued for merch orders.
+
+#### `POST /merch/orders/:id/payment`
+
+- Multipart form: `transactionId`, `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `merch-payment-proof/`).
+- Caller must own the order (`order.userId`), else `403`. Order's `paymentStatus` must be `INITIATED`, else `409`. Idempotent: replaying the same `idempotencyKey` returns the already-recorded order instead of erroring or duplicating.
+- Moves `paymentStatus` to `RECONCILIATION_PENDING` via compare-and-swap (`updateMany` + count check), identical pattern to `PaymentsService.submitPayment`.
+
+#### `PATCH /admin/merch/orders/:id/verify`
+
+- Body: `{ status: 'SUCCESS' | 'FAILED', rejectionReason? }` — `rejectionReason` required when rejecting.
+- Compare-and-swap: the order's `paymentStatus` must currently be `RECONCILIATION_PENDING`, else `409`. On `SUCCESS`, also flips `MerchOrder.status` to `CONFIRMED` in the same update. No BullMQ job is enqueued (unlike registration payments) — a confirmed merch order doesn't trigger credential issuance.
+
+#### `PATCH /admin/merch/orders/:id/status`
+
+- Body: `{ status: 'SHIPPED' | 'DELIVERED' | 'CANCELLED' }`. Enforces a one-way transition guard: `CONFIRMED → SHIPPED → DELIVERED`, or `→ CANCELLED` from `PENDING_PAYMENT`/`CONFIRMED`. `400` on any other transition (e.g. `DELIVERED → PENDING_PAYMENT`), regardless of the order's current `paymentStatus`.
 
 ### CA Portal (Phase 3-5 Additions)
 
