@@ -53,46 +53,45 @@ export default function SponsorsPage() {
 
     return (
         <PublicLayout>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <h1 className={styles.pageTitle}>Sponsors</h1>
-                    <p className={styles.pageSubtitle}>
-                        Infinito 2K26 is made possible by our sponsors.
-                    </p>
-                </header>
+            <header className={styles.header}>
+                <p className="eyebrow">Made possible by</p>
+                <h1 className={`${styles.pageTitle} glow`}>Sponsors</h1>
+                <p className={styles.pageSubtitle}>
+                    Infinito 2K26 is made possible by our sponsors.
+                </p>
+            </header>
 
-                {isLoading ? (
-                    <SectionSpinner message="Loading sponsors..." />
-                ) : error ? (
-                    <ErrorState description={error} onRetry={fetchSponsors} />
-                ) : sponsors.length === 0 ? (
-                    <EmptyState
-                        title="Sponsors coming soon"
-                        description="Check back soon."
-                    />
-                ) : (
-                    <div className={styles.grid}>
-                        {sponsors.map((sponsor) => (
-                            <Card key={sponsor.id} className={styles.sponsorCard}>
-                                <Badge variant="info">{TIER_LABEL[sponsor.tier]}</Badge>
-                                <div className={styles.logoWrap}>
-                                    {sponsor.logoUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                            src={sponsor.logoUrl}
-                                            alt={sponsor.name}
-                                            className={styles.logo}
-                                        />
-                                    ) : (
-                                        <span className={styles.logoFallback}>{sponsor.name}</span>
-                                    )}
-                                </div>
-                                <p className={styles.sponsorName}>{sponsor.name}</p>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </div>
+            {isLoading ? (
+                <SectionSpinner message="Loading sponsors..." />
+            ) : error ? (
+                <ErrorState description={error} onRetry={fetchSponsors} />
+            ) : sponsors.length === 0 ? (
+                <EmptyState
+                    title="Sponsors coming soon"
+                    description="Check back soon."
+                />
+            ) : (
+                <div className={styles.grid}>
+                    {sponsors.map((sponsor) => (
+                        <Card key={sponsor.id} className={styles.sponsorCard}>
+                            <Badge variant="info">{TIER_LABEL[sponsor.tier]}</Badge>
+                            <div className={styles.logoWrap}>
+                                {sponsor.logoUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={sponsor.logoUrl}
+                                        alt={sponsor.name}
+                                        className={styles.logo}
+                                    />
+                                ) : (
+                                    <span className={styles.logoFallback}>{sponsor.name}</span>
+                                )}
+                            </div>
+                            <p className={styles.sponsorName}>{sponsor.name}</p>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </PublicLayout>
     );
 }

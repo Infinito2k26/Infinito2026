@@ -1,15 +1,13 @@
-'use client';
-
 import React from 'react';
 
-import Card from '@/components/ui/card';
+import PublicLayout from '@/components/layout/public-layout';
 
 import styles from './privacy-policy.module.css';
 
 export default function PrivacyPolicyPage() {
     return (
-        <div className={styles.pageWrapper}>
-            <Card className={styles.privacyPolicyCard}>
+        <PublicLayout>
+            <div className={styles.pageWrapper}>
                 <div className={styles.header}>
                     <h1 className={styles.title}>Privacy Policy</h1>
                     <p className={styles.updated}>Infinito 2K26 — IIT Patna</p>
@@ -71,7 +69,7 @@ export default function PrivacyPolicyPage() {
                         the contact channels published on the fest&apos;s official pages.
                     </p>
                 </div>
-            </Card>
-        </div>
+            </div>
+        </PublicLayout>
     );
 }

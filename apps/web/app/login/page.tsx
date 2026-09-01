@@ -7,7 +7,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import Card from '@/components/ui/card';
+import AuthLayout from '@/components/layout/auth-layout';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -60,12 +60,11 @@ export default function LoginPage() {
     };
 
     return (
-        <div className={styles.pageWrapper}>
-            <Card className={styles.loginCard}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Welcome Back</h1>
-                    <p className={styles.subtitle}>Sign in to your Infinito account</p>
-                </div>
+        <AuthLayout>
+            <div className={styles.header}>
+                <h1 className={styles.title}>Welcome Back</h1>
+                <p className={styles.subtitle}>Sign in to your Infinito account</p>
+            </div>
 
                 {justRegistered && !apiError && (
                     <div className={styles.successAlert}>
@@ -129,7 +128,6 @@ export default function LoginPage() {
                         </Link>
                     </p>
                 </div>
-            </Card>
-        </div>
+        </AuthLayout>
     );
 }

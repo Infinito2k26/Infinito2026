@@ -26,8 +26,6 @@ export class IdentityController {
   }
 
   @Get('scan/:token')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.VOLUNTEER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async getScanDashboard(@Param('token') token: string) {
     return this.identityService.getScanDashboard(token);
   }

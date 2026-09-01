@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { CalendarDays, MapPin } from "lucide-react";
 
-import Card from "@/components/ui/card";
+import PosterCard from "@/components/ui/poster-card";
+import SportIcon from "@/components/ui/sport-icon";
 import Badge from "@/components/ui/badge";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
 import { formatFeeSummary } from "@/lib/format-event-fee";
+import { findSportForEventName } from "@/lib/sports";
 import type { EventSummary } from "@/lib/types/event";
 
 import styles from "./events.module.css";
@@ -68,40 +69,59 @@ export default function EventsPage() {
                 />
             ) : (
                 <div className={styles.grid}>
-                    {events.map((event) => (
-                        <Link key={event.id} href={`/dashboard/events/${event.slug}`}>
-                            <Card className={styles.eventCard}>
-                                <div className={styles.cardHeader}>
-                                    <span className={styles.categoryTag}>{event.sportCategory}</span>
-                                    <Badge variant={event.registrationOpen ? "success" : "default"}>
-                                        {event.registrationOpen ? "Registration Open" : "Closed"}
-                                    </Badge>
+                    {events.map((event, i) => {
+                        const matched = findSportForEventName(event.name);
+                        const date = new Date(event.startDate).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                        });
+
+                        if (matched) {
+                            return (
+                                <PosterCard
+                                    key={event.id}
+                                    slug={matched.poster}
+                                    name={event.name}
+                                    category={event.sportCategory}
+                                    format={formatFeeSummary(event)}
+                                    date={date}
+                                    href={`/dashboard/events/${event.slug}`}
+                                    priority={i < 4}
+                                />
+                            );
+                        }
+
+                        return (
+                            <a
+                                key={event.id}
+                                href={`/dashboard/events/${event.slug}`}
+                                className={styles.fallbackCard}
+                            >
+                                <div className={styles.fallbackArt}>
+                                    <SportIcon sport={event.name} size={40} />
                                 </div>
-
-                                <h2 className={styles.eventName}>{event.name}</h2>
-
-                                <div className={styles.metaRow}>
-                                    <CalendarDays size={14} />
-                                    <span>
-                                        {new Date(event.startDate).toLocaleDateString("en-IN", {
-                                            day: "numeric",
-                                            month: "short",
-                                            year: "numeric",
-                                        })}
-                                    </span>
-                                </div>
-
-                                {event.venue && (
-                                    <div className={styles.metaRow}>
-                                        <MapPin size={14} />
-                                        <span>{event.venue}</span>
+                                <div className={styles.fallbackStrip}>
+                                    <span className={styles.fallbackName}>{event.name}</span>
+                                    <div className={styles.fallbackMeta}>
+                                        <span className={styles.fallbackDetail}>
+                                            <CalendarDays size={13} /> {date}
+                                        </span>
+                                        {event.venue && (
+                                            <span className={styles.fallbackDetail}>
+                                                <MapPin size={13} /> {event.venue}
+                                            </span>
+                                        )}
                                     </div>
-                                )}
-
-                                <div className={styles.feeRow}>{formatFeeSummary(event)}</div>
-                            </Card>
-                        </Link>
-                    ))}
+                                    <div className={styles.fallbackFooter}>
+                                        <Badge variant={event.registrationOpen ? "success" : "default"}>
+                                            {event.registrationOpen ? "Open" : "Closed"}
+                                        </Badge>
+                                        <span className={styles.fallbackFee}>{formatFeeSummary(event)}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        );
+                    })}
                 </div>
             )}
         </div>

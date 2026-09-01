@@ -10,8 +10,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-    title = "Something went wrong",
-    description = "That didn't load. Please try again.",
+    title = "The path is broken",
+    description = "That didn't load. Try again — if it keeps failing, the fest desk can help.",
     onRetry,
     className,
 }: ErrorStateProps) {

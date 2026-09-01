@@ -1,96 +1,119 @@
+/* Buttons speak in the art's engraved-caps voice: Cinzel, uppercase, tracked.
+   Carved corners (2px), never pill-soft. */
+
 .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: inherit;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--f-caps);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease),
+    transform 0.08s var(--ease);
 }
 
 .button:focus-visible {
-    outline: 2px solid var(--color-accent-primary);
-    outline-offset: 2px;
+  outline: 2px solid var(--crimson-700);
+  outline-offset: 2px;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
-/* Sizes */
+/* --- Sizes. Every size clears the 44px touch target except sm, which is only
+   for dense table rows where a pointer is already in use. -------------------*/
+
 .sm {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 13px;
+  font-size: 0.6875rem;
+  padding: 0.5rem 0.875rem;
+  min-height: 34px;
 }
 
 .md {
-    height: 40px;
-    padding: 0 16px;
-    font-size: 14px;
+  font-size: var(--fs-small);
+  padding: 0.75rem 1.25rem;
+  min-height: 44px;
 }
 
 .lg {
-    height: 48px;
-    padding: 0 20px;
-    font-size: 15px;
+  font-size: 0.9375rem;
+  padding: 0.9375rem 1.75rem;
+  min-height: 52px;
 }
 
-/* Variants */
+/* --- Variants ------------------------------------------------------------ */
+
 .primary {
-    background-color: var(--color-accent-primary);
-    border-color: var(--color-accent-primary);
-    color: var(--color-bg-primary);
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  border-color: var(--crimson-700);
 }
 
 .primary:hover:not(:disabled) {
-    background-color: var(--color-accent-secondary);
-    border-color: var(--color-accent-secondary);
+  background: var(--crimson-600);
+  border-color: var(--crimson-600);
+  color: var(--bone-50);
 }
 
 .secondary {
-    background-color: var(--color-bg-secondary);
-    border-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+  background: transparent;
+  color: var(--char-800);
+  border-color: var(--char-700);
 }
 
 .secondary:hover:not(:disabled) {
-    background-color: var(--color-border);
-    border-color: var(--color-border);
+  background: var(--char-800);
+  color: var(--bone-100);
+}
+
+/* Kept for callers that already ask for it; a lighter-weight secondary. */
+.outline {
+  background: transparent;
+  color: var(--crimson-700);
+  border-color: var(--bone-300);
+}
+
+.outline:hover:not(:disabled) {
+  border-color: var(--crimson-700);
+  background: var(--bone-50);
 }
 
 .ghost {
-    background-color: transparent;
-    border-color: var(--color-border);
-    color: var(--color-text-primary);
+  background: transparent;
+  color: var(--char-500);
+  border-color: transparent;
 }
 
 .ghost:hover:not(:disabled) {
-    background-color: var(--color-bg-secondary);
+  background: var(--bone-200);
+  color: var(--char-800);
 }
 
 .danger {
-    background-color: var(--color-danger);
-    border-color: var(--color-danger);
-    color: var(--color-bg-primary);
+  background: transparent;
+  color: var(--err);
+  border-color: rgba(163, 39, 42, 0.45);
 }
 
 .danger:hover:not(:disabled) {
-    background-color: var(--color-danger-hover);
-    border-color: var(--color-danger-hover);
+  background: var(--err);
+  color: var(--bone-100);
+  border-color: var(--err);
 }
 
 .spinnerSlot {
-    display: inline-flex;
-    align-items: center;
-}
-.outline {
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
+  display: inline-flex;
+  align-items: center;
 }

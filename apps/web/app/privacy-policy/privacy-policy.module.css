@@ -1,62 +1,40 @@
 .pageWrapper {
     width: 100%;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    padding: 2rem 1rem;
-    background-color: var(--color-bg-primary);
-}
-
-.privacyPolicyCard {
-    width: 100%;
-    max-width: 48rem;
-    padding: 2rem 1.5rem;
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-9);
 }
 
 .header {
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 1rem;
+    margin-bottom: var(--space-6);
+    border-bottom: 1px solid var(--bone-300);
+    padding-bottom: var(--space-4);
 }
 
 .title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
+    color: var(--crimson-800);
 }
 
 .updated {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    font-size: var(--fs-small);
+    color: var(--text-muted);
 }
 
 .content {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    color: var(--color-text-primary);
-    line-height: 1.6;
+    gap: var(--space-5);
+    color: var(--char-800);
+    line-height: var(--lh-body);
 }
 
 .content h2 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
 }
 
 .content ul {
-    padding-left: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-}
-
-@media (min-width: 640px) {
-    .privacyPolicyCard {
-        padding: 2.5rem 2rem;
-    }
+    gap: var(--space-2);
 }

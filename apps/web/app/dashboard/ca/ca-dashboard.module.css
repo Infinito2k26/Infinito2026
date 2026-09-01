@@ -1,27 +1,26 @@
 .page {
     max-width: 64rem;
     margin: 0 auto;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-5);
 }
 
 .title {
-    font-size: 1.875rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: var(--color-text-primary);
+    margin-top: 0;
+    color: var(--ember-600);
 }
 
 .subtitle {
-    margin-top: 0.5rem;
-    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    color: var(--text-muted);
 }
 
 .actionRow {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: var(--space-4);
 }
 
 .referralCol {
@@ -31,18 +30,20 @@
 .metricsRow {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: var(--space-4);
 }
 
 .leaderboardSection {
-    margin-top: 1rem;
+    margin-top: var(--space-2);
 }
 
 .leaderboardTitle {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
+    font-family: var(--f-caps);
+    font-size: 0.9375rem;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+    color: var(--crimson-800);
 }
 
 @media (min-width: 768px) {

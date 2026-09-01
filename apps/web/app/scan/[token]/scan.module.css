@@ -1,10 +1,15 @@
-/* ---------- Base Layout Structure (Mobile First: 375px) ---------- */
+/* The one deliberately dark screen family in the system (with the credential
+   pass and the footer) — this one lives on a volunteer's phone at a gate in
+   low light, so it gets a dark ground, large touch targets, and loud
+   pass/fail feedback rather than the site's usual bone card. */
 .container {
     width: 100%;
-    padding: 1rem;
+    min-height: 100vh;
+    padding: var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
+    background: var(--char-900);
 }
 
 .profileCard {
@@ -12,8 +17,10 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.5rem;
-    padding: 1.5rem 1.25rem;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-5);
+    background: var(--char-800);
+    border: 1px solid var(--char-700);
 }
 
 .photoWrap {
@@ -24,8 +31,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
+    background-color: var(--char-700);
+    border: 1px solid var(--char-700);
 }
 
 .photo {
@@ -35,29 +42,31 @@
 }
 
 .photoFallback {
-    color: var(--color-text-secondary);
+    color: var(--mist-400);
 }
 
 .holderName {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     font-weight: 800;
-    color: var(--color-text-primary);
+    color: var(--bone-100);
 }
 
 .holderMeta {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    font-size: var(--fs-body);
+    color: var(--mist-400);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .iitpBadge {
-    font-size: 0.6875rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
     font-weight: 700;
-    color: var(--color-accent-primary);
-    border: 1px solid var(--color-accent-primary);
-    border-radius: var(--radius-sm, 4px);
+    letter-spacing: var(--track-micro);
+    color: var(--ember-300);
+    border: 1px solid var(--ember-300);
+    border-radius: var(--radius-sm);
     padding: 0.0625rem 0.375rem;
 }
 
@@ -65,18 +74,18 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
     text-align: left;
 }
 
 .infoRow {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.8125rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-4);
+    font-size: var(--fs-small);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--char-700);
 }
 
 .infoRow:last-child {
@@ -86,13 +95,13 @@
 .infoLabel {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--color-text-secondary);
+    gap: var(--space-1);
+    color: var(--mist-400);
     white-space: nowrap;
 }
 
 .infoValue {
-    color: var(--color-text-primary);
+    color: var(--bone-100);
     font-weight: 600;
     text-align: right;
 }
@@ -101,95 +110,112 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
 }
 
 .addonBadge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
+    gap: var(--space-1);
+    font-size: var(--fs-micro);
     font-weight: 600;
-    color: var(--color-text-secondary);
-    background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-sm, 4px);
-    padding: 0.25rem 0.5rem;
+    color: var(--bone-100);
+    background-color: var(--char-700);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem var(--space-2);
 }
 
 .actionCard {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.25rem;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background: var(--char-800);
+    border: 1px solid var(--char-700);
 }
 
 .actionTitle {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--ember-300);
 }
 
 .directionToggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
+/* Large targets: this is tapped with a thumb, one-handed, often at a run. */
 .directionBtn {
-    padding: 0.625rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
+    min-height: 60px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--char-700);
     background-color: transparent;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-text-secondary);
+    font-family: var(--f-caps);
+    font-size: 0.9375rem;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--mist-400);
     cursor: pointer;
+    transition: border-color var(--t-state) var(--ease), color var(--t-state) var(--ease),
+        background-color var(--t-state) var(--ease);
 }
 
 .directionBtnActive {
-    border-color: var(--color-accent-primary);
-    color: var(--color-accent-primary);
-    background-color: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
+    border-color: var(--ember-500);
+    color: var(--ember-300);
+    background-color: rgba(212, 98, 47, 0.15);
 }
 
 .gateInput {
     width: 100%;
-    padding: 0.625rem 0.75rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background-color: var(--color-bg-primary);
-    color: var(--color-text-primary);
-    font-size: 0.875rem;
+    min-height: 52px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--char-700);
+    background-color: var(--char-900);
+    color: var(--bone-100);
+    font-size: var(--fs-body);
+}
+
+.gateInput::placeholder {
+    color: var(--mist-400);
 }
 
 .logBtn {
     width: 100%;
+    min-height: 56px;
 }
 
 .logError {
-    font-size: 0.8125rem;
-    color: var(--color-danger);
+    font-size: var(--fs-small);
+    color: var(--ember-300);
 }
 
+/* Unmistakable pass/fail: big, filled, impossible to misread at a glance. */
 .resultBanner {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 0.75rem;
-    border-radius: var(--radius-md);
-    font-size: 0.8125rem;
-    font-weight: 600;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 1.0625rem;
+    font-weight: 700;
 }
 
 .resultValid {
-    color: #059669;
-    background-color: rgba(5, 150, 105, 0.1);
+    color: var(--bone-100);
+    background-color: var(--ok);
 }
 
 .resultWarn {
-    color: #d97706;
-    background-color: rgba(217, 119, 6, 0.1);
+    color: var(--bone-100);
+    background-color: var(--warn);
 }
 
 /* ---------- Desktop Scaling Grid Adjustments ---------- */
@@ -197,10 +223,6 @@
     .container {
         max-width: 32rem;
         margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .profileCard {
-        padding: 2rem;
+        padding: var(--space-6);
     }
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import { AlertCircle } from "lucide-react";
 import styles from "./input.module.css";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -13,10 +14,12 @@ const Input = ({
     hint,
     className,
     id,
-    // children,
     ...rest
 }: InputProps) => {
     const inputId = id ?? rest.name;
+    // Without this the message is visible but unannounced — screen readers get
+    // the invalid state and no reason for it.
+    const messageId = inputId ? `${inputId}-message` : undefined;
 
     return (
         <div className={styles.wrapper}>
@@ -30,13 +33,19 @@ const Input = ({
                 id={inputId}
                 className={`${styles.input} ${error ? styles.inputError : ""} ${className ?? ""}`}
                 aria-invalid={error ? true : undefined}
+                aria-describedby={(error || hint) && messageId ? messageId : undefined}
                 {...rest}
             />
 
             {error ? (
-                <span className={styles.error}>{error}</span>
+                <span id={messageId} className={styles.error}>
+                    <AlertCircle size={15} className={styles.errorIcon} aria-hidden="true" />
+                    {error}
+                </span>
             ) : hint ? (
-                <span className={styles.hint}>{hint}</span>
+                <span id={messageId} className={styles.hint}>
+                    {hint}
+                </span>
             ) : null}
         </div>
     );

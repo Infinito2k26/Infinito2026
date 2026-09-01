@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 
-import Card from '@/components/ui/card';
+import AuthLayout from '@/components/layout/auth-layout';
 import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -43,14 +43,13 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className={styles.pageWrapper}>
-            <Card className={styles.card}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Forgot Password</h1>
-                    <p className={styles.subtitle}>
-                        Enter your email and we&apos;ll send you a link to reset your password.
-                    </p>
-                </div>
+        <AuthLayout>
+            <div className={styles.header}>
+                <h1 className={styles.title}>Forgot Password</h1>
+                <p className={styles.subtitle}>
+                    Enter your email and we&apos;ll send you a link to reset your password.
+                </p>
+            </div>
 
                 {apiError && <div className={styles.errorAlert}>{apiError}</div>}
 
@@ -93,7 +92,6 @@ export default function ForgotPasswordPage() {
                         </Link>
                     </p>
                 </div>
-            </Card>
-        </div>
+        </AuthLayout>
     );
 }

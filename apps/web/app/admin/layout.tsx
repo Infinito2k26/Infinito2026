@@ -1,5 +1,6 @@
 import AuthGuard from "../../components/auth/AuthGuard";
 import AdminSidebar from "../../components/layout/admin-sidebar";
+import PageFade from "../../components/layout/page-fade";
 import styles from "../../components/layout/layout.module.css";
 
 export default function AdminLayout({
@@ -12,7 +13,7 @@ export default function AdminLayout({
       <div className={styles.dashboardShell}>
         <AdminSidebar />
         <main className={styles.dashboardMain}>
-          {children}
+          <PageFade>{children}</PageFade>
         </main>
       </div>
     </AuthGuard>

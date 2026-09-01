@@ -1,3 +1,8 @@
+/* ---------------------------------------------------------------------------
+   Layout shells — public navbar/footer, dashboard sidebar and bottom nav.
+   All colour, type and spacing comes from the tokens in app/globals.css.
+   ------------------------------------------------------------------------- */
+
 .publicShell {
   display: flex;
   flex-direction: column;
@@ -6,7 +11,7 @@
 
 .publicMain {
   flex: 1;
-  padding-top: 60px;
+  padding-top: var(--navbar-h);
 }
 
 .dashboardShell {
@@ -14,6 +19,7 @@
   flex-direction: column;
   min-height: 100vh;
   padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  background: var(--bone-100);
 }
 
 .dashboardMain {
@@ -25,230 +31,116 @@
     flex-direction: row;
     padding-bottom: 0;
   }
-  
+
   .dashboardMain {
     margin-left: 228px;
   }
 }
 
-.sidebar {
-  display: none;
-  flex-direction: column;
-  position: fixed;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 228px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-  padding: 20px 12px;
-  z-index: 100;
-  overflow-y: auto;
-}
-
-@media (min-width: 768px) {
-  .sidebar {
-    display: flex;
-  }
-}
-
-.fest {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 8px 28px;
-}
-
-.festMark {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  background: var(--color-accent-primary);
-  color: var(--color-bg-primary);
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.festName {
-  color: var(--color-text-primary);
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-
-.sidebarNav {
-  flex: 1;
-}
-
-.sidebarNavList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sidebarLink {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 13.5px;
-  font-weight: 500;
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.sidebarLink:hover {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-.sidebarLink:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: 2px;
-}
-
-.sidebarLinkActive {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  font-weight: 600;
-}
-
-.sidebarLinkActive .sidebarIcon {
-  color: var(--color-accent-primary);
-}
-
-.sidebarIcon {
-  display: flex;
-  flex-shrink: 0;
-}
-
-.sidebarLabel {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bottomNav {
-  display: flex;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-@media (min-width: 768px) {
-  .bottomNav {
-    display: none;
-  }
-}
-
-.bottomNavItem {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 10px 0;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 500;
-  transition: color 160ms ease;
-}
-
-.bottomNavItem:hover {
-  color: var(--color-text-primary);
-}
-
-.bottomNavItem:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: -2px;
-}
-
-.bottomNavItemActive {
-  color: var(--color-accent-primary);
-  font-weight: 600;
-}
-
-.bottomNavIcon {
-  display: flex;
-}
-
-.bottomNavLabel {
-  line-height: 1;
-}
+/* ---------------------------------------------------------------- Navbar -- */
 
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  background: var(--color-bg-primary);
-  border-bottom: 1px solid var(--color-border);
-  height: 60px;
+  z-index: var(--z-nav);
+  height: var(--navbar-h);
+  background: rgba(245, 237, 226, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bone-300);
 }
 
 .navbar_inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-5);
   height: 100%;
-  max-width: 1200px;
+  max-width: var(--container);
   margin: 0 auto;
-  padding: 0 24px;
+  padding-inline: var(--spacing-container);
 }
 
-.navbar_list_left, .navbar_list_right {
+.brand {
   display: flex;
-  gap: 24px;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  color: var(--crimson-800);
+}
+
+.brandMark {
+  font-family: var(--f-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.brandSub {
+  font-family: var(--f-caps);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.navbar_list_left,
+.navbar_list_right {
+  display: flex;
+  gap: var(--space-4);
   align-items: center;
   min-width: 0;
-  flex-wrap: wrap;
 }
 
 .navbar_item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 15px;
-  cursor: pointer;
+  position: relative;
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
   white-space: nowrap;
-  text-decoration: none;
-  color: var(--color-text-primary);
-  font-weight: 500;
-  transition: color 0.2s ease;
+  color: var(--char-700);
+  transition: color var(--t-state) var(--ease);
 }
 
 .navbar_item:hover {
-  color: var(--color-accent-secondary);
+  color: var(--crimson-700);
+}
+
+.navbar_item_active {
+  color: var(--crimson-800);
+}
+
+.navbar_item_active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  background: var(--ember-500);
 }
 
 .navbar_signup {
-  background: var(--color-accent-primary);
-  color: var(--color-bg-primary);
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  width: 80px;
-  text-align: center;
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background var(--t-state) var(--ease);
 }
 
 .navbar_signup:hover {
-  color: var(--color-bg-primary);
-  background: var(--color-text-primary);
+  background: var(--crimson-600);
+  color: var(--bone-50);
 }
 
 .hamburger {
@@ -257,7 +149,6 @@
   height: 44px;
   border: none;
   background: transparent;
-  cursor: pointer;
   padding: 0;
   flex-direction: column;
   justify-content: center;
@@ -266,11 +157,12 @@
 
 .hamburger span {
   display: block;
-  width: 24px;
+  width: 22px;
   height: 2px;
   margin: 0 auto;
-  background-color: var(--color-text-primary);
-  transition: 0.25s ease;
+  background-color: var(--char-800);
+  transition: transform var(--t-enter) var(--ease),
+    opacity var(--t-state) var(--ease);
 }
 
 .hamburger_active span:nth-child(1) {
@@ -290,102 +182,382 @@
 }
 
 .mobile_menu_item {
-  font-size: 16px;
-  padding: 12px 24px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--color-border);
-  text-decoration: none;
-  color: var(--color-text-primary);
+  font-family: var(--f-caps);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 1rem var(--spacing-container);
+  border-bottom: 1px solid var(--bone-300);
+  color: var(--char-800);
   display: flex;
   align-items: center;
+  min-height: 52px;
+}
+
+.mobile_menu_item_active {
+  color: var(--crimson-800);
+  border-left: 3px solid var(--ember-500);
+}
+
+.mobile_menu_actions {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--spacing-container);
+}
+
+.mobile_menu_login,
+.mobile_menu_register {
+  flex: 1;
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-sm);
   min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.mobile_menu_item:hover {
-  opacity: 0.8;
+.mobile_menu_login {
+  border: 1px solid var(--char-700);
+  color: var(--char-800);
 }
 
-@media (max-width: 768px) {
-  .navbar_list_left {
-    display: none;
-  }
-  
+.mobile_menu_register {
+  background: var(--crimson-700);
+  color: var(--bone-100);
+}
+
+/* Raised from the usual 768px tablet cutoff: eight nav items (the four
+   original plus Team/Sponsors/Gallery/Merch added later) don't fit a single
+   desktop row until well past tablet width, and were previously overlapping
+   the Login/Register links on any window narrower than ~1150px. */
+@media (max-width: 1100px) {
+  .navbar_list_left,
   .navbar_list_right {
     display: none;
   }
-  
+
   .hamburger {
     display: flex;
     margin-left: auto;
   }
-  
+
   .mobile_menu_active {
     display: flex;
     flex-direction: column;
-    background-color: var(--color-bg-primary);
-    border-top: 1px solid var(--color-border);
-    padding: 16px 0;
+    position: fixed;
+    top: var(--navbar-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-nav);
+    background: var(--bone-100);
+    border-top: 1px solid var(--bone-300);
+    padding-block: var(--space-2) env(safe-area-inset-bottom);
+    overflow-y: auto;
   }
 }
 
+/* --------------------------------------------------------------- Sidebar -- */
+
+.sidebar {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 228px;
+  background: var(--bone-50);
+  border-right: 1px solid var(--bone-300);
+  padding: var(--space-5) var(--space-3);
+  z-index: var(--z-nav);
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+  }
+}
+
+.fest {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2) var(--space-6);
+}
+
+.festMark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  font-family: var(--f-display);
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.festName {
+  font-family: var(--f-display);
+  color: var(--crimson-800);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sidebarNav {
+  flex: 1;
+}
+
+.sidebarNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.625rem var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--char-500);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  border-left: 2px solid transparent;
+  transition: background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
+}
+
+.sidebarLink:hover {
+  background: var(--bone-200);
+  color: var(--char-800);
+}
+
+.sidebarLinkActive {
+  background: var(--bone-200);
+  color: var(--crimson-800);
+  font-weight: 600;
+  border-left-color: var(--ember-500);
+}
+
+.sidebarLinkActive .sidebarIcon {
+  color: var(--ember-600);
+}
+
+.sidebarIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sidebarLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ Bottom nav -- */
+
+.bottomNav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  background: var(--bone-50);
+  border-top: 1px solid var(--bone-300);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .bottomNav {
+    display: none;
+  }
+}
+
+.bottomNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 0.625rem 0;
+  min-height: 56px;
+  color: var(--char-500);
+  font-size: 0.625rem;
+  font-family: var(--f-caps);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color var(--t-state) var(--ease);
+}
+
+.bottomNavItem:hover {
+  color: var(--char-800);
+}
+
+.bottomNavItemActive {
+  color: var(--crimson-800);
+}
+
+.bottomNavIcon {
+  display: flex;
+}
+
+.bottomNavLabel {
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------- Footer -- */
+
 .footer {
+  position: relative;
   width: 100%;
-  padding: 48px 24px 24px;
-  background-color: var(--color-bg-secondary);
-  border-top: 1px solid var(--color-border);
+  background: var(--char-900);
+  color: var(--mist-400);
+  padding: 0 var(--spacing-container) var(--space-6);
+}
+
+/* Sits above the footer so the bone page ends against the footer's dark ground
+   with the same ruined skyline that runs along the bottom of every poster. The
+   path's solid mass is at its base, so it meets the footer with no seam. */
+.footerRidge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-99%);
+  color: var(--char-900);
+  pointer-events: none;
 }
 
 .footer_inner {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 40px;
-  max-width: 1200px;
+  gap: var(--space-6);
+  max-width: var(--container);
   margin: 0 auto;
+  padding-top: var(--space-7);
+}
+
+@media (min-width: 768px) {
+  .footer_inner {
+    grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+    gap: var(--space-5);
+  }
 }
 
 .footer_column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-3);
   align-items: flex-start;
 }
 
-.footer_title {
-  font-size: 16px;
+.footerBrand {
+  font-family: var(--f-display);
+  font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 4px;
+  color: var(--bone-100);
+  line-height: 1;
+}
+
+.footerTagline {
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist-400);
+  line-height: 1.9;
+}
+
+.footer_title {
+  font-family: var(--f-caps);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--ember-300);
+  margin-bottom: var(--space-1);
 }
 
 .footer_link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 14px;
+  color: var(--mist-400);
+  font-size: var(--fs-small);
   line-height: 1.5;
-  transition: color 0.2s ease;
+  transition: color var(--t-state) var(--ease);
 }
 
 .footer_link:hover {
-  color: var(--color-text-primary);
+  color: var(--bone-100);
+}
+
+.footer_link:focus-visible,
+.footerContact:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
+}
+
+.footerContact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--mist-400);
+}
+
+.footerContactRole {
+  font-family: var(--f-caps);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.footerContactName {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--bone-100);
+}
+
+.footerContactPhone {
+  font-size: var(--fs-small);
+  color: var(--ember-300);
+  font-variant-numeric: tabular-nums;
 }
 
 .footer_bottom {
-  max-width: 1200px;
-  margin: 48px auto 0;
-  padding-top: 24px;
-  border-top: 1px solid var(--color-border);
+  max-width: var(--container);
+  margin: var(--space-6) auto 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(184, 173, 160, 0.16);
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   justify-content: space-between;
   align-items: center;
 }
 
 .footer_bottom_text {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-@media (min-width: 768px) {
-  .footer_inner {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--char-500);
 }

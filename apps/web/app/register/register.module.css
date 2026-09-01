@@ -1,154 +1,131 @@
-/* ---------- Base Styles (Mobile First: 375px) ---------- */
-.pageWrapper {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    background-color: var(--color-bg-primary);
-}
-
-.registerCard {
-    width: 100%;
-    max-width: 100%;
-    padding: 2rem 1.5rem;
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
 .header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-6);
 }
 
 .title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    margin-bottom: 0.75rem;
-    line-height: 1.2;
+    margin-bottom: var(--space-2);
 }
 
 .subtitle {
-    font-size: 0.9375rem;
-    color: var(--color-text-secondary);
-    line-height: 1.5;
+    color: var(--text-muted);
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-5);
 }
 
 .inputGroup {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .label {
-    font-size: 0.875rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
     font-weight: 600;
-    color: var(--color-text-primary);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-700);
 }
 
 .checkboxGroup {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
 }
 
 .checkbox {
-    width: 1.125rem;
-    height: 1.125rem;
-    margin-top: 0.125rem;
-    /* Aligns checkbox with the first line of multi-line text */
-    accent-color: var(--color-accent-primary);
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    accent-color: var(--crimson-700);
     flex-shrink: 0;
     cursor: pointer;
 }
 
 .checkboxLabel {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-    line-height: 1.4;
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+    line-height: var(--lh-heading);
     cursor: pointer;
 }
 
 .errorText {
-    font-size: 0.75rem;
-    color: var(--color-error);
-    margin-top: -0.75rem;
+    font-size: var(--fs-small);
+    color: var(--err);
+    margin-top: calc(-1 * var(--space-3));
 }
 
 .submitBtn {
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     width: 100%;
 }
 
 .footer {
-    margin-top: 2rem;
+    margin-top: var(--space-6);
     text-align: center;
-    border-top: 1px solid var(--color-border);
-    padding-top: 1.5rem;
+    border-top: 1px solid var(--bone-300);
+    padding-top: var(--space-5);
 }
 
 .footerText {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    font-size: var(--fs-small);
+    color: var(--text-muted);
 }
 
 .link {
-    color: var(--color-accent-primary);
+    color: var(--crimson-700);
     font-weight: 600;
-    text-decoration: none;
-    transition: color 0.2s ease;
 }
 
 .link:hover {
-    color: var(--color-accent-secondary);
+    color: var(--crimson-600);
     text-decoration: underline;
 }
 
 .errorAlert {
-    background-color: rgba(255, 0, 0, 0.1);
-    color: var(--color-error);
-    border: 1px solid var(--color-error);
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md, 0.5rem);
-    margin-bottom: 1.5rem;
-    font-size: 0.875rem;
+    background-color: var(--err-bg);
+    color: var(--err);
+    border: 1px solid var(--err);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-small);
     text-align: center;
+    animation: alert-shake 420ms var(--ease);
+}
+
+@keyframes alert-shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
 }
 
 .successAlert {
-    background-color: #d1fae5;
-    color: #065f46;
-    border: 1px solid #34d399;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md, 0.5rem);
-    margin-bottom: 1.5rem;
-    font-size: 0.875rem;
+    background-color: var(--ok-bg);
+    color: var(--ok);
+    border: 1px solid var(--ok);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-small);
     text-align: center;
+    animation: alert-pop 400ms var(--ease);
 }
 
-/* ---------- Desktop Scaling ---------- */
-@media (min-width: 640px) {
-    .registerCard {
-        max-width: 480px;
-        padding: 2.5rem 2.5rem;
+@keyframes alert-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-6px);
     }
-
-    .title {
-        font-size: 1.75rem;
-    }
-
-    .subtitle {
-        font-size: 1rem;
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
 }

@@ -1,0 +1,75 @@
+.valknut {
+  width: 72px;
+  height: 72px;
+  color: var(--char-700);
+  opacity: 0.25;
+}
+
+.arrowRule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 460px;
+  color: var(--char-700);
+}
+
+.arrowLine {
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.arrowLabel {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.arrowHead {
+  width: 12px;
+  height: 10px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.pendant {
+  width: 24px;
+  height: 120px;
+  color: var(--char-700);
+  opacity: 0.3;
+}
+
+/* Desktop only — at phone widths it competes with the content for the gutter. */
+@media (max-width: 1023px) {
+  .pendant {
+    display: none;
+  }
+}
+
+/* The section terminator. This is the most theme-carrying device in the system:
+   it is how a bone section ends against the dark band below it, echoing the
+   ruined skyline that runs across the bottom of every poster. */
+.ridge {
+  display: block;
+  width: 100%;
+  height: clamp(2.5rem, 5vw, 5.25rem);
+}
+
+.emberDivider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--bone-300) 18%,
+    var(--ember-500) 50%,
+    var(--bone-300) 82%,
+    transparent
+  );
+}

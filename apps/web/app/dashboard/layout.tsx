@@ -1,5 +1,6 @@
 import Sidebar from "../../components/layout/sidebar";
 import BottomNav from "../../components/layout/bottom-nav";
+import PageFade from "../../components/layout/page-fade";
 import styles from "../../components/layout/layout.module.css";
 import AuthGuard from "../../components/auth/AuthGuard";
 
@@ -12,9 +13,9 @@ export default function DashboardLayout({
     <AuthGuard>
       <div className={styles.dashboardShell}>
         <Sidebar />
-        
+
         <main className={styles.dashboardMain}>
-          {children}
+          <PageFade>{children}</PageFade>
         </main>
 
         <BottomNav />

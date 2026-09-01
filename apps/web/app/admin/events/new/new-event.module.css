@@ -1,18 +1,17 @@
 .page {
-    padding: 1.5rem;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-5);
     max-width: 42rem;
+    margin-inline: auto;
 }
 
 .title {
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
+    margin-top: 0;
 }
 
 .subtitle {
-    margin-top: 0.5rem;
-    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    color: var(--text-muted);
 }

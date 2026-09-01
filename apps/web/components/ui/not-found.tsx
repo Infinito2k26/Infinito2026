@@ -12,8 +12,8 @@ interface NotFoundProps {
 }
 
 export function NotFound({
-    title = "Not found",
-    description = "The resource you're looking for doesn't exist or has been moved.",
+    title = "These ruins are empty",
+    description = "Nothing stands here. The page may have moved, or the link may be wrong.",
     backHref,
     backLabel,
     className,

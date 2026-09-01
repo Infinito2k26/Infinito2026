@@ -3,110 +3,112 @@
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: var(--space-4) var(--spacing-container) var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-5);
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .pageTitle {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
+  margin-top: 0;
 }
 
 .pageSubtitle {
   font-size: 0.9375rem;
-  color: var(--color-text-secondary);
+  color: var(--text-muted);
 }
 
 .tabRow {
   display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-2);
+  border-bottom: var(--hairline);
 }
 
 .tab,
 .tabActive {
-  padding: 0.625rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.625rem var(--space-4);
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
   font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  font-family: inherit;
 }
 
 .tab {
-  color: var(--color-text-secondary);
+  color: var(--char-500);
 }
 
 .tabActive {
-  color: var(--color-accent-primary);
-  border-bottom-color: var(--color-accent-primary);
+  color: var(--crimson-700);
+  border-bottom-color: var(--crimson-700);
 }
 
 /* Card List */
 .listContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .paymentCard {
   display: flex;
   flex-direction: column;
-  padding: 1.25rem;
-  gap: 1rem;
+  padding: var(--space-4);
+  gap: var(--space-4);
+  background: var(--bone-50);
 }
 
 .cardTop {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .registrantInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .eventName {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--char-800);
 }
 
 .registrantMeta {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  font-size: var(--fs-micro);
+  color: var(--text-muted);
 }
 
 .amount {
+  font-family: var(--f-caps);
   font-size: 1.0625rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
+  font-weight: 700;
+  color: var(--crimson-700);
   white-space: nowrap;
 }
 
 /* Proof row: screenshot thumbnail + transaction ID */
 .proofRow {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
-  padding: 0.75rem;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background-color: var(--bone-100);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
 }
 
 .screenshotLink {
@@ -118,7 +120,7 @@
   height: 64px;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: var(--hairline);
 }
 
 .txnDetails {
@@ -129,52 +131,55 @@
 }
 
 .txnLabel {
+  font-family: var(--f-caps);
   font-size: 0.6875rem;
   font-weight: 600;
+  letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--char-500);
 }
 
 .txnValue {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--char-800);
   word-break: break-all;
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
+  font-family: var(--f-caps);
   font-size: 0.6875rem;
   font-weight: 700;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem var(--space-2);
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   align-self: flex-start;
 }
 
 .statusApproved {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  background-color: rgba(74, 107, 63, 0.1);
+  color: var(--ok);
 }
 
 .statusRejected {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background-color: rgba(163, 39, 42, 0.1);
+  color: var(--err);
 }
 
 .resolutionDetails {
   font-size: 0.8125rem;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  padding: 0.75rem;
+  color: var(--char-800);
+  background-color: var(--bone-100);
+  border: var(--hairline);
+  padding: var(--space-3);
   border-radius: var(--radius-sm);
 }
 
 .actionArea {
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 
 .reviewTriggerBtn {
@@ -183,21 +188,21 @@
 
 /* Inline Review Form */
 .activeReviewZone {
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px dashed var(--color-border);
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--bone-300);
 }
 
 .reviewForm {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .actionToggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .radioInput {
@@ -208,82 +213,87 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--char-500);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--t-state) var(--ease);
 }
 
 .radioApprove {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: #10b981;
-  color: #059669;
+  background-color: rgba(74, 107, 63, 0.1);
+  border-color: var(--ok);
+  color: var(--ok);
 }
 
 .radioReject {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #dc2626;
+  background-color: rgba(163, 39, 42, 0.1);
+  border-color: var(--err);
+  color: var(--err);
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2);
 }
 
 .label {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--char-800);
 }
 
 .textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   font-family: inherit;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  color: var(--char-800);
+  background-color: var(--bone-100);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
   resize: vertical;
   outline: none;
 }
 
 .textarea:focus {
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-accent-primary-rgb), 0.15);
+  border-color: var(--crimson-700);
+  box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.15);
 }
 
 .inputError {
-  border-color: var(--color-error);
+  border-color: var(--err);
 }
 
 .errorText {
   font-size: 0.75rem;
-  color: var(--color-error);
+  color: var(--err);
 }
 
 .formActions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 
 .cancelBtn {
   background-color: transparent;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  color: var(--char-500);
+  border: var(--hairline);
   flex: 1;
 }
 
 .formActions button[type="submit"] {
   flex: 2;
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-4);
 }
 
 /* ---------- Desktop Scaling ---------- */
@@ -302,9 +312,4 @@
     width: 96px;
     height: 96px;
   }
-}
-
-.emptyState {
-    color: var(--color-text-secondary);
-    padding: 1rem;
 }

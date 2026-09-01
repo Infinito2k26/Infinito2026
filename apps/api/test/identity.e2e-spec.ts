@@ -214,19 +214,31 @@ describe('Identity: GET /identity/scan/:token (gate dashboard, e2e)', () => {
     await app.close();
   });
 
-  it('rejects unauthenticated requests with 401', async () => {
+  it('allows unauthenticated requests — the scan dashboard is public (only logging a scan requires a volunteer/admin login)', async () => {
+    // Garbage signature, no Authorization header: previously 401'd before the
+    // signature was even checked. Now it reaches signature validation directly.
     await request(app.getHttpServer())
       .get(`/api/identity/scan/${randomUUID()}.not-a-real-signature`)
-      .expect(401);
+      .expect(400);
   });
 
-  it('rejects a PARTICIPANT caller with 403 (volunteer/admin only)', async () => {
-    const user = await registerAndLogin(app, 'E2E Scan Dashboard Forbidden');
+  it('a PARTICIPANT caller can view the dashboard too — viewing has no role gate', async () => {
+    const user = await registerAndLogin(app, 'E2E Scan Dashboard Participant');
+    const registration = await createRegistration(prisma, user.userId);
+    await identityService.issueCredentialsForPayment(registration.id);
+    const credential = await prisma.credential.findUniqueOrThrow({
+      where: { userId: user.userId },
+    });
+    const rawToken = tokenService.signToken(credential.id);
 
-    await request(app.getHttpServer())
-      .get(`/api/identity/scan/${randomUUID()}.not-a-real-signature`)
+    const res = await request(app.getHttpServer())
+      .get(`/api/identity/scan/${encodeURIComponent(rawToken)}`)
       .set('Authorization', `Bearer ${user.token}`)
-      .expect(403);
+      .expect(200);
+
+    expect(
+      (res.body as SuccessResponse<{ credentialId: string }>).data.credentialId,
+    ).toBe(credential.id);
   });
 
   it('rejects a tampered token with 400 (critical test #9)', async () => {
