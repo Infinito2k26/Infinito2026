@@ -67,7 +67,7 @@ export default function Hero() {
       </div>
 
       <div className={styles.actions}>
-        <Link href="/register" className={styles.primary}>
+        <Link href="/signup" className={styles.primary}>
           Enter the battlefield
         </Link>
         <Link href="/sports" className={styles.secondary}>
