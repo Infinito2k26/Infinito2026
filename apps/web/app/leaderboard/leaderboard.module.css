@@ -1,0 +1,231 @@
+.pageWrapper {
+    width: 100%;
+    background-color: var(--bone-100);
+}
+
+.container {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-9);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.title {
+    margin-top: var(--space-1);
+}
+
+.subtitle {
+    color: var(--text-muted);
+    max-width: 44ch;
+}
+
+/* --- Podium: the top three, elevated by rank ----------------------------- */
+
+.podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: end;
+    gap: var(--space-3);
+    max-width: 640px;
+    margin-inline: auto;
+    width: 100%;
+}
+
+.podiumSpot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-align: center;
+    padding: var(--space-4) var(--space-2) 0;
+}
+
+.podiumTrophy {
+    color: var(--ember-600);
+    margin-bottom: var(--space-1);
+}
+
+.podiumRankNumber {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    letter-spacing: var(--track-micro);
+    color: var(--text-muted);
+}
+
+.podiumName {
+    font-weight: 700;
+    color: var(--char-800);
+}
+
+.podiumCollege {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+}
+
+.podiumPoints {
+    font-family: var(--f-caps);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--crimson-700);
+    margin-top: var(--space-1);
+}
+
+.podiumBase {
+    width: 100%;
+    margin-top: var(--space-3);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: var(--char-900);
+}
+
+.podiumRank1 .podiumBase {
+    height: 88px;
+    background: var(--crimson-800);
+}
+
+.podiumRank2 .podiumBase {
+    height: 60px;
+}
+
+.podiumRank3 .podiumBase {
+    height: 44px;
+    background: var(--char-700);
+}
+
+/* --- Table: ranks below the podium ---------------------------------------- */
+
+.tableCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    min-width: 600px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table th {
+    background-color: var(--bone-200);
+    padding: var(--space-4);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    text-transform: uppercase;
+    letter-spacing: var(--track-micro);
+    font-weight: 700;
+    color: var(--char-500);
+    border-bottom: 1px solid var(--bone-300);
+}
+
+.table td {
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--bone-300);
+    vertical-align: middle;
+}
+
+.row:last-child td {
+    border-bottom: none;
+}
+
+.row:hover {
+    background-color: var(--bone-100);
+}
+
+.thRank,
+.tdRank {
+    width: 5rem;
+    text-align: center;
+}
+
+.metricHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.thMetrics,
+.tdMetrics {
+    width: 7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+.thPoints,
+.tdPoints {
+    text-align: right;
+    width: 6rem;
+}
+
+.tdPoints {
+    font-weight: 800;
+    color: var(--crimson-700);
+    font-variant-numeric: tabular-nums;
+}
+
+.nameWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ambassadorName {
+    font-weight: 600;
+    color: var(--char-800);
+}
+
+.collegeName {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+}
+
+.rankBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-full);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    background-color: var(--bone-200);
+    color: var(--text-muted);
+}
+
+.emptyState {
+    padding: var(--space-8) var(--space-4);
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* --- Desktop ---------------------------------------------------------- */
+@media (min-width: 768px) {
+    .podiumRank1 .podiumBase {
+        height: 120px;
+    }
+
+    .podiumRank2 .podiumBase {
+        height: 84px;
+    }
+
+    .podiumRank3 .podiumBase {
+        height: 60px;
+    }
+}

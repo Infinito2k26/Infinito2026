@@ -1,0 +1,171 @@
+.header {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-5);
+}
+
+.title {
+    margin-top: var(--space-2);
+}
+
+.description {
+    margin-top: var(--space-3);
+    color: var(--text-muted);
+    max-width: 52ch;
+}
+
+.controls {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: 0 var(--spacing-container) var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--bone-300);
+    margin-bottom: var(--space-5);
+}
+
+.search {
+    position: relative;
+    flex: 1 1 240px;
+    max-width: 320px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--mist-400);
+    pointer-events: none;
+}
+
+.searchInput {
+    padding-left: 2.5rem;
+}
+
+.filterGroup {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.filter {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--char-500);
+    background: transparent;
+    border: 1px solid var(--bone-300);
+    border-radius: var(--radius-full);
+    padding: 0.5rem 0.9375rem;
+    min-height: 36px;
+    transition: color var(--t-state) var(--ease),
+        border-color var(--t-state) var(--ease),
+        background var(--t-state) var(--ease);
+}
+
+.filter:hover {
+    color: var(--char-800);
+    border-color: var(--mist-400);
+}
+
+.filterActive {
+    background: var(--crimson-700);
+    border-color: var(--crimson-700);
+    color: var(--bone-100);
+}
+
+.filterActive:hover {
+    color: var(--bone-50);
+    border-color: var(--crimson-600);
+    background: var(--crimson-600);
+}
+
+.grid {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: 0 var(--spacing-container) var(--space-9);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: var(--space-4);
+}
+
+/* Fallback card for events whose sport has no poster art yet — a bone card
+   with the sport's engraved icon standing in, same base-strip structure as
+   PosterCard so it doesn't look like a broken tile in the grid. */
+.fallbackCard {
+    display: flex;
+    flex-direction: column;
+    border: var(--hairline);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bone-50);
+    box-shadow: var(--shadow-sm);
+    color: inherit;
+    transition: box-shadow var(--t-enter) var(--ease),
+        transform var(--t-enter) var(--ease);
+}
+
+.fallbackCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.fallbackArt {
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bone-200);
+    color: var(--char-500);
+}
+
+.strip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 0.75rem 0.875rem 0.875rem;
+    background: var(--char-900);
+    border-top: 2px solid transparent;
+    transition: border-color var(--t-state) var(--ease);
+}
+
+.fallbackCard:hover .strip {
+    border-top-color: var(--ember-500);
+}
+
+.fallbackName {
+    font-family: var(--f-caps);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-100);
+}
+
+.fallbackMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.fallbackDetail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    color: var(--mist-400);
+}
+
+.fallbackFee {
+    font-family: var(--f-caps);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ember-300);
+}

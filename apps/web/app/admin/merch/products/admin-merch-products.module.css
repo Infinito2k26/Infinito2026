@@ -1,0 +1,137 @@
+.page {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.formCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--char-800);
+}
+
+.textarea {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+    color: var(--char-800);
+    cursor: pointer;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--err);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+.tableCard {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: var(--hairline);
+    text-align: left;
+}
+
+.headCell {
+    padding: var(--space-3);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: var(--hairline);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: var(--space-3);
+    color: var(--char-800);
+}
+
+.actionsCell {
+    padding: var(--space-3);
+    display: flex;
+    gap: var(--space-2);
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-5) var(--space-4);
+}
+
+@media (min-width: 640px) {
+    .row {
+        flex-direction: row;
+    }
+
+    .row > * {
+        flex: 1;
+    }
+}

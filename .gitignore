@@ -12,6 +12,9 @@ node_modules
 .env.test.local
 .env.production.local
 
+# Local DB dumps from scripts/db-backup.sh
+/backups
+
 # Testing
 coverage
 
@@ -27,6 +30,9 @@ out/
 build
 dist
 
+# UploadsService's local-disk fallback when Cloudinary isn't configured
+/apps/api/local-uploads
+
 
 # Debug
 npm-debug.log*
@@ -36,3 +42,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+*.zip
+apps/api/prisma/seed.js
+apps/api/test-prisma.ts

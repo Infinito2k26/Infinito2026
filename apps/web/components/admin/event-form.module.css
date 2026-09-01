@@ -1,0 +1,103 @@
+.formCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.sectionTitle {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--track-micro);
+    color: var(--char-500);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: var(--hairline);
+}
+
+.form > .sectionTitle:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.rowInput {
+    flex: 1;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--char-800);
+}
+
+.select,
+.textarea {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
+    font-size: 0.9375rem;
+    font-family: inherit;
+}
+
+.select:focus,
+.textarea:focus {
+    outline: 2px solid var(--crimson-700);
+    outline-offset: 1px;
+}
+
+.textarea {
+    resize: vertical;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+    color: var(--char-800);
+    cursor: pointer;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--err);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+@media (min-width: 640px) {
+    .row {
+        flex-direction: row;
+    }
+
+    .row > * {
+        flex: 1;
+    }
+}

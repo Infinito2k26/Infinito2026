@@ -1,0 +1,58 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+}
+
+.header {
+    margin-bottom: var(--space-4);
+}
+
+.pageTitle {
+    margin-top: 0;
+}
+
+.pageSubtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.orderCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--bone-50);
+}
+
+.orderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.orderDate {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+}
+
+.itemList {
+    font-size: var(--fs-micro);
+    color: var(--char-800);
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.total {
+    font-family: var(--f-caps);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--crimson-700);
+    text-align: right;
+}

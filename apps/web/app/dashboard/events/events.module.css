@@ -1,0 +1,127 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+}
+
+.header {
+    padding: var(--space-1) 0 var(--space-4);
+}
+
+.pageTitle {
+    margin-top: 0;
+}
+
+.pageSubtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: var(--space-4);
+}
+
+.grid > * {
+    opacity: 0;
+    animation: card-in 520ms var(--ease) forwards;
+}
+
+@keyframes card-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.grid > *:nth-child(1) { animation-delay: 0ms; }
+.grid > *:nth-child(2) { animation-delay: 60ms; }
+.grid > *:nth-child(3) { animation-delay: 120ms; }
+.grid > *:nth-child(4) { animation-delay: 180ms; }
+.grid > *:nth-child(5) { animation-delay: 240ms; }
+.grid > *:nth-child(6) { animation-delay: 300ms; }
+.grid > *:nth-child(n+7) { animation-delay: 360ms; }
+
+/* Fallback card for events whose sport has no poster art yet — same
+   base-strip structure as PosterCard so it doesn't look like a broken tile. */
+.fallbackCard {
+    display: flex;
+    flex-direction: column;
+    border: var(--hairline);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bone-50);
+    box-shadow: var(--shadow-sm);
+    color: inherit;
+    transition: box-shadow var(--t-reveal) var(--ease), transform var(--t-reveal) var(--ease);
+}
+
+.fallbackCard:hover {
+    box-shadow: 0 0 0 1px var(--ember-500), 0 14px 32px rgba(36, 31, 30, 0.28);
+    transform: translateY(-6px) scale(1.015);
+}
+
+.fallbackArt {
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bone-200);
+    color: var(--char-500);
+}
+
+.fallbackStrip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 0.75rem 0.875rem 0.875rem;
+    background: var(--char-900);
+    border-top: 2px solid transparent;
+    transition: border-color var(--t-state) var(--ease);
+}
+
+.fallbackCard:hover .fallbackStrip {
+    border-top-color: var(--ember-500);
+}
+
+.fallbackName {
+    font-family: var(--f-caps);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-100);
+}
+
+.fallbackMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.fallbackDetail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6875rem;
+    color: var(--mist-400);
+}
+
+.fallbackFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.fallbackFee {
+    font-family: var(--f-caps);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ember-300);
+}

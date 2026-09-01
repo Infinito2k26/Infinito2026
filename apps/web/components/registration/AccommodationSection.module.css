@@ -1,0 +1,39 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.toggleRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--char-800);
+    cursor: pointer;
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background-color: var(--bone-200);
+}
+
+.packageChoice {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.radioRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-body);
+    color: var(--char-800);
+    cursor: pointer;
+}

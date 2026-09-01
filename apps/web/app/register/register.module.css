@@ -1,0 +1,131 @@
+.header {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+.title {
+    margin-bottom: var(--space-2);
+}
+
+.subtitle {
+    color: var(--text-muted);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.label {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-700);
+}
+
+.checkboxGroup {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.checkbox {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    accent-color: var(--crimson-700);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.checkboxLabel {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+    line-height: var(--lh-heading);
+    cursor: pointer;
+}
+
+.errorText {
+    font-size: var(--fs-small);
+    color: var(--err);
+    margin-top: calc(-1 * var(--space-3));
+}
+
+.submitBtn {
+    margin-top: var(--space-2);
+    width: 100%;
+}
+
+.footer {
+    margin-top: var(--space-6);
+    text-align: center;
+    border-top: 1px solid var(--bone-300);
+    padding-top: var(--space-5);
+}
+
+.footerText {
+    font-size: var(--fs-small);
+    color: var(--text-muted);
+}
+
+.link {
+    color: var(--crimson-700);
+    font-weight: 600;
+}
+
+.link:hover {
+    color: var(--crimson-600);
+    text-decoration: underline;
+}
+
+.errorAlert {
+    background-color: var(--err-bg);
+    color: var(--err);
+    border: 1px solid var(--err);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-small);
+    text-align: center;
+    animation: alert-shake 420ms var(--ease);
+}
+
+@keyframes alert-shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+
+.successAlert {
+    background-color: var(--ok-bg);
+    color: var(--ok);
+    border: 1px solid var(--ok);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-small);
+    text-align: center;
+    animation: alert-pop 400ms var(--ease);
+}
+
+@keyframes alert-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}

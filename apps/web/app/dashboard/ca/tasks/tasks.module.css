@@ -1,0 +1,269 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 1200px;
+    margin-inline: auto;
+}
+
+.header {
+    margin-bottom: var(--space-5);
+}
+
+.pageTitle {
+    margin-top: 0;
+    color: var(--ember-600);
+}
+
+.pageSubtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.taskList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.taskCard {
+    padding: var(--space-4);
+    background-color: var(--bone-50);
+    border: var(--hairline);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.titleArea {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.taskTitle {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--char-800);
+    line-height: 1.3;
+}
+
+.brandTag {
+    align-self: flex-start;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    padding: 0.125rem var(--space-2);
+    background-color: var(--bone-200);
+    color: var(--crimson-800);
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+}
+
+.pointsArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--glow-200);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    min-width: 3.5rem;
+}
+
+.pointsValue {
+    font-family: var(--f-caps);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ember-600);
+    line-height: 1;
+}
+
+.pointsLabel {
+    font-family: var(--f-caps);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--crimson-800);
+    text-transform: uppercase;
+}
+
+.statusRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: var(--hairline);
+    padding-top: var(--space-3);
+    margin-top: var(--space-1);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.25rem var(--space-2);
+    border-radius: var(--radius-full);
+}
+
+.badgeNone {
+    background-color: var(--bone-200);
+    color: var(--char-500);
+}
+
+.badgePending {
+    background-color: rgba(163, 112, 28, 0.12);
+    color: var(--warn);
+}
+
+.badgeApproved {
+    background-color: rgba(74, 107, 63, 0.12);
+    color: var(--ok);
+}
+
+.badgeRejected {
+    background-color: rgba(163, 39, 42, 0.1);
+    color: var(--err);
+}
+
+.typeLabel {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Hardened Audit Panel (Gap #11 Reason Display) */
+.rejectionBanner {
+    display: flex;
+    gap: var(--space-3);
+    background-color: rgba(163, 39, 42, 0.05);
+    border: 1px dashed rgba(163, 39, 42, 0.3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+}
+
+.errorIcon {
+    color: var(--err);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.bannerContent {
+    font-size: 0.8125rem;
+    color: var(--char-800);
+    line-height: 1.4;
+}
+
+.bannerContent strong {
+    color: var(--err);
+    display: block;
+    margin-bottom: 0.125rem;
+}
+
+.submissionZone {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.inlineForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.inputFlex {
+    width: 100%;
+}
+
+.actionBtn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Native file processing wrapper rules matching standard primitive sizes */
+.fileInputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.nativeFileInput {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.fileLabel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--bone-100);
+    border: 1px dashed var(--bone-300);
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color var(--t-state) var(--ease), color var(--t-state) var(--ease),
+        background-color var(--t-state) var(--ease);
+}
+
+.fileLabel:hover {
+    border-color: var(--ember-600);
+    color: var(--char-800);
+    background-color: var(--bone-200);
+}
+
+.errorSpan {
+    font-size: 0.75rem;
+    color: var(--err);
+    margin-top: -0.25rem;
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-4);
+}
+
+/* ---------- Desktop Scaling Grid Adjustments ---------- */
+@media (min-width: 768px) {
+    .taskCard {
+        padding: var(--space-5);
+    }
+
+    .inlineForm {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .inputFlex {
+        flex: 1;
+    }
+
+    .fileInputWrapper {
+        flex: 1;
+    }
+
+    .actionBtn {
+        width: auto;
+        min-width: 120px;
+    }
+}

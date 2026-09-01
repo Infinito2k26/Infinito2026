@@ -1,0 +1,140 @@
+.page {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.tabRow {
+    display: flex;
+    gap: var(--space-2);
+    border-bottom: var(--hairline);
+    flex-wrap: wrap;
+}
+
+.tab,
+.tabActive {
+    padding: 0.625rem var(--space-4);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+.tab {
+    color: var(--char-500);
+}
+
+.tabActive {
+    color: var(--crimson-700);
+    border-bottom-color: var(--crimson-700);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.orderCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    background: var(--bone-50);
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.buyer {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--char-800);
+}
+
+.amount {
+    font-family: var(--f-caps);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--crimson-700);
+}
+
+.itemList {
+    font-size: 0.875rem;
+    color: var(--char-800);
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.screenshotLink {
+    display: inline-block;
+}
+
+.screenshotThumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+}
+
+.txn {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.rejection {
+    font-size: 0.8125rem;
+    color: var(--char-800);
+    background-color: var(--bone-100);
+    border: var(--hairline);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+}
+
+.rejectForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.textarea {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--char-800);
+    background-color: var(--bone-100);
+    border: var(--hairline);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-4);
+}

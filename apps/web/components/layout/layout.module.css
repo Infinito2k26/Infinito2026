@@ -1,0 +1,563 @@
+/* ---------------------------------------------------------------------------
+   Layout shells — public navbar/footer, dashboard sidebar and bottom nav.
+   All colour, type and spacing comes from the tokens in app/globals.css.
+   ------------------------------------------------------------------------- */
+
+.publicShell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.publicMain {
+  flex: 1;
+  padding-top: var(--navbar-h);
+}
+
+.dashboardShell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  background: var(--bone-100);
+}
+
+.dashboardMain {
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .dashboardShell {
+    flex-direction: row;
+    padding-bottom: 0;
+  }
+
+  .dashboardMain {
+    margin-left: 228px;
+  }
+}
+
+/* ---------------------------------------------------------------- Navbar -- */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  height: var(--navbar-h);
+  background: rgba(245, 237, 226, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bone-300);
+}
+
+.navbar_inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  height: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-inline: var(--spacing-container);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  color: var(--crimson-800);
+}
+
+.brandMark {
+  font-family: var(--f-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.brandSub {
+  font-family: var(--f-caps);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.navbar_list_left,
+.navbar_list_right {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  min-width: 0;
+}
+
+.navbar_item {
+  position: relative;
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--char-700);
+  transition: color var(--t-state) var(--ease);
+}
+
+.navbar_item:hover {
+  color: var(--crimson-700);
+}
+
+.navbar_item_active {
+  color: var(--crimson-800);
+}
+
+.navbar_item_active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  background: var(--ember-500);
+}
+
+.navbar_signup {
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background var(--t-state) var(--ease);
+}
+
+.navbar_signup:hover {
+  background: var(--crimson-600);
+  color: var(--bone-50);
+}
+
+.hamburger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  margin: 0 auto;
+  background-color: var(--char-800);
+  transition: transform var(--t-enter) var(--ease),
+    opacity var(--t-state) var(--ease);
+}
+
+.hamburger_active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger_active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger_active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile_menu {
+  display: none;
+}
+
+.mobile_menu_item {
+  font-family: var(--f-caps);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 1rem var(--spacing-container);
+  border-bottom: 1px solid var(--bone-300);
+  color: var(--char-800);
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+}
+
+.mobile_menu_item_active {
+  color: var(--crimson-800);
+  border-left: 3px solid var(--ember-500);
+}
+
+.mobile_menu_actions {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--spacing-container);
+}
+
+.mobile_menu_login,
+.mobile_menu_register {
+  flex: 1;
+  font-family: var(--f-caps);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-sm);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile_menu_login {
+  border: 1px solid var(--char-700);
+  color: var(--char-800);
+}
+
+.mobile_menu_register {
+  background: var(--crimson-700);
+  color: var(--bone-100);
+}
+
+/* Raised from the usual 768px tablet cutoff: eight nav items (the four
+   original plus Team/Sponsors/Gallery/Merch added later) don't fit a single
+   desktop row until well past tablet width, and were previously overlapping
+   the Login/Register links on any window narrower than ~1150px. */
+@media (max-width: 1100px) {
+  .navbar_list_left,
+  .navbar_list_right {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .mobile_menu_active {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: var(--navbar-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-nav);
+    background: var(--bone-100);
+    border-top: 1px solid var(--bone-300);
+    padding-block: var(--space-2) env(safe-area-inset-bottom);
+    overflow-y: auto;
+  }
+}
+
+/* --------------------------------------------------------------- Sidebar -- */
+
+.sidebar {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 228px;
+  background: var(--bone-50);
+  border-right: 1px solid var(--bone-300);
+  padding: var(--space-5) var(--space-3);
+  z-index: var(--z-nav);
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+  }
+}
+
+.fest {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2) var(--space-6);
+}
+
+.festMark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  font-family: var(--f-display);
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.festName {
+  font-family: var(--f-display);
+  color: var(--crimson-800);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sidebarNav {
+  flex: 1;
+}
+
+.sidebarNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.625rem var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--char-500);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  border-left: 2px solid transparent;
+  transition: background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
+}
+
+.sidebarLink:hover {
+  background: var(--bone-200);
+  color: var(--char-800);
+}
+
+.sidebarLinkActive {
+  background: var(--bone-200);
+  color: var(--crimson-800);
+  font-weight: 600;
+  border-left-color: var(--ember-500);
+}
+
+.sidebarLinkActive .sidebarIcon {
+  color: var(--ember-600);
+}
+
+.sidebarIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sidebarLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ Bottom nav -- */
+
+.bottomNav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  background: var(--bone-50);
+  border-top: 1px solid var(--bone-300);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .bottomNav {
+    display: none;
+  }
+}
+
+.bottomNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 0.625rem 0;
+  min-height: 56px;
+  color: var(--char-500);
+  font-size: 0.625rem;
+  font-family: var(--f-caps);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color var(--t-state) var(--ease);
+}
+
+.bottomNavItem:hover {
+  color: var(--char-800);
+}
+
+.bottomNavItemActive {
+  color: var(--crimson-800);
+}
+
+.bottomNavIcon {
+  display: flex;
+}
+
+.bottomNavLabel {
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------- Footer -- */
+
+.footer {
+  position: relative;
+  width: 100%;
+  background: var(--char-900);
+  color: var(--mist-400);
+  padding: 0 var(--spacing-container) var(--space-6);
+}
+
+/* Sits above the footer so the bone page ends against the footer's dark ground
+   with the same ruined skyline that runs along the bottom of every poster. The
+   path's solid mass is at its base, so it meets the footer with no seam. */
+.footerRidge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-99%);
+  color: var(--char-900);
+  pointer-events: none;
+}
+
+.footer_inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-top: var(--space-7);
+}
+
+@media (min-width: 768px) {
+  .footer_inner {
+    grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+    gap: var(--space-5);
+  }
+}
+
+.footer_column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.footerBrand {
+  font-family: var(--f-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--bone-100);
+  line-height: 1;
+}
+
+.footerTagline {
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist-400);
+  line-height: 1.9;
+}
+
+.footer_title {
+  font-family: var(--f-caps);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--ember-300);
+  margin-bottom: var(--space-1);
+}
+
+.footer_link {
+  color: var(--mist-400);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  transition: color var(--t-state) var(--ease);
+}
+
+.footer_link:hover {
+  color: var(--bone-100);
+}
+
+.footer_link:focus-visible,
+.footerContact:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
+}
+
+.footerContact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--mist-400);
+}
+
+.footerContactRole {
+  font-family: var(--f-caps);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.footerContactName {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--bone-100);
+}
+
+.footerContactPhone {
+  font-size: var(--fs-small);
+  color: var(--ember-300);
+  font-variant-numeric: tabular-nums;
+}
+
+.footer_bottom {
+  max-width: var(--container);
+  margin: var(--space-6) auto 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(184, 173, 160, 0.16);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer_bottom_text {
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}

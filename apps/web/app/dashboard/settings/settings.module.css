@@ -1,0 +1,74 @@
+.page {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.cardGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 40rem;
+}
+
+.card {
+    background: var(--bone-50);
+}
+
+.cardTitle {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+    color: var(--char-500);
+}
+
+.dangerTitle {
+    composes: cardTitle;
+    color: var(--err);
+}
+
+.dangerText {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+}
+
+.fieldRow {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: var(--hairline);
+    padding-bottom: var(--space-2);
+}
+
+.fieldRow:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.fieldLabel {
+    color: var(--text-muted);
+}
+
+.fieldValue {
+    font-weight: 600;
+    color: var(--char-800);
+}
+
+.signOutBtn {
+    border-color: var(--err);
+    color: var(--err);
+}

@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  max-width: 320px;
+  align-items: center;
+  gap: var(--space-3);
+  background-color: var(--bone-50);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-container);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background-color: var(--bone-200);
+  color: var(--ember-600);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.value {
+  font-family: var(--f-caps);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--char-800);
+  font-variant-numeric: tabular-nums;
+}
+
+.valueText {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--char-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

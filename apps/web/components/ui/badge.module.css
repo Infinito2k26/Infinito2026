@@ -1,0 +1,47 @@
+/* Status pills. Each variant pairs a colour with a word in the caller's label —
+   colour alone never carries the meaning. */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.default {
+  background: var(--bone-200);
+  color: var(--char-700);
+  border-color: var(--bone-300);
+}
+
+.success {
+  background: var(--ok-bg);
+  color: var(--ok);
+  border-color: rgba(74, 107, 63, 0.3);
+}
+
+.warning {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-color: rgba(163, 112, 28, 0.3);
+}
+
+.danger {
+  background: var(--err-bg);
+  color: var(--err);
+  border-color: rgba(163, 39, 42, 0.3);
+}
+
+.info {
+  background: var(--info-bg);
+  color: var(--info);
+  border-color: rgba(63, 90, 107, 0.3);
+}

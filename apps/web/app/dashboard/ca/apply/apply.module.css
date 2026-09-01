@@ -1,0 +1,30 @@
+.page {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.formCard {
+    background-color: var(--bone-50);
+    border: var(--hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-5);
+}
+
+.formTitle {
+    font-family: var(--f-caps);
+    font-size: 0.9375rem;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+    color: var(--crimson-800);
+}
+
+.errorText {
+    font-size: 0.875rem;
+    color: var(--err);
+    margin-bottom: var(--space-3);
+}

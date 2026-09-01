@@ -1,102 +1,124 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import Link from "next/link";
+import PublicLayout from "@/components/layout/public-layout";
+import Hero from "@/components/home/hero";
+import Countdown from "@/components/home/countdown";
+import PosterCard from "@/components/ui/poster-card";
+import Ornament from "@/components/ui/ornament";
+import Reveal from "@/components/ui/reveal";
+import CountUp from "@/components/ui/count-up";
+import { FEATURED_SPORTS, FEST_DATES } from "@/lib/sports";
+import styles from "./home.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+const STATS = [
+  { value: 17, label: "Sports" },
+  { value: 3, label: "Categories" },
+  { value: 3, label: "Days of war" },
+  { value: 11, label: "Editions" },
+];
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+const DAYS = [
+  {
+    day: "Day I",
+    date: "9 October",
+    title: "The Gathering",
+    body: "Opening ceremony, group stages across every team sport, and the first heats on the track.",
+  },
+  {
+    day: "Day II",
+    date: "10 October",
+    title: "The Reckoning",
+    body: "Knockouts begin. Individual finals in chess, squash and table tennis, and the powerlifting platform opens.",
+  },
+  {
+    day: "Day III",
+    date: "11 October",
+    title: "The Last Stand",
+    body: "Finals across every field, the athletics relay, and the closing ceremony with the overall trophy.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <PublicLayout>
+      <Hero />
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+      <section className={styles.stats} aria-label="Infinito 2026 at a glance">
+        <div className={styles.statsInner}>
+          {STATS.map(({ value, label }, i) => (
+            <Reveal key={label} index={i} className={styles.stat}>
+              <span className={styles.statValue}>
+                <CountUp value={value} />
+              </span>
+              <span className={styles.statLabel}>{label}</span>
+            </Reveal>
+          ))}
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+        <Countdown target={FEST_DATES.start} />
+      </section>
+
+      <section className={styles.section}>
+        <Reveal className={styles.sectionHead}>
+          <p className="eyebrow">The battlefield awaits</p>
+          <h2 className={`${styles.sectionTitle} glow`}>Choose your sport</h2>
+          <p className={styles.sectionLede}>
+            Seventeen sports across three categories. Pick your ground, gather
+            your side, and register before entries close on 4 October.
+          </p>
+        </Reveal>
+
+        <div className={styles.posterGrid}>
+          {FEATURED_SPORTS.map((sport, i) => (
+            <Reveal key={sport.id} index={i} className={styles.posterTilt}>
+              <PosterCard
+                slug={sport.poster}
+                name={sport.name}
+                category={sport.category}
+                format={sport.format}
+                href={`/sports?sport=${sport.id}`}
+                priority={i < 2}
+              />
+            </Reveal>
+          ))}
+        </div>
+
+        <div className={styles.sectionFoot}>
+          <Link href="/sports" className={styles.textLink}>
+            See all seventeen sports →
+          </Link>
+        </div>
+      </section>
+
+      <section className={styles.schedule}>
+        <Reveal className={styles.sectionHead}>
+          <p className="eyebrow">{FEST_DATES.label}</p>
+          <h2 className={`${styles.sectionTitle} glow`}>Three days</h2>
+        </Reveal>
+        <div className={styles.dayGrid}>
+          {DAYS.map(({ day, date, title, body }, i) => (
+            <Reveal key={day} index={i} className={styles.day}>
+              <p className={styles.dayLabel}>
+                {day} · {date}
+              </p>
+              <h3 className={styles.dayTitle}>{title}</h3>
+              <p className={styles.dayBody}>{body}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <Ornament variant="ridge" />
+
+      <Reveal className={styles.legacy}>
+        <Ornament variant="valknut" className={styles.legacyMark} />
+        <h2 className={styles.legacyTitle}>From the ruins, we rise</h2>
+        <p className={styles.legacyBody}>
+          One fest. Countless battles. One legacy still to be written. The ruins
+          remain — what stands on them next is yours to decide.
+        </p>
+        <Link href="/register" className={styles.legacyCta}>
+          Write your legacy
+        </Link>
+      </Reveal>
+    </PublicLayout>
   );
 }

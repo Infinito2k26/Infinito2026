@@ -1,0 +1,60 @@
+.page {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.tableCard {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    min-width: 48rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: var(--hairline);
+    text-align: left;
+}
+
+.headCell {
+    padding: var(--space-3);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: var(--hairline);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: var(--space-3);
+    color: var(--char-800);
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-5) var(--space-4);
+}

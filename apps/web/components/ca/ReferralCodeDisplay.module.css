@@ -1,0 +1,85 @@
+.container {
+    width: 100%;
+    max-width: 26rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--bone-200);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-inline: auto;
+    padding: var(--spacing-container);
+}
+
+.label {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+}
+
+.codeBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    background-color: var(--bone-50);
+    border: 1.5px dashed var(--ember-500);
+}
+
+.code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 600;
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    white-space: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    color: var(--char-800);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.btn {
+    flex: 1 1 8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 1rem;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    cursor: pointer;
+    transition: transform 0.08s ease, background-color var(--t-state) var(--ease);
+    font-family: inherit;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.secondary {
+    background-color: var(--bone-50);
+    color: var(--char-800);
+}
+
+.secondary:hover {
+    background-color: var(--bone-100);
+}
+
+.primary {
+    background-color: var(--crimson-700);
+    color: var(--bone-100);
+    border-color: var(--crimson-700);
+}
+
+.primary:hover {
+    background-color: var(--ember-600);
+    border-color: var(--ember-600);
+}

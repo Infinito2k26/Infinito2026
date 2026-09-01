@@ -1,0 +1,75 @@
+.page {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+}
+
+.teamCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--bone-50);
+}
+
+.teamName {
+    font-family: var(--f-caps);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--crimson-800);
+}
+
+.eventName {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+}
+
+.metaRow {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+}
+
+.rosterList {
+    margin-top: var(--space-2);
+    padding-left: 1.25rem;
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    list-style: disc;
+}
+
+.inviteCode {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 700;
+    color: var(--crimson-700);
+    word-break: break-all;
+    text-align: right;
+}
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

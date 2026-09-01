@@ -1,0 +1,259 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 640px;
+    margin-inline: auto;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.title {
+    margin-top: 0;
+}
+
+/* ---------- Step indicator ---------- */
+
+.steps {
+    display: flex;
+    align-items: center;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.stepConnector {
+    flex: 1;
+    height: 1px;
+    background: var(--bone-300);
+    margin: 0 var(--space-2);
+}
+
+.stepConnectorDone {
+    composes: stepConnector;
+    background: var(--crimson-700);
+}
+
+.stepNumber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--bone-300);
+    background: var(--bone-50);
+    font-family: var(--f-caps);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--char-500);
+}
+
+.stepNumberActive {
+    composes: stepNumber;
+    border-color: var(--crimson-700);
+    background: var(--crimson-700);
+    color: var(--bone-100);
+}
+
+.stepNumberDone {
+    composes: stepNumber;
+    border-color: var(--crimson-700);
+    color: var(--crimson-700);
+}
+
+.stepLabel {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.stepLabelActive {
+    composes: stepLabel;
+    color: var(--crimson-800);
+}
+
+/* ---------- Team step ---------- */
+
+.tabRow {
+    display: flex;
+    gap: var(--space-2);
+    border-bottom: var(--hairline);
+    margin-bottom: var(--space-4);
+}
+
+.tab,
+.tabActive {
+    padding: 0.625rem 1rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+.tab {
+    color: var(--char-500);
+}
+
+.tabActive {
+    color: var(--crimson-700);
+    border-bottom-color: var(--crimson-700);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.detailsForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--char-800);
+}
+
+.select {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
+    font-size: var(--fs-body);
+    font-family: inherit;
+}
+
+.select:focus {
+    outline: 2px solid var(--crimson-700);
+    outline-offset: 1px;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-body);
+    color: var(--char-800);
+    cursor: pointer;
+}
+
+.fileDropzone {
+    display: flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1.5px dashed var(--bone-300);
+    background-color: var(--bone-50);
+    color: var(--text-muted);
+    font-size: var(--fs-micro);
+    cursor: pointer;
+}
+
+.fileDropzone:hover {
+    border-color: var(--crimson-700);
+}
+
+.hiddenFileInput {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--err);
+}
+
+.teamCreatedPanel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.successText {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--char-800);
+}
+
+.hintText {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    line-height: var(--lh-body);
+}
+
+.linkRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    background-color: var(--bone-200);
+    border: var(--hairline);
+}
+
+.linkValue {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+    color: var(--char-800);
+}
+
+.copyBtn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
+    cursor: pointer;
+}
+
+.continueBtn {
+    margin-top: var(--space-4);
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .continueBtn {
+        width: auto;
+        min-width: 200px;
+    }
+}

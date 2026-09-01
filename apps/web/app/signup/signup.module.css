@@ -1,0 +1,131 @@
+.header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  color: var(--text-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--char-700);
+}
+
+/* --- Password strength meter ---------------------------------------------- */
+
+.strengthMeter {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.strengthBar {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--bone-300);
+  transition: background var(--t-state) var(--ease);
+}
+
+.strengthBarFilled {
+  background: var(--strength-color, var(--crimson-700));
+}
+
+.strengthLabel {
+  font-size: var(--fs-small);
+  color: var(--strength-color, var(--text-muted));
+  margin-top: var(--space-1);
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.checkbox {
+  margin-top: 3px;
+  accent-color: var(--crimson-700);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.checkboxLabel {
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+  line-height: var(--lh-heading);
+}
+
+.errorText {
+  font-size: var(--fs-small);
+  color: var(--err);
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.submitBtn {
+  margin-top: var(--space-2);
+  width: 100%;
+}
+
+.footer {
+  margin-top: var(--space-6);
+  text-align: center;
+  border-top: 1px solid var(--bone-300);
+  padding-top: var(--space-5);
+}
+
+.footerText {
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+
+.link {
+  color: var(--crimson-700);
+  font-weight: 600;
+}
+
+.link:hover {
+  color: var(--crimson-600);
+  text-decoration: underline;
+}
+
+.errorAlert {
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  background-color: var(--err-bg);
+  color: var(--err);
+  font-size: var(--fs-small);
+  text-align: center;
+  border: 1px solid var(--err);
+  animation: alert-shake 420ms var(--ease);
+}
+
+@keyframes alert-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}

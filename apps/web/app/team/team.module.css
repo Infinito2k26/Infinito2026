@@ -1,0 +1,79 @@
+.header {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-5);
+}
+
+.pageTitle {
+    margin-top: var(--space-2);
+}
+
+.pageSubtitle {
+    margin-top: var(--space-3);
+    color: var(--text-muted);
+    max-width: 52ch;
+}
+
+.section {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: 0 var(--spacing-container) var(--space-7);
+}
+
+.deptTitle {
+    font-family: var(--f-caps);
+    font-size: var(--fs-h3);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--crimson-800);
+    margin-bottom: var(--space-4);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    gap: var(--space-4);
+}
+
+.memberCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-1);
+}
+
+.photoWrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bone-200);
+}
+
+.photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photoFallback {
+    color: var(--mist-400);
+}
+
+.memberName {
+    font-size: var(--fs-body);
+    font-weight: 700;
+    color: var(--char-800);
+}
+
+.memberRole {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+}

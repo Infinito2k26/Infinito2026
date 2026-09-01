@@ -1,0 +1,170 @@
+.hero {
+  position: relative;
+  background: var(--bone-100);
+}
+
+.artWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.art {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: scale(1.06);
+  animation: kenburns 14s var(--ease) forwards;
+}
+
+@keyframes kenburns {
+  0% {
+    transform: scale(1.06) translateY(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Embers drifting up out of the art's own ruined-arena band — pure CSS,
+   each span gets its own drift/speed/delay via nth-child so the rise never
+   looks synchronised. Confined to the lower third; never over faces. */
+.embers {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  bottom: -4%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ember-500);
+  box-shadow: 0 0 6px 1px var(--ember-500);
+  opacity: 0;
+  animation: ember-rise 6s ease-in infinite;
+}
+
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 12px), -220%) scale(1.1);
+  }
+}
+
+.ember:nth-child(1) { left: 6%;  animation-delay: 0s;   animation-duration: 5.5s; --drift: 10px; }
+.ember:nth-child(2) { left: 18%; animation-delay: 1.1s; animation-duration: 6.8s; --drift: -14px; }
+.ember:nth-child(3) { left: 30%; animation-delay: 2.4s; animation-duration: 5.2s; --drift: 8px; }
+.ember:nth-child(4) { left: 42%; animation-delay: 0.6s; animation-duration: 7.4s; --drift: -6px; }
+.ember:nth-child(5) { left: 58%; animation-delay: 3.1s; animation-duration: 6.1s; --drift: 16px; }
+.ember:nth-child(6) { left: 70%; animation-delay: 1.8s; animation-duration: 5.9s; --drift: -10px; }
+.ember:nth-child(7) { left: 82%; animation-delay: 4s;   animation-duration: 6.6s; --drift: 12px; }
+.ember:nth-child(8) { left: 94%; animation-delay: 0.3s; animation-duration: 7.1s; --drift: -18px; }
+
+/* The actions sit in the dark ruin band along the bottom of every crop, which is
+   the only region of the art with guaranteed contrast. On phones the mobile crop
+   is 4:5 and tall, so they drop below the image instead of over it. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  padding: var(--space-5) var(--spacing-container) var(--space-6);
+  background: var(--char-900);
+}
+
+@media (min-width: 769px) {
+  .actions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(1.5rem, 4vw, 3.5rem);
+    background: transparent;
+    padding-block: 0;
+  }
+}
+
+.primary,
+.secondary {
+  font-family: var(--f-caps);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: cta-enter 700ms var(--ease) forwards;
+  transition: background var(--t-state) var(--ease),
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease),
+    transform var(--t-state) var(--ease), box-shadow var(--t-state) var(--ease);
+}
+
+.primary {
+  animation-delay: 900ms;
+}
+
+.secondary {
+  animation-delay: 1050ms;
+}
+
+@keyframes cta-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.primary {
+  background: var(--crimson-700);
+  color: var(--bone-100);
+  border-color: var(--crimson-700);
+}
+
+.primary:hover {
+  background: var(--crimson-600);
+  border-color: var(--crimson-600);
+  color: var(--bone-50);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 4px rgba(212, 98, 47, 0.22), 0 8px 20px rgba(36, 31, 30, 0.25);
+}
+
+.secondary:hover {
+  transform: translateY(-2px);
+}
+
+.secondary {
+  background: rgba(27, 23, 21, 0.55);
+  color: var(--bone-100);
+  border-color: var(--bone-300);
+  backdrop-filter: blur(6px);
+}
+
+.secondary:hover {
+  background: var(--bone-100);
+  color: var(--char-900);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
+}

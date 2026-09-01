@@ -1,0 +1,101 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 64rem;
+    margin-inline: auto;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+}
+
+.pageTitle {
+    margin-top: 0;
+}
+
+.pageSubtitle {
+    color: var(--text-muted);
+    line-height: var(--lh-body);
+}
+
+.tableCard {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-5) var(--space-4);
+    font-size: 0.875rem;
+}
+
+.table {
+    width: 100%;
+    min-width: 40rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: var(--hairline);
+    text-align: left;
+}
+
+.headCell {
+    padding: var(--space-3);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: var(--hairline);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: var(--space-3);
+    color: var(--char-800);
+}
+
+.cellNowrap {
+    padding: var(--space-3);
+    white-space: nowrap;
+    color: var(--char-800);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.badgeValid {
+    color: var(--ok);
+}
+
+.badgeDuplicate {
+    color: var(--warn);
+}
+
+.badgeInvalid {
+    color: var(--err);
+}
+
+/* ---------- Desktop Scaling Grid Adjustments ---------- */
+@media (min-width: 768px) {
+    .table {
+        font-size: 0.875rem;
+    }
+}

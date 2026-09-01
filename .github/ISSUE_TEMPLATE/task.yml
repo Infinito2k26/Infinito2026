@@ -1,0 +1,42 @@
+name: Engineering Task
+description: Track infrastructure, refactor, documentation, or QA work.
+title: "[Task]: "
+labels: ["type:chore"]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: What needs to be done?
+    validations:
+      required: true
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - lead
+        - backend
+        - frontend
+        - qa
+        - docs
+        - infra
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of Done
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies or Blockers
+    validations:
+      required: false
+

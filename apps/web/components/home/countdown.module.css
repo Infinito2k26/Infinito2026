@@ -1,0 +1,63 @@
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--bone-300);
+  width: 100%;
+}
+
+.label {
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--char-500);
+}
+
+.parts {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.value {
+  display: inline-block;
+  font-family: var(--f-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--crimson-800);
+  font-variant-numeric: tabular-nums;
+  animation: tick-in 500ms var(--ease);
+}
+
+@keyframes tick-in {
+  0% {
+    opacity: 0.3;
+    transform: translateY(-10px);
+    text-shadow: 0 0 18px var(--glow-200);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    text-shadow: 0 0 0 transparent;
+  }
+}
+
+.unit {
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--char-500);
+}
