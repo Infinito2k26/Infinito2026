@@ -16,10 +16,18 @@ interface UpiPaymentSectionProps {
   qrImageUrl?: string;
   /** IITP registrations are always fee-waived (see Event fee logic). */
   isIITP?: boolean;
-  /** Registration this payment is submitted against. Required unless isIITP/waived. */
+  /** Registration this payment is submitted against. Required unless isIITP/waived or onSubmit is provided. */
   registrationId?: string;
   /** Called once the screenshot + transaction ID are successfully submitted for review. */
   onSubmitted?: () => void;
+  /**
+   * Override for what happens on submit — receives a FormData already
+   * carrying transactionId/idempotencyKey/file. When omitted, defaults to
+   * POST /payments with registrationId (the event-registration flow). Pass
+   * this to reuse the same UPI/screenshot UI against a different endpoint
+   * (e.g. merch order payment).
+   */
+  onSubmit?: (formData: FormData) => Promise<void>;
 }
 
 const DEFAULT_QR_IMAGE = "/payment/upi-qr-placeholder.svg";
@@ -40,6 +48,7 @@ export default function UpiPaymentSection({
   isIITP = false,
   registrationId,
   onSubmitted,
+  onSubmit,
 }: UpiPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
   const [transactionId, setTransactionId] = useState("");
@@ -81,18 +90,22 @@ export default function UpiPaymentSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!registrationId || !file || !transactionId.trim()) return;
+    if ((!registrationId && !onSubmit) || !file || !transactionId.trim()) return;
 
     setSubmitting(true);
     setSubmitError(null);
     try {
       const formData = new FormData();
-      formData.append("registrationId", registrationId);
       formData.append("transactionId", transactionId.trim());
       formData.append("idempotencyKey", crypto.randomUUID());
       formData.append("file", file);
 
-      await api.post("/payments", formData);
+      if (onSubmit) {
+        await onSubmit(formData);
+      } else {
+        formData.append("registrationId", registrationId as string);
+        await api.post("/payments", formData);
+      }
       setSubmitted(true);
       onSubmitted?.();
     } catch (err) {
@@ -148,7 +161,7 @@ export default function UpiPaymentSection({
 
           <p className={styles.payee}>Payable to: {payeeName}</p>
 
-          {registrationId && !submitted && (
+          {(registrationId || onSubmit) && !submitted && (
             <form className={styles.proofForm} onSubmit={handleSubmit}>
               <label className={styles.fieldLabel} htmlFor="upi-transaction-id">
                 Transaction ID

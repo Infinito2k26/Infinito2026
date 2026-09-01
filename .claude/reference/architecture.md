@@ -48,6 +48,7 @@ flowchart TD
 | CA            | Campus Ambassador onboarding, referral links, tasks, proofs |
 | Leads         | Waitlist capture and pre-registration CRM           |
 | Content       | Public team roster, sponsor listing, photo gallery (admin CRUD + public pages) |
+| Merch         | Product catalog, orders, manual-UPI checkout (mirrors Payments), fulfillment status |
 
 ## 4. Boundary Rules
 

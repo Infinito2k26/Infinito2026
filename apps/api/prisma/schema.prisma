@@ -162,6 +162,14 @@ enum SponsorTier {
   ASSOCIATE
 }
 
+enum MerchOrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 
 //--------- MODELS ---------------
 
@@ -197,6 +205,7 @@ model User {
   caApplications         CAApplication[] @relation("CAApplicant")
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
+  merchOrders            MerchOrder[]
 
   @@index([isIITP, role])
   @@index([brandId])
@@ -478,6 +487,65 @@ model GalleryItem {
   createdAt   DateTime @default(now())
 
   @@index([publishedAt])
+}
+
+model Product {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  price          Decimal   @db.Decimal(10, 2)
+  sizesAvailable String[]  // e.g. ["S","M","L","XL","XXL"]; empty = one-size
+  inStock        Boolean   @default(true)
+  // Default false: a product is a draft until an admin explicitly publishes
+  // it, mirroring Event.isPublished — GET /merch/products never returns
+  // unpublished products, matching GET /events.
+  isPublished    Boolean   @default(false)
+  imageUrls      String[]  // UploadsService storage keys, signed at read time
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  orderItems MerchOrderItem[]
+}
+
+model MerchOrder {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  shippingName    String
+  shippingPhone   String
+  shippingAddress String
+  shippingPincode String
+  totalAmount     Decimal          @db.Decimal(10, 2)
+  status          MerchOrderStatus @default(PENDING_PAYMENT)
+  // Manual-payment fields, a parallel set to Payment (see Risks in the
+  // merch plan for why this isn't a polymorphic Payment row instead) —
+  // reuses the existing PaymentStatus enum, same compare-and-swap +
+  // idempotency-replay pattern as PaymentsService.
+  paymentStatus   PaymentStatus    @default(INITIATED)
+  screenshotUrl   String?
+  transactionId   String?
+  rejectionReason String?
+  idempotencyKey  String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user  User             @relation(fields: [userId], references: [id])
+  items MerchOrderItem[]
+
+  @@index([userId])
+  @@index([paymentStatus])
+}
+
+model MerchOrderItem {
+  id              String  @id @default(uuid()) @db.Uuid
+  merchOrderId    String  @db.Uuid
+  productId       String  @db.Uuid
+  size            String?
+  quantity        Int
+  priceAtPurchase Decimal @db.Decimal(10, 2)
+
+  merchOrder MerchOrder @relation(fields: [merchOrderId], references: [id])
+  product    Product    @relation(fields: [productId], references: [id])
 }
 
 model CaTask {

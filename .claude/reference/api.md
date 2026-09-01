@@ -243,6 +243,50 @@ Response `data` shape: `{ sponsors: [{ id, name, logoUrl, tier }] }`. Only `Bran
 
 Sponsor tier/listing is managed via the existing Brand admin endpoints, not a separate route: `POST /admin/brands` / `PATCH /admin/brands/:id` now also accept `tier` (`SponsorTier` enum) and `isPubliclyListed` (boolean).
 
+### Merch
+
+No payment gateway here either — same manual UPI-screenshot flow as event registrations, reusing the `PaymentStatus` enum directly on `MerchOrder` rather than the `Payment` table (see `.claude/reference/database.md`'s `MerchOrder` entry for why).
+
+| Method | Path                              | Access        | Purpose                                    |
+| ------ | ---------------------------------- | ------------- | ------------------------------------------- |
+| GET    | `/merch/products`                  | Public        | List in-stock, published products           |
+| GET    | `/merch/products/:id`              | Public        | Product detail (published only)             |
+| POST   | `/merch/orders`                    | Authenticated | Place an order                              |
+| GET    | `/merch/orders/mine`               | Authenticated | My order history                            |
+| POST   | `/merch/orders/:id/payment`        | Authenticated | Submit screenshot + transaction ID          |
+| GET    | `/admin/merch/products`            | Admin         | List all products, any stock/publish state  |
+| POST   | `/admin/merch/products`            | Admin         | Create a product (always starts unpublished) |
+| PATCH  | `/admin/merch/products/:id`        | Admin         | Update a product                            |
+| PATCH  | `/admin/merch/products/:id/publish`| Admin         | Publish or unpublish a product              |
+| GET    | `/admin/merch/orders`              | Admin         | List orders, paginated, filter by `status`  |
+| PATCH  | `/admin/merch/orders/:id/verify`   | Admin         | Approve or reject an order's payment        |
+| PATCH  | `/admin/merch/orders/:id/status`   | Admin         | Advance fulfillment status                  |
+
+#### Product publishing
+
+Mirrors `Event.isPublished`/`PATCH /events/:id/publish` exactly: `POST /admin/merch/products` always creates a draft (`isPublished: false`, regardless of any other field), and `PATCH /admin/merch/products/:id/publish` (`{ isPublished: boolean }`) is the only way to make it live. `GET /merch/products` and `GET /merch/products/:id` never return an unpublished product (`404` on the detail route); `POST /merch/orders` also rejects (`404`) an order referencing an unpublished product, so a stale product ID a buyer already has (e.g. from a shared link) can't be ordered after unpublishing.
+
+#### `POST /merch/orders`
+
+- Body: `{ shippingName, shippingPhone, shippingAddress, shippingPincode, items: [{ productId, size?, quantity }] }`.
+- `totalAmount` is always computed server-side from each item's *live* `Product.price` at order time — a client-supplied amount is never trusted, same rule as event registration fees. `404` if any `productId` doesn't resolve or isn't published; `400` if it isn't `inStock` or the items array is empty.
+- Creates the `MerchOrder` (`status: PENDING_PAYMENT`, `paymentStatus: INITIATED`) and its `MerchOrderItem` rows in one transaction. No credential/QR is issued for merch orders.
+
+#### `POST /merch/orders/:id/payment`
+
+- Multipart form: `transactionId`, `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `merch-payment-proof/`).
+- Caller must own the order (`order.userId`), else `403`. Order's `paymentStatus` must be `INITIATED`, else `409`. Idempotent: replaying the same `idempotencyKey` returns the already-recorded order instead of erroring or duplicating.
+- Moves `paymentStatus` to `RECONCILIATION_PENDING` via compare-and-swap (`updateMany` + count check), identical pattern to `PaymentsService.submitPayment`.
+
+#### `PATCH /admin/merch/orders/:id/verify`
+
+- Body: `{ status: 'SUCCESS' | 'FAILED', rejectionReason? }` — `rejectionReason` required when rejecting.
+- Compare-and-swap: the order's `paymentStatus` must currently be `RECONCILIATION_PENDING`, else `409`. On `SUCCESS`, also flips `MerchOrder.status` to `CONFIRMED` in the same update. No BullMQ job is enqueued (unlike registration payments) — a confirmed merch order doesn't trigger credential issuance.
+
+#### `PATCH /admin/merch/orders/:id/status`
+
+- Body: `{ status: 'SHIPPED' | 'DELIVERED' | 'CANCELLED' }`. Enforces a one-way transition guard: `CONFIRMED → SHIPPED → DELIVERED`, or `→ CANCELLED` from `PENDING_PAYMENT`/`CONFIRMED`. `400` on any other transition (e.g. `DELIVERED → PENDING_PAYMENT`), regardless of the order's current `paymentStatus`.
+
 ### CA Portal (Phase 3-5 Additions)
 
 | Method | Path                                      | Access        | Purpose                                          |

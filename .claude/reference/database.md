@@ -211,6 +211,14 @@ enum SponsorTier {
   BRONZE
   ASSOCIATE
 }
+
+enum MerchOrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
 ```
 
 ---
@@ -719,6 +727,65 @@ Immutable audit of every QR scan. Volunteer selects gate and direction (ENTRY / 
 
 ---
 
+### Product
+
+Merch storefront catalog item. Added 2026-09-01.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `name` | String | |
+| `description` | String? | |
+| `price` | Decimal | |
+| `sizesAvailable` | String[] | e.g. `["S","M","L","XL","XXL"]`; empty = one-size |
+| `inStock` | Boolean | Default true |
+| `isPublished` | Boolean | Default **false** — a product is a draft until an admin explicitly publishes it via `PATCH /admin/merch/products/:id/publish`, mirroring `Event.isPublished`. Added 2026-09-01. |
+| `imageUrls` | String[] | `UploadsService` storage keys, signed at read time |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+| `deletedAt` | DateTime? | Soft delete |
+
+---
+
+### MerchOrder
+
+One order, one or more `MerchOrderItem` rows. Paid via the same manual UPI-screenshot flow as event registrations, but carries its own payment fields directly (a parallel field set reusing the `PaymentStatus` **enum**) rather than a row in the `Payment` table — `Payment.registrationId` is a required, non-nullable FK, so representing a merch order there would mean either making `Payment` polymorphic (touching already-shipped, well-tested registration-payment code) or adding a nullable second FK to a table that's currently a clean 1:1 with `Registration`. This keeps the module boundary clean at the cost of some field duplication. Added 2026-09-01.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `userId` | UUID FK → User | |
+| `shippingName` | String | |
+| `shippingPhone` | String | |
+| `shippingAddress` | String | |
+| `shippingPincode` | String | |
+| `totalAmount` | Decimal | Always computed server-side from live `Product.price` at order time — never trust a client-supplied amount |
+| `status` | MerchOrderStatus | PENDING_PAYMENT / CONFIRMED / SHIPPED / DELIVERED / CANCELLED |
+| `paymentStatus` | PaymentStatus | Same enum as `Payment.status`; reused, not the table itself |
+| `screenshotUrl` | String? | Uploaded via `UploadsService`, `merch-payment-proof/` folder |
+| `transactionId` | String? | |
+| `rejectionReason` | String? | Set by admin on a rejected `verify` call |
+| `idempotencyKey` | String unique | Set to a placeholder at order-creation time, overwritten by the client-supplied key on `POST /merch/orders/:id/payment` — identical two-step pattern to `Payment.idempotencyKey` via the registration stub |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+
+---
+
+### MerchOrderItem
+
+Line item within a `MerchOrder`. `priceAtPurchase` snapshots `Product.price` at order time so a later price change doesn't rewrite historical orders. Added 2026-09-01.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `merchOrderId` | UUID FK → MerchOrder | |
+| `productId` | UUID FK → Product | |
+| `size` | String? | One of `Product.sizesAvailable`, or null for one-size items |
+| `quantity` | Int | |
+| `priceAtPurchase` | Decimal | Snapshotted from `Product.price` at order-creation time |
+
+---
+
 ## 5. Required Indexes
 
 | Table | Index | Purpose |
@@ -758,6 +825,9 @@ Immutable audit of every QR scan. Volunteer selects gate and direction (ENTRY / 
 | ScanLog | `(gate, direction, createdAt)` | Gate traffic reporting |
 | TeamMember | `(department, displayOrder)` | Grouped public listing order |
 | GalleryItem | `(publishedAt)` | Newest-first public listing |
+| MerchOrder | `(userId)` | "My orders" lookup |
+| MerchOrder | `(paymentStatus)` | Admin payment-review queue |
+| MerchOrder | unique `idempotencyKey` | Prevent duplicate payment submissions |
 
 ---
 
