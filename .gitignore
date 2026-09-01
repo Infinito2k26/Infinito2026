@@ -11,6 +11,9 @@ node_modules
 .env.development.local
 .env.test.local
 .env.production.local
+# docs/deployment.md's runbook filename — real secrets, never meant to be
+# committed even though it doesn't match Next's own .env.*.local convention.
+.env.prod
 
 # Local DB dumps from scripts/db-backup.sh
 /backups
