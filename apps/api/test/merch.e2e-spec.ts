@@ -144,6 +144,21 @@ describe('Merch: full happy path (e2e)', () => {
     const productId = (createProductRes.body as SuccessResponse<{ id: string }>)
       .data.id;
 
+    const beforePublishRes = await request(app.getHttpServer())
+      .get('/api/merch/products')
+      .expect(200);
+    expect(
+      (
+        beforePublishRes.body as SuccessResponse<{ products: { id: string }[] }>
+      ).data.products.some((p) => p.id === productId),
+    ).toBe(false);
+
+    await request(app.getHttpServer())
+      .patch(`/api/admin/merch/products/${productId}/publish`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ isPublished: true })
+      .expect(200);
+
     const browseRes = await request(app.getHttpServer())
       .get('/api/merch/products')
       .expect(200);
@@ -215,6 +230,12 @@ describe('Merch: full happy path (e2e)', () => {
       .data.id;
 
     await request(app.getHttpServer())
+      .patch(`/api/admin/merch/products/${productId}/publish`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ isPublished: true })
+      .expect(200);
+
+    await request(app.getHttpServer())
       .post('/api/merch/orders')
       .set('Authorization', `Bearer ${buyer.token}`)
       .send({
@@ -225,5 +246,54 @@ describe('Merch: full happy path (e2e)', () => {
         items: [{ productId, quantity: 1 }],
       })
       .expect(400);
+  });
+
+  it('a newly-created product is a draft — invisible and unorderable until published', async () => {
+    const admin = await registerLoginWithRole(
+      app,
+      prisma,
+      'Merch Admin 3',
+      UserRole.SUPER_ADMIN,
+    );
+    const buyer = await registerAndLogin(app, 'Merch Buyer 3');
+
+    const createProductRes = await request(app.getHttpServer())
+      .post('/api/admin/merch/products')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ name: 'Draft Cap', price: 200 })
+      .expect(201);
+    const productId = (createProductRes.body as SuccessResponse<{ id: string }>)
+      .data.id;
+    expect(
+      (createProductRes.body as SuccessResponse<{ isPublished: boolean }>).data
+        .isPublished,
+    ).toBe(false);
+
+    await request(app.getHttpServer())
+      .get(`/api/merch/products/${productId}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .post('/api/merch/orders')
+      .set('Authorization', `Bearer ${buyer.token}`)
+      .send({
+        shippingName: 'Buyer Name',
+        shippingPhone: '9999999999',
+        shippingAddress: '123 Test Street',
+        shippingPincode: '800001',
+        items: [{ productId, quantity: 1 }],
+      })
+      .expect(404);
+
+    // Admin can still see it in the admin listing while it's a draft.
+    const adminListRes = await request(app.getHttpServer())
+      .get('/api/admin/merch/products')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .expect(200);
+    expect(
+      (
+        adminListRes.body as SuccessResponse<{ products: { id: string }[] }>
+      ).data.products.some((p) => p.id === productId),
+    ).toBe(true);
   });
 });

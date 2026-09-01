@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Card from "@/components/ui/card";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import Badge from "@/components/ui/badge";
 import { api, ApiError } from "@/lib/api";
 import styles from "./admin-merch-products.module.css";
 
@@ -14,6 +15,7 @@ interface Product {
     price: string | number;
     sizesAvailable: string[];
     inStock: boolean;
+    isPublished: boolean;
     imageUrls: string[];
 }
 
@@ -27,6 +29,7 @@ export default function AdminMerchProductsPage() {
     const [form, setForm] = useState(BLANK_FORM);
     const [submitting, setSubmitting] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
+    const [busyId, setBusyId] = useState<string | null>(null);
 
     const fetchProducts = async () => {
         setIsLoading(true);
@@ -63,6 +66,18 @@ export default function AdminMerchProductsPage() {
         setForm(BLANK_FORM);
     };
 
+    const togglePublish = async (product: Product) => {
+        setBusyId(product.id);
+        try {
+            await api.patch(`/admin/merch/products/${product.id}/publish`, { isPublished: !product.isPublished });
+            await fetchProducts();
+        } catch (err) {
+            console.error("Failed to toggle publish state", err);
+        } finally {
+            setBusyId(null);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name.trim() || !form.price) return;
@@ -97,7 +112,9 @@ export default function AdminMerchProductsPage() {
         <div className={styles.page}>
             <div>
                 <h1 className={styles.title}>Merch Products</h1>
-                <p className={styles.subtitle}>Manage the storefront catalog.</p>
+                <p className={styles.subtitle}>
+                    New products start as drafts — publish them from the table below once they&apos;re ready for the storefront.
+                </p>
             </div>
 
             <Card className={styles.formCard}>
@@ -138,7 +155,7 @@ export default function AdminMerchProductsPage() {
                     <div className={styles.actions}>
                         {editingId && <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>}
                         <Button type="submit" variant="primary" loading={submitting}>
-                            {editingId ? "Save changes" : "Add product"}
+                            {editingId ? "Save changes" : "Add as draft"}
                         </Button>
                     </div>
                 </form>
@@ -157,6 +174,7 @@ export default function AdminMerchProductsPage() {
                                 <th className={styles.headCell}>Price</th>
                                 <th className={styles.headCell}>Sizes</th>
                                 <th className={styles.headCell}>In stock</th>
+                                <th className={styles.headCell}>Published</th>
                                 <th className={styles.headCell}>Actions</th>
                             </tr>
                         </thead>
@@ -167,8 +185,21 @@ export default function AdminMerchProductsPage() {
                                     <td className={styles.cell}>₹{Number(product.price)}</td>
                                     <td className={styles.cell}>{product.sizesAvailable.join(", ") || "—"}</td>
                                     <td className={styles.cell}>{product.inStock ? "Yes" : "No"}</td>
+                                    <td className={styles.cell}>
+                                        <Badge variant={product.isPublished ? "success" : "default"}>
+                                            {product.isPublished ? "Published" : "Draft"}
+                                        </Badge>
+                                    </td>
                                     <td className={styles.actionsCell}>
                                         <Button variant="outline" size="sm" onClick={() => startEdit(product)}>Edit</Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={busyId === product.id}
+                                            onClick={() => togglePublish(product)}
+                                        >
+                                            {product.isPublished ? "Unpublish" : "Publish"}
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}

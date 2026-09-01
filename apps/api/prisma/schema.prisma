@@ -496,6 +496,10 @@ model Product {
   price          Decimal   @db.Decimal(10, 2)
   sizesAvailable String[]  // e.g. ["S","M","L","XL","XXL"]; empty = one-size
   inStock        Boolean   @default(true)
+  // Default false: a product is a draft until an admin explicitly publishes
+  // it, mirroring Event.isPublished — GET /merch/products never returns
+  // unpublished products, matching GET /events.
+  isPublished    Boolean   @default(false)
   imageUrls      String[]  // UploadsService storage keys, signed at read time
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

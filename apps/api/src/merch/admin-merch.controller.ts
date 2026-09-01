@@ -15,6 +15,7 @@ import { MerchService } from './merch.service';
 import {
   CreateProductDto,
   UpdateProductDto,
+  PublishProductDto,
   VerifyMerchOrderDto,
   UpdateOrderStatusDto,
 } from './dto/merch.dto';
@@ -45,6 +46,14 @@ export class AdminMerchController {
     @Body() dto: UpdateProductDto,
   ) {
     return this.merchService.updateProduct(id, dto);
+  }
+
+  @Patch('products/:id/publish')
+  async publishProduct(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: PublishProductDto,
+  ) {
+    return this.merchService.setProductPublished(id, dto.isPublished);
   }
 
   @Get('orders')

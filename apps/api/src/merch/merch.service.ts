@@ -44,11 +44,11 @@ export class MerchService {
     };
   }
 
-  async listProducts(includeOutOfStock: boolean) {
+  async listProducts(isAdmin: boolean) {
     const products = await this.prisma.product.findMany({
       where: {
         deletedAt: null,
-        ...(includeOutOfStock ? {} : { inStock: true }),
+        ...(isAdmin ? {} : { inStock: true, isPublished: true }),
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -57,9 +57,21 @@ export class MerchService {
 
   async findProductById(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product || product.deletedAt) {
+    if (!product || product.deletedAt || !product.isPublished) {
       throw new NotFoundException('Product not found');
     }
+    return this.withSignedImages(product);
+  }
+
+  async setProductPublished(id: string, isPublished: boolean) {
+    const existing = await this.prisma.product.findUnique({ where: { id } });
+    if (!existing || existing.deletedAt) {
+      throw new NotFoundException('Product not found');
+    }
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: { isPublished },
+    });
     return this.withSignedImages(product);
   }
 
@@ -95,7 +107,7 @@ export class MerchService {
       let totalAmount = 0;
       const itemsData = dto.items.map((item) => {
         const product = productById.get(item.productId);
-        if (!product || product.deletedAt) {
+        if (!product || product.deletedAt || !product.isPublished) {
           throw new NotFoundException(`Product ${item.productId} not found`);
         }
         if (!product.inStock) {

@@ -249,22 +249,27 @@ No payment gateway here either — same manual UPI-screenshot flow as event regi
 
 | Method | Path                              | Access        | Purpose                                    |
 | ------ | ---------------------------------- | ------------- | ------------------------------------------- |
-| GET    | `/merch/products`                  | Public        | List in-stock products                      |
-| GET    | `/merch/products/:id`              | Public        | Product detail                              |
+| GET    | `/merch/products`                  | Public        | List in-stock, published products           |
+| GET    | `/merch/products/:id`              | Public        | Product detail (published only)             |
 | POST   | `/merch/orders`                    | Authenticated | Place an order                              |
 | GET    | `/merch/orders/mine`               | Authenticated | My order history                            |
 | POST   | `/merch/orders/:id/payment`        | Authenticated | Submit screenshot + transaction ID          |
-| GET    | `/admin/merch/products`            | Admin         | List all products (including out-of-stock)  |
-| POST   | `/admin/merch/products`            | Admin         | Create a product                            |
+| GET    | `/admin/merch/products`            | Admin         | List all products, any stock/publish state  |
+| POST   | `/admin/merch/products`            | Admin         | Create a product (always starts unpublished) |
 | PATCH  | `/admin/merch/products/:id`        | Admin         | Update a product                            |
+| PATCH  | `/admin/merch/products/:id/publish`| Admin         | Publish or unpublish a product              |
 | GET    | `/admin/merch/orders`              | Admin         | List orders, paginated, filter by `status`  |
 | PATCH  | `/admin/merch/orders/:id/verify`   | Admin         | Approve or reject an order's payment        |
 | PATCH  | `/admin/merch/orders/:id/status`   | Admin         | Advance fulfillment status                  |
 
+#### Product publishing
+
+Mirrors `Event.isPublished`/`PATCH /events/:id/publish` exactly: `POST /admin/merch/products` always creates a draft (`isPublished: false`, regardless of any other field), and `PATCH /admin/merch/products/:id/publish` (`{ isPublished: boolean }`) is the only way to make it live. `GET /merch/products` and `GET /merch/products/:id` never return an unpublished product (`404` on the detail route); `POST /merch/orders` also rejects (`404`) an order referencing an unpublished product, so a stale product ID a buyer already has (e.g. from a shared link) can't be ordered after unpublishing.
+
 #### `POST /merch/orders`
 
 - Body: `{ shippingName, shippingPhone, shippingAddress, shippingPincode, items: [{ productId, size?, quantity }] }`.
-- `totalAmount` is always computed server-side from each item's *live* `Product.price` at order time — a client-supplied amount is never trusted, same rule as event registration fees. `400` if any `productId` doesn't resolve, isn't `inStock`, or the items array is empty.
+- `totalAmount` is always computed server-side from each item's *live* `Product.price` at order time — a client-supplied amount is never trusted, same rule as event registration fees. `404` if any `productId` doesn't resolve or isn't published; `400` if it isn't `inStock` or the items array is empty.
 - Creates the `MerchOrder` (`status: PENDING_PAYMENT`, `paymentStatus: INITIATED`) and its `MerchOrderItem` rows in one transaction. No credential/QR is issued for merch orders.
 
 #### `POST /merch/orders/:id/payment`

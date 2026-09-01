@@ -739,6 +739,7 @@ Merch storefront catalog item. Added 2026-09-01.
 | `price` | Decimal | |
 | `sizesAvailable` | String[] | e.g. `["S","M","L","XL","XXL"]`; empty = one-size |
 | `inStock` | Boolean | Default true |
+| `isPublished` | Boolean | Default **false** — a product is a draft until an admin explicitly publishes it via `PATCH /admin/merch/products/:id/publish`, mirroring `Event.isPublished`. Added 2026-09-01. |
 | `imageUrls` | String[] | `UploadsService` storage keys, signed at read time |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |

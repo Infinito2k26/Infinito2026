@@ -80,8 +80,22 @@ describe('MerchService', () => {
   describe('createOrder', () => {
     it('computes totalAmount server-side from live product prices, ignoring any client-supplied amount', async () => {
       prisma.product.findMany.mockResolvedValue([
-        { id: 'p1', name: 'Tee', price: 500, inStock: true, deletedAt: null },
-        { id: 'p2', name: 'Cap', price: 300, inStock: true, deletedAt: null },
+        {
+          id: 'p1',
+          name: 'Tee',
+          price: 500,
+          inStock: true,
+          isPublished: true,
+          deletedAt: null,
+        },
+        {
+          id: 'p2',
+          name: 'Cap',
+          price: 300,
+          inStock: true,
+          isPublished: true,
+          deletedAt: null,
+        },
       ]);
       prisma.merchOrder.create.mockImplementation(
         ({ data }: { data: Record<string, unknown> }) =>
@@ -116,7 +130,14 @@ describe('MerchService', () => {
 
     it('rejects an out-of-stock product', async () => {
       prisma.product.findMany.mockResolvedValue([
-        { id: 'p1', name: 'Tee', price: 500, inStock: false, deletedAt: null },
+        {
+          id: 'p1',
+          name: 'Tee',
+          price: 500,
+          inStock: false,
+          isPublished: true,
+          deletedAt: null,
+        },
       ]);
 
       await expect(
@@ -142,6 +163,83 @@ describe('MerchService', () => {
           items: [{ productId: 'missing', quantity: 1 }],
         }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('rejects an unpublished product', async () => {
+      prisma.product.findMany.mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Tee',
+          price: 500,
+          inStock: true,
+          isPublished: false,
+          deletedAt: null,
+        },
+      ]);
+
+      await expect(
+        service.createOrder('user-1', {
+          shippingName: 'A',
+          shippingPhone: '1',
+          shippingAddress: 'B',
+          shippingPincode: '800001',
+          items: [{ productId: 'p1', quantity: 1 }],
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('listProducts', () => {
+    it('filters to in-stock and published only for public callers', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+
+      await service.listProducts(false);
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { deletedAt: null, inStock: true, isPublished: true },
+        }),
+      );
+    });
+
+    it('returns everything for admin callers, regardless of stock or publish state', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+
+      await service.listProducts(true);
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { deletedAt: null } }),
+      );
+    });
+  });
+
+  describe('setProductPublished', () => {
+    it('throws when the product does not exist', async () => {
+      prisma.product.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.setProductPublished('missing', true),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('publishes an existing product', async () => {
+      prisma.product.findUnique.mockResolvedValue({
+        id: 'p1',
+        deletedAt: null,
+      });
+      prisma.product.update.mockResolvedValue({
+        id: 'p1',
+        isPublished: true,
+        imageUrls: [],
+      });
+
+      const result = await service.setProductPublished('p1', true);
+
+      expect(prisma.product.update).toHaveBeenCalledWith({
+        where: { id: 'p1' },
+        data: { isPublished: true },
+      });
+      expect(result.isPublished).toBe(true);
     });
   });
 

@@ -136,3 +136,8 @@ export class UpdateOrderStatusDto {
   @IsEnum(['SHIPPED', 'DELIVERED', 'CANCELLED'])
   status!: 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 }
+
+export class PublishProductDto {
+  @IsBoolean()
+  isPublished!: boolean;
+}
