@@ -61,6 +61,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Docker/GHCR tags must be lowercase; github.repository preserves the
+      # org/repo's actual case ("Infinito2k26/Infinito2026"), which buildx
+      # rejects outright.
+      - name: Compute lowercase image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/api" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -68,8 +75,8 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/api:latest
-            ghcr.io/${{ github.repository }}/api:${{ github.sha }}
+            ${{ steps.image.outputs.name }}:latest
+            ${{ steps.image.outputs.name }}:${{ github.sha }}
 
       # Deploying the new image to the VM (Phase 1 item 5) is a manual
       # `docker compose pull && docker compose up -d` on the deploy target
