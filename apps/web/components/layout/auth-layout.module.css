@@ -2,6 +2,8 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Navbar is position: fixed and takes no layout space itself. */
+    padding-top: var(--navbar-h);
 }
 
 .artPanel {
@@ -36,48 +38,6 @@
     align-items: center;
     padding: var(--space-6) var(--spacing-container) var(--space-8);
     background: var(--bone-100);
-}
-
-.brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    margin-bottom: var(--space-6);
-    color: inherit;
-    opacity: 0;
-    animation: brand-in 500ms var(--ease) forwards;
-}
-
-@keyframes brand-in {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.brand:hover {
-    color: inherit;
-}
-
-.brandMark {
-    font-family: var(--f-display);
-    font-size: 1.75rem;
-    color: var(--crimson-800);
-    line-height: 1;
-}
-
-.brandSub {
-    font-family: var(--f-caps);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    letter-spacing: var(--track-micro);
-    text-transform: uppercase;
-    color: var(--char-500);
 }
 
 .formSlot {
