@@ -23,6 +23,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { IdentityModule } from './identity/identity.module';
 import { EventsModule } from './events/events.module';
 import { TeamsModule } from './teams/teams.module';
+import { ContentModule } from './content/content.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { TeamsModule } from './teams/teams.module';
     IdentityModule,
     EventsModule,
     TeamsModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

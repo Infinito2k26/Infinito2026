@@ -154,6 +154,14 @@ enum RecordStatus {
   ARCHIVED
 }
 
+enum SponsorTier {
+  TITLE
+  GOLD
+  SILVER
+  BRONZE
+  ASSOCIATE
+}
+
 
 //--------- MODELS ---------------
 
@@ -428,20 +436,48 @@ model CASocialAccount {
 }
 
 model Brand {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String
-  logoUrl      String?
-  contactName  String?
-  contactEmail String?
-  isActive     Boolean  @default(true)
-  status       RecordStatus @default(ACTIVE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String       @id @default(uuid()) @db.Uuid
+  name             String
+  logoUrl          String?
+  contactName      String?
+  contactEmail     String?
+  isActive         Boolean      @default(true)
+  status           RecordStatus @default(ACTIVE)
+  // Sponsor-facing fields — a Brand only appears on the public /sponsors
+  // page when it has a tier and isPubliclyListed; CA-task-only brands
+  // (tier: null) stay off that page entirely.
+  tier             SponsorTier?
+  isPubliclyListed Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   tasks CaTask[]
   users User[]  @relation("BrandUsers")
 
   @@index([isActive])
+}
+
+model TeamMember {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  department   String
+  role         String?
+  photoUrl     String?
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([department, displayOrder])
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  imageUrl    String
+  caption     String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([publishedAt])
 }
 
 model CaTask {

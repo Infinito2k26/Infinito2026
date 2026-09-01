@@ -8,6 +8,9 @@ const NAV_ITEMS = [
     { label: 'Events', href: '/events' },
     { label: 'Sports', href: '/sports', status: 'Upcoming' },
     { label: 'About', href: '/about', status: 'Upcoming' },
+    { label: 'Team', href: '/team' },
+    { label: 'Sponsors', href: '/sponsors' },
+    { label: 'Gallery', href: '/gallery' },
 ];
 
 const Navbar = () => {
