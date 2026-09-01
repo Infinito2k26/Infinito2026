@@ -10,7 +10,16 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+  'application/pdf': 'pdf',
 };
+
+// Cloudinary stores non-image files (rulebook PDFs) under resource_type
+// 'raw' — 'image' only works for formats it can transform/thumbnail.
+// Inferred from the key's extension so getSignedGetUrl (which only ever
+// receives the key, not the original mimetype) can match it at read time.
+function resourceTypeForKey(key: string): 'image' | 'raw' {
+  return key.endsWith('.pdf') ? 'raw' : 'image';
+}
 
 export const LOCAL_UPLOAD_DIR = join(process.cwd(), 'local-uploads');
 
@@ -55,12 +64,16 @@ export class UploadsService {
       return { key: `${folder}/${filename}` };
     }
 
+    // 'raw' resource types don't get an extension auto-appended by Cloudinary
+    // the way 'image' does — embed it in the public_id so resourceTypeForKey
+    // can classify the stored key correctly later (in getSignedGetUrl).
+    const isRaw = extension === 'pdf';
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder,
-          public_id: randomUUID(),
-          resource_type: 'image',
+          public_id: isRaw ? `${randomUUID()}.${extension}` : randomUUID(),
+          resource_type: isRaw ? 'raw' : 'image',
           type: 'authenticated',
         },
         (error, uploadResult) => {
@@ -90,7 +103,7 @@ export class UploadsService {
     }
 
     return cloudinary.url(key, {
-      resource_type: 'image',
+      resource_type: resourceTypeForKey(key),
       type: 'authenticated',
       sign_url: true,
       auth_token: {

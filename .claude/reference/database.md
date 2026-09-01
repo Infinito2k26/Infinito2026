@@ -313,14 +313,14 @@ Selectable disciplines within a complex event (e.g. Athletics). Admin-defined an
 
 ### EventRulebook
 
-Rulebook files attached per event. Multiple versions can coexist (e.g. v1, amended v2). Stored in `docs/rulebooks/`. For internal reference by event coordinators — the platform displays the file link on the event page but does not parse content.
+Rulebook files attached per event. Multiple versions can coexist (e.g. v1, amended v2). The platform displays the file link on the event page but does not parse content.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID PK | |
 | `eventId` | UUID FK → Event | |
 | `title` | String | e.g. "Cricket Rulebook 2K26" |
-| `fileUrl` | String | Uploaded file URL |
+| `fileUrl` | String | Either an admin-pasted external URL (e.g. Google Drive share link, `http`/`https` only), or an `UploadsService` storage key for a directly-uploaded PDF — signed to a time-limited URL at read time only in the latter case (see `EventsService.signRulebookUrl`). Exactly one of a pasted URL or an uploaded file is required per rulebook. Added 2026-09-01 (`POST /admin/events/:id/rulebooks`). |
 | `version` | String? | e.g. "v1", "v2" |
 | `uploadedById` | UUID FK → User | Admin who uploaded |
 | `createdAt` | DateTime | |

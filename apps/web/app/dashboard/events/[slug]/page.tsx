@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarDays, MapPin, Trophy, Users } from "lucide-react";
+import { CalendarDays, FileText, MapPin, Trophy, Users } from "lucide-react";
 
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
@@ -32,6 +32,7 @@ export default function EventDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [notFound, setNotFound] = useState(false);
+    const [rulebooks, setRulebooks] = useState<{ id: string; title: string; version: string | null; fileUrl: string }[]>([]);
 
     const fetchEvent = async () => {
         setIsLoading(true);
@@ -40,6 +41,10 @@ export default function EventDetailPage() {
         try {
             const res = await api.get(`/events/${params.slug}`);
             setEvent(res.data as EventDetail);
+            api
+                .get(`/events/${params.slug}/rulebooks`)
+                .then((r) => setRulebooks(r.data?.rulebooks ?? []))
+                .catch(() => setRulebooks([]));
         } catch (err) {
             if (err instanceof ApiError && err.status === 404) {
                 setNotFound(true);
@@ -128,6 +133,23 @@ export default function EventDetailPage() {
                     <p className={styles.accommodationNote}>
                         Accommodation and mess-only add-ons are available for this event.
                     </p>
+                )}
+
+                {rulebooks.length > 0 && (
+                    <div className={styles.rulebookLinks}>
+                        {rulebooks.map((rb) => (
+                            <a
+                                key={rb.id}
+                                href={rb.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.rulebookLink}
+                            >
+                                <FileText size={14} />
+                                View Rulebook{rb.version ? ` (${rb.version})` : ""}
+                            </a>
+                        ))}
+                    </div>
                 )}
 
                 <Button

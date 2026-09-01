@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import EventForm, { type EventFormState } from "@/components/admin/event-form";
+import RulebookManager from "@/components/admin/rulebook-manager";
+import Card from "@/components/ui/card";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { api } from "@/lib/api";
@@ -121,7 +123,12 @@ export default function EditEventPage() {
             ) : error ? (
                 <ErrorState description={error} onRetry={fetchEvent} />
             ) : initialForm ? (
-                <EventForm mode="edit" eventId={params.id} initialForm={initialForm} />
+                <>
+                    <EventForm mode="edit" eventId={params.id} initialForm={initialForm} />
+                    <Card>
+                        <RulebookManager eventId={params.id} />
+                    </Card>
+                </>
             ) : null}
         </div>
     );
