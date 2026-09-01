@@ -189,9 +189,15 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 | Method | Path                        | Access          | Purpose                            |
 | ------ | --------------------------- | --------------- | ---------------------------------- |
 | GET    | `/identity/mine`            | Authenticated   | Get QR credential                  |
+| GET    | `/identity/scan/:token`     | Volunteer/Admin | Gate-scan dashboard for a credential |
 | POST   | `/identity/scan`            | Volunteer/Admin | Scan and log credential            |
-| GET    | `/identity/validate/:token` | Public          | Offline-safe credential validation |
 | GET    | `/admin/scans`               | Admin           | List scan logs, paginated, for gate audit |
+
+#### `GET /identity/scan/:token`
+
+- Only `VOLUNTEER`, `ADMIN`, `SUPER_ADMIN` — the QR itself now encodes a full URL (`<WEB_ORIGIN>/scan/:token`, see `IdentityService.issueCredential`), not a bare token, so a guard's stock camera app opens `apps/web/app/scan/[token]/page.tsx` directly. Login-gating this endpoint is what keeps a photographed QR from leaking participant PII to anyone who isn't a logged-in guard.
+- `400` if the token's HMAC signature is invalid; `404` if the signature is valid but no credential matches.
+- Response `data` shape: `{ credentialId, holder: { name, phone, photoUrl, college, isIITP, teamName, role, idType, idNumber }, event: { name, sportCategory, venue }, accommodationOpted, messOnlyOpted, scanCount, lastScannedAt, recentScans: [{ gate, direction, result, createdAt }] }`. `holder.photoUrl` is a time-limited signed URL (participant credentials only; individual/user credentials have no photo).
 
 #### `POST /identity/scan`
 
@@ -206,6 +212,36 @@ No payment gateway — every registration is paid via UPI outside the platform, 
 - Only `ADMIN` and `SUPER_ADMIN`.
 - Query: `page` (default 1), `limit` (default 20, max 100), `gate` (optional exact match).
 - Response `data` shape: `{ scans: ScanLog[], pagination: { page, limit, total, totalPages } }`. Each scan includes `holderName` (resolved from the credential's linked `user` or `participant`) and `scannedBy` (the volunteer/admin who performed the scan).
+
+### Content (Team / Sponsors / Gallery)
+
+| Method | Path                | Access | Purpose                                    |
+| ------ | ------------------- | ------ | ------------------------------------------- |
+| GET    | `/team`             | Public | List team/committee members, grouped by department |
+| GET    | `/gallery`          | Public | Paginated public photo gallery              |
+| GET    | `/sponsors`         | Public | List publicly-listed, tiered sponsor brands |
+| POST   | `/admin/team`       | Admin  | Create a team member (multipart, `photo` optional) |
+| PATCH  | `/admin/team/:id`   | Admin  | Update a team member (multipart, `photo` optional) |
+| DELETE | `/admin/team/:id`   | Admin  | Remove a team member                       |
+| POST   | `/admin/gallery`    | Admin  | Add a gallery photo (multipart, `image` required) |
+| PATCH  | `/admin/gallery/:id`| Admin  | Update a gallery item's caption            |
+| DELETE | `/admin/gallery/:id`| Admin  | Remove a gallery item                      |
+
+#### `GET /team`
+
+Response `data` shape: `{ departments: [{ department, members: [{ id, name, department, role, photoUrl, displayOrder }] }] }`. `photoUrl` is a time-limited signed URL when set.
+
+#### `GET /gallery`
+
+Query: `page` (default 1), `limit` (default 20, max 100). Response `data` shape: `{ items: [{ id, imageUrl, caption, publishedAt }], pagination: { page, limit, total, totalPages } }`, newest (`publishedAt`) first.
+
+#### `GET /sponsors`
+
+Response `data` shape: `{ sponsors: [{ id, name, logoUrl, tier }] }`. Only `Brand` rows with `tier` set, `isPubliclyListed: true`, and `status: ACTIVE`; ordered by tier (`TITLE` first).
+
+#### Sponsor tier management
+
+Sponsor tier/listing is managed via the existing Brand admin endpoints, not a separate route: `POST /admin/brands` / `PATCH /admin/brands/:id` now also accept `tier` (`SponsorTier` enum) and `isPubliclyListed` (boolean).
 
 ### CA Portal (Phase 3-5 Additions)
 

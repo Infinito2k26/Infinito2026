@@ -3,9 +3,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsEnum,
+  IsBoolean,
   ValidateIf,
   IsInt,
 } from 'class-validator';
+import { SponsorTier } from '@prisma/client';
 
 export enum TaskSource {
   MODERATOR = 'MODERATOR',
@@ -36,6 +38,14 @@ export class CreateBrandDto {
   @IsString()
   @IsOptional()
   contactEmail?: string;
+
+  @IsEnum(SponsorTier)
+  @IsOptional()
+  tier?: SponsorTier;
+
+  @IsBoolean()
+  @IsOptional()
+  isPubliclyListed?: boolean;
 }
 
 export class UpdateBrandDto {
@@ -46,6 +56,14 @@ export class UpdateBrandDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsEnum(SponsorTier)
+  @IsOptional()
+  tier?: SponsorTier;
+
+  @IsBoolean()
+  @IsOptional()
+  isPubliclyListed?: boolean;
 }
 
 export class CreateTaskDto {

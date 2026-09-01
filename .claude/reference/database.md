@@ -201,6 +201,16 @@ enum TaskStatus {
   VERIFIED
   REJECTED
 }
+
+// Public-facing sponsor tier, shown on the /sponsors page. Null on a Brand
+// means it's a CA-task-only brand, not a public sponsor.
+enum SponsorTier {
+  TITLE
+  GOLD
+  SILVER
+  BRONZE
+  ASSOCIATE
+}
 ```
 
 ---
@@ -469,8 +479,41 @@ Sponsors / brands on whose behalf the internal team assigns tasks to CAs. Brands
 | `contactName` | String? | Internal sponsor contact |
 | `contactEmail` | String? | |
 | `isActive` | Boolean | Default true |
+| `tier` | SponsorTier? | Null = not a public sponsor, only a CA-task brand. Added 2026-09-01. |
+| `isPubliclyListed` | Boolean | Default true. A Brand appears on `/sponsors` only when both this is true and `tier` is set. Added 2026-09-01. |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
+
+---
+
+### TeamMember
+
+Public-facing committee/team roster shown on `/team`, grouped by `department`. Distinct from `Participant` (a competing player) — this is festival organizing-team info only.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `name` | String | |
+| `department` | String | Grouping key shown as a section heading, e.g. "Web Development" |
+| `role` | String? | e.g. "Coordinator" |
+| `photoUrl` | String? | Uploaded via `UploadsService`, same signed-URL pattern as `Participant.photoUrl` |
+| `displayOrder` | Int | Default 0. Sort order within a department. |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+
+---
+
+### GalleryItem
+
+A single published photo shown on `/gallery`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `imageUrl` | String | Uploaded via `UploadsService`, signed-URL pattern |
+| `caption` | String? | |
+| `publishedAt` | DateTime | Default now(). Sort key for the public gallery (newest first). |
+| `createdAt` | DateTime | |
 
 ---
 
@@ -713,6 +756,8 @@ Immutable audit of every QR scan. Volunteer selects gate and direction (ENTRY / 
 | Credential | unique `userId` | One QR per individual |
 | ScanLog | `(credentialId, createdAt)` | Scan history timeline |
 | ScanLog | `(gate, direction, createdAt)` | Gate traffic reporting |
+| TeamMember | `(department, displayOrder)` | Grouped public listing order |
+| GalleryItem | `(publishedAt)` | Newest-first public listing |
 
 ---
 

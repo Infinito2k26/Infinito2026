@@ -47,6 +47,7 @@ flowchart TD
 | Admin         | operational dashboards, brands, ca-tasks, task verification (compare-and-swap) |
 | CA            | Campus Ambassador onboarding, referral links, tasks, proofs |
 | Leads         | Waitlist capture and pre-registration CRM           |
+| Content       | Public team roster, sponsor listing, photo gallery (admin CRUD + public pages) |
 
 ## 4. Boundary Rules
 
