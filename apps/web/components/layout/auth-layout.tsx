@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import Navbar from "./navbar";
 import styles from "./auth-layout.module.css";
 
 /**
@@ -16,6 +16,7 @@ import styles from "./auth-layout.module.css";
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell}>
+      <Navbar />
       <div className={styles.artPanel}>
         <Image
           src="/main-mobile.png"
@@ -28,11 +29,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
 
       <div className={styles.formPanel}>
-        <Link href="/" className={styles.brand} aria-label="Infinito 2026, home">
-          <span className={styles.brandMark}>Infinito</span>
-          <span className={styles.brandSub}>Ruins of Ragnarok</span>
-        </Link>
-
         <div className={styles.formSlot}>{children}</div>
       </div>
     </div>

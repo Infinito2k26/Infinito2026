@@ -64,7 +64,7 @@ const Navbar = () => {
           <Link href="/login" className={styles.navbar_item}>
             Login
           </Link>
-          <Link href="/register" className={styles.navbar_signup}>
+          <Link href="/signup" className={styles.navbar_signup}>
             Register
           </Link>
         </div>
@@ -108,7 +108,7 @@ const Navbar = () => {
           <Link href="/login" className={styles.mobile_menu_login}>
             Login
           </Link>
-          <Link href="/register" className={styles.mobile_menu_register}>
+          <Link href="/signup" className={styles.mobile_menu_register}>
             Register
           </Link>
         </div>

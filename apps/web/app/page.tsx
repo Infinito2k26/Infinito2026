@@ -115,7 +115,7 @@ export default function Home() {
           One fest. Countless battles. One legacy still to be written. The ruins
           remain — what stands on them next is yours to decide.
         </p>
-        <Link href="/register" className={styles.legacyCta}>
+        <Link href="/signup" className={styles.legacyCta}>
           Write your legacy
         </Link>
       </Reveal>
