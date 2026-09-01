@@ -30,12 +30,27 @@
 }
 
 .value {
+  display: inline-block;
   font-family: var(--f-display);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 700;
   line-height: 1;
   color: var(--crimson-800);
   font-variant-numeric: tabular-nums;
+  animation: tick-in 500ms var(--ease);
+}
+
+@keyframes tick-in {
+  0% {
+    opacity: 0.3;
+    transform: translateY(-10px);
+    text-shadow: 0 0 18px var(--glow-200);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    text-shadow: 0 0 0 transparent;
+  }
 }
 
 .unit {

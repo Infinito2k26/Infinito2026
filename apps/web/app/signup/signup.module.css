@@ -120,4 +120,12 @@
   font-size: var(--fs-small);
   text-align: center;
   border: 1px solid var(--err);
+  animation: alert-shake 420ms var(--ease);
+}
+
+@keyframes alert-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
 }

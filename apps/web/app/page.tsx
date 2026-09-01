@@ -4,14 +4,16 @@ import Hero from "@/components/home/hero";
 import Countdown from "@/components/home/countdown";
 import PosterCard from "@/components/ui/poster-card";
 import Ornament from "@/components/ui/ornament";
+import Reveal from "@/components/ui/reveal";
+import CountUp from "@/components/ui/count-up";
 import { FEATURED_SPORTS, FEST_DATES } from "@/lib/sports";
 import styles from "./home.module.css";
 
 const STATS = [
-  { value: "17", label: "Sports" },
-  { value: "3", label: "Categories" },
-  { value: "3", label: "Days of war" },
-  { value: "11", label: "Editions" },
+  { value: 17, label: "Sports" },
+  { value: 3, label: "Categories" },
+  { value: 3, label: "Days of war" },
+  { value: 11, label: "Editions" },
 ];
 
 const DAYS = [
@@ -42,37 +44,40 @@ export default function Home() {
 
       <section className={styles.stats} aria-label="Infinito 2026 at a glance">
         <div className={styles.statsInner}>
-          {STATS.map(({ value, label }) => (
-            <div key={label} className={styles.stat}>
-              <span className={styles.statValue}>{value}</span>
+          {STATS.map(({ value, label }, i) => (
+            <Reveal key={label} index={i} className={styles.stat}>
+              <span className={styles.statValue}>
+                <CountUp value={value} />
+              </span>
               <span className={styles.statLabel}>{label}</span>
-            </div>
+            </Reveal>
           ))}
         </div>
         <Countdown target={FEST_DATES.start} />
       </section>
 
       <section className={styles.section}>
-        <div className={styles.sectionHead}>
+        <Reveal className={styles.sectionHead}>
           <p className="eyebrow">The battlefield awaits</p>
           <h2 className={`${styles.sectionTitle} glow`}>Choose your sport</h2>
           <p className={styles.sectionLede}>
             Seventeen sports across three categories. Pick your ground, gather
             your side, and register before entries close on 4 October.
           </p>
-        </div>
+        </Reveal>
 
         <div className={styles.posterGrid}>
           {FEATURED_SPORTS.map((sport, i) => (
-            <PosterCard
-              key={sport.id}
-              slug={sport.poster}
-              name={sport.name}
-              category={sport.category}
-              format={sport.format}
-              href={`/sports?sport=${sport.id}`}
-              priority={i < 2}
-            />
+            <Reveal key={sport.id} index={i} className={styles.posterTilt}>
+              <PosterCard
+                slug={sport.poster}
+                name={sport.name}
+                category={sport.category}
+                format={sport.format}
+                href={`/sports?sport=${sport.id}`}
+                priority={i < 2}
+              />
+            </Reveal>
           ))}
         </div>
 
@@ -84,26 +89,26 @@ export default function Home() {
       </section>
 
       <section className={styles.schedule}>
-        <div className={styles.sectionHead}>
+        <Reveal className={styles.sectionHead}>
           <p className="eyebrow">{FEST_DATES.label}</p>
           <h2 className={`${styles.sectionTitle} glow`}>Three days</h2>
-        </div>
+        </Reveal>
         <div className={styles.dayGrid}>
-          {DAYS.map(({ day, date, title, body }) => (
-            <article key={day} className={styles.day}>
+          {DAYS.map(({ day, date, title, body }, i) => (
+            <Reveal key={day} index={i} className={styles.day}>
               <p className={styles.dayLabel}>
                 {day} · {date}
               </p>
               <h3 className={styles.dayTitle}>{title}</h3>
               <p className={styles.dayBody}>{body}</p>
-            </article>
+            </Reveal>
           ))}
         </div>
       </section>
 
       <Ornament variant="ridge" />
 
-      <section className={styles.legacy}>
+      <Reveal className={styles.legacy}>
         <Ornament variant="valknut" className={styles.legacyMark} />
         <h2 className={styles.legacyTitle}>From the ruins, we rise</h2>
         <p className={styles.legacyBody}>
@@ -113,7 +118,7 @@ export default function Home() {
         <Link href="/register" className={styles.legacyCta}>
           Write your legacy
         </Link>
-      </section>
+      </Reveal>
     </PublicLayout>
   );
 }

@@ -89,7 +89,7 @@
 .navbar_list_left,
 .navbar_list_right {
   display: flex;
-  gap: var(--space-5);
+  gap: var(--space-4);
   align-items: center;
   min-width: 0;
 }
@@ -233,7 +233,11 @@
   color: var(--bone-100);
 }
 
-@media (max-width: 768px) {
+/* Raised from the usual 768px tablet cutoff: eight nav items (the four
+   original plus Team/Sponsors/Gallery/Merch added later) don't fit a single
+   desktop row until well past tablet width, and were previously overlapping
+   the Login/Register links on any window narrower than ~1150px. */
+@media (max-width: 1100px) {
   .navbar_list_left,
   .navbar_list_right {
     display: none;

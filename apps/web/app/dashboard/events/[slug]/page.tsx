@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { CalendarDays, FileText, MapPin, Trophy, Users } from "lucide-react";
 
@@ -12,6 +13,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { NotFound } from "@/components/ui/not-found";
 import { api, ApiError } from "@/lib/api";
 import { formatFeeSummary } from "@/lib/format-event-fee";
+import { findSportForEventName } from "@/lib/sports";
 import type { EventDetail } from "@/lib/types/event";
 
 import styles from "./event-detail.module.css";
@@ -74,8 +76,25 @@ export default function EventDetailPage() {
         return <ErrorState description={error ?? "Event not found."} onRetry={fetchEvent} />;
     }
 
+    const poster = findSportForEventName(event.name);
+
     return (
         <div className={styles.container}>
+            {poster && (
+                <div className={styles.posterBanner}>
+                    <Image
+                        src={`/event-${poster.poster}.jpg`}
+                        alt={`${event.name} at Infinito 2026 — Ruins of Ragnarok`}
+                        width={1600}
+                        height={2000}
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        quality={78}
+                        priority
+                        className={styles.posterImage}
+                    />
+                </div>
+            )}
+
             <Card className={styles.headerCard}>
                 <div className={styles.headerTop}>
                     <span className={styles.categoryTag}>{event.sportCategory}</span>

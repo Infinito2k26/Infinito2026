@@ -14,12 +14,17 @@
   border-radius: var(--radius-sm);
   white-space: nowrap;
   transition: background var(--t-state) var(--ease),
-    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
+    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease),
+    transform 0.08s var(--ease);
 }
 
 .button:focus-visible {
   outline: 2px solid var(--crimson-700);
   outline-offset: 2px;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .button:disabled {

@@ -12,8 +12,6 @@ import {
   Copy,
 } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import AuthGuard from "@/components/auth/AuthGuard";
-import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { ErrorState } from "@/components/ui/error-state";
@@ -117,160 +115,158 @@ export default function ScanPage() {
   };
 
   return (
-    <AuthGuard allowedRoles={["VOLUNTEER", "ADMIN", "SUPER_ADMIN"]}>
-      <div className={styles.container}>
-        {isLoading && <PageSpinner message="Loading credential..." />}
+    <div className={styles.container}>
+      {isLoading && <PageSpinner message="Loading credential..." />}
 
-        {!isLoading && loadError && (
-          <ErrorState
-            title="Couldn't verify this QR"
-            description={loadError}
-            onRetry={loadDashboard}
-          />
-        )}
+      {!isLoading && loadError && (
+        <ErrorState
+          title="Couldn't verify this QR"
+          description={loadError}
+          onRetry={loadDashboard}
+        />
+      )}
 
-        {!isLoading && dashboard && (
-          <>
-            <Card className={styles.profileCard}>
-              <div className={styles.photoWrap}>
-                {dashboard.holder.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={dashboard.holder.photoUrl}
-                    alt={dashboard.holder.name}
-                    className={styles.photo}
-                  />
-                ) : (
-                  <UserCircle size={64} className={styles.photoFallback} />
-                )}
+      {!isLoading && dashboard && (
+        <>
+          <div className={styles.profileCard}>
+            <div className={styles.photoWrap}>
+              {dashboard.holder.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={dashboard.holder.photoUrl}
+                  alt={dashboard.holder.name}
+                  className={styles.photo}
+                />
+              ) : (
+                <UserCircle size={64} className={styles.photoFallback} />
+              )}
+            </div>
+
+            <h1 className={styles.holderName}>{dashboard.holder.name}</h1>
+            <p className={styles.holderMeta}>
+              {dashboard.holder.college ?? "—"}
+              {dashboard.holder.isIITP && (
+                <span className={styles.iitpBadge}>IITP</span>
+              )}
+            </p>
+
+            <div className={styles.infoGrid}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Event</span>
+                <span className={styles.infoValue}>
+                  {dashboard.event.name}
+                </span>
               </div>
-
-              <h1 className={styles.holderName}>{dashboard.holder.name}</h1>
-              <p className={styles.holderMeta}>
-                {dashboard.holder.college ?? "—"}
-                {dashboard.holder.isIITP && (
-                  <span className={styles.iitpBadge}>IITP</span>
-                )}
-              </p>
-
-              <div className={styles.infoGrid}>
+              {dashboard.holder.teamName && (
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Event</span>
+                  <span className={styles.infoLabel}>Team</span>
                   <span className={styles.infoValue}>
-                    {dashboard.event.name}
+                    {dashboard.holder.teamName}
+                    {dashboard.holder.role ? ` · ${dashboard.holder.role}` : ""}
                   </span>
-                </div>
-                {dashboard.holder.teamName && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Team</span>
-                    <span className={styles.infoValue}>
-                      {dashboard.holder.teamName}
-                      {dashboard.holder.role ? ` · ${dashboard.holder.role}` : ""}
-                    </span>
-                  </div>
-                )}
-                {dashboard.event.venue && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>
-                      <MapPin size={14} /> Venue
-                    </span>
-                    <span className={styles.infoValue}>
-                      {dashboard.event.venue}
-                    </span>
-                  </div>
-                )}
-                {dashboard.holder.idType && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>ID</span>
-                    <span className={styles.infoValue}>
-                      {dashboard.holder.idType} · {dashboard.holder.idNumber}
-                    </span>
-                  </div>
-                )}
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>
-                    <ScanLine size={14} /> Scans
-                  </span>
-                  <span className={styles.infoValue}>
-                    {dashboard.scanCount}
-                    {dashboard.lastScannedAt &&
-                      ` · last ${new Date(dashboard.lastScannedAt).toLocaleString()}`}
-                  </span>
-                </div>
-              </div>
-
-              <div className={styles.addonRow}>
-                {dashboard.accommodationOpted && (
-                  <span className={styles.addonBadge}>
-                    <BedDouble size={14} /> Accommodation
-                  </span>
-                )}
-                {dashboard.messOnlyOpted && (
-                  <span className={styles.addonBadge}>
-                    <UtensilsCrossed size={14} /> Mess only
-                  </span>
-                )}
-              </div>
-            </Card>
-
-            <Card className={styles.actionCard}>
-              <h2 className={styles.actionTitle}>Log gate scan</h2>
-
-              <div className={styles.directionToggle}>
-                {(["ENTRY", "EXIT"] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`${styles.directionBtn} ${
-                      direction === d ? styles.directionBtnActive : ""
-                    }`}
-                    onClick={() => setDirection(d)}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-
-              <input
-                className={styles.gateInput}
-                placeholder="Gate / location (e.g. Gate 1, Mess Hall)"
-                value={gate}
-                onChange={(e) => setGate(e.target.value)}
-              />
-
-              <Button
-                onClick={handleLogScan}
-                loading={isLogging}
-                disabled={!gate.trim()}
-                className={styles.logBtn}
-              >
-                Log {direction}
-              </Button>
-
-              {logError && <p className={styles.logError}>{logError}</p>}
-
-              {logResult && (
-                <div
-                  className={`${styles.resultBanner} ${
-                    logResult.result === "VALID"
-                      ? styles.resultValid
-                      : styles.resultWarn
-                  }`}
-                >
-                  {logResult.result === "VALID" ? (
-                    <CheckCircle size={16} />
-                  ) : (
-                    <Copy size={16} />
-                  )}
-                  {logResult.result === "VALID"
-                    ? `${logResult.direction} logged at ${logResult.gate}`
-                    : `Already scanned ${logResult.direction} — duplicate`}
                 </div>
               )}
-            </Card>
-          </>
-        )}
-      </div>
-    </AuthGuard>
+              {dashboard.event.venue && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>
+                    <MapPin size={14} /> Venue
+                  </span>
+                  <span className={styles.infoValue}>
+                    {dashboard.event.venue}
+                  </span>
+                </div>
+              )}
+              {dashboard.holder.idType && (
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>ID</span>
+                  <span className={styles.infoValue}>
+                    {dashboard.holder.idType} · {dashboard.holder.idNumber}
+                  </span>
+                </div>
+              )}
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>
+                  <ScanLine size={14} /> Scans
+                </span>
+                <span className={styles.infoValue}>
+                  {dashboard.scanCount}
+                  {dashboard.lastScannedAt &&
+                    ` · last ${new Date(dashboard.lastScannedAt).toLocaleString()}`}
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.addonRow}>
+              {dashboard.accommodationOpted && (
+                <span className={styles.addonBadge}>
+                  <BedDouble size={14} /> Accommodation
+                </span>
+              )}
+              {dashboard.messOnlyOpted && (
+                <span className={styles.addonBadge}>
+                  <UtensilsCrossed size={14} /> Mess only
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.actionCard}>
+            <h2 className={styles.actionTitle}>Log gate scan</h2>
+
+            <div className={styles.directionToggle}>
+              {(["ENTRY", "EXIT"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={`${styles.directionBtn} ${
+                    direction === d ? styles.directionBtnActive : ""
+                  }`}
+                  onClick={() => setDirection(d)}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+
+            <input
+              className={styles.gateInput}
+              placeholder="Gate / location (e.g. Gate 1, Mess Hall)"
+              value={gate}
+              onChange={(e) => setGate(e.target.value)}
+            />
+
+            <Button
+              onClick={handleLogScan}
+              loading={isLogging}
+              disabled={!gate.trim()}
+              className={styles.logBtn}
+            >
+              Log {direction}
+            </Button>
+
+            {logError && <p className={styles.logError}>{logError}</p>}
+
+            {logResult && (
+              <div
+                className={`${styles.resultBanner} ${
+                  logResult.result === "VALID"
+                    ? styles.resultValid
+                    : styles.resultWarn
+                }`}
+              >
+                {logResult.result === "VALID" ? (
+                  <CheckCircle size={16} />
+                ) : (
+                  <Copy size={16} />
+                )}
+                {logResult.result === "VALID"
+                  ? `${logResult.direction} logged at ${logResult.gate}`
+                  : `Already scanned ${logResult.direction} — duplicate`}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 }

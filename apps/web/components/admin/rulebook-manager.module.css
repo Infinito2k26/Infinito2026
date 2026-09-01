@@ -1,24 +1,27 @@
 .wrapper {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .heading {
-    font-size: 0.9375rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
     font-weight: 700;
-    color: var(--color-text-primary);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
 }
 
 .hint {
     font-size: 0.8125rem;
-    color: var(--color-text-secondary);
+    color: var(--text-muted);
 }
 
 .list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
     list-style: none;
     padding: 0;
     margin: 0;
@@ -28,37 +31,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: var(--space-3);
     font-size: 0.875rem;
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .row {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: var(--space-1);
 }
 
 .label {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .errorText {
     font-size: 0.8125rem;
-    color: var(--color-danger, #dc2626);
+    color: var(--err);
 }
 
 @media (min-width: 640px) {

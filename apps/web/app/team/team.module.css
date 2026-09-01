@@ -1,42 +1,38 @@
-.container {
-    width: 100%;
-    padding: 1rem;
-    background-color: var(--color-bg-primary);
-    min-height: 100vh;
-}
-
 .header {
-    margin-bottom: 2rem;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-8) var(--spacing-container) var(--space-5);
 }
 
 .pageTitle {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    margin-bottom: 0.5rem;
+    margin-top: var(--space-2);
 }
 
 .pageSubtitle {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-    line-height: 1.5;
+    margin-top: var(--space-3);
+    color: var(--text-muted);
+    max-width: 52ch;
 }
 
 .section {
-    margin-bottom: 2rem;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: 0 var(--spacing-container) var(--space-7);
 }
 
 .deptTitle {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin-bottom: 1rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-h3);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--crimson-800);
+    margin-bottom: var(--space-4);
 }
 
 .grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    gap: var(--space-4);
 }
 
 .memberCard {
@@ -44,7 +40,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.5rem;
+    gap: var(--space-1);
 }
 
 .photoWrap {
@@ -55,7 +51,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-bg-secondary);
+    background: var(--bone-200);
 }
 
 .photo {
@@ -65,38 +61,19 @@
 }
 
 .photoFallback {
-    color: var(--color-text-secondary);
+    color: var(--mist-400);
 }
 
 .memberName {
-    font-size: 0.9375rem;
+    font-size: var(--fs-body);
     font-weight: 700;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .memberRole {
-    font-size: 0.8125rem;
-    color: var(--color-text-secondary);
-}
-
-@media (min-width: 768px) {
-    .container {
-        padding: 2rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .pageTitle {
-        font-size: 2rem;
-    }
-
-    .pageSubtitle {
-        font-size: 1rem;
-    }
-
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 1.5rem;
-    }
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
 }

@@ -39,7 +39,7 @@
 .input:focus {
   outline: none;
   border-color: var(--crimson-700);
-  box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.12);
+  box-shadow: 0 0 0 4px rgba(139, 26, 26, 0.14);
 }
 
 .input:disabled {
@@ -50,11 +50,19 @@
 
 .inputError {
   border-color: var(--err);
+  animation: input-shake 420ms var(--ease);
+}
+
+@keyframes input-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
 }
 
 .inputError:focus {
   border-color: var(--err);
-  box-shadow: 0 0 0 3px rgba(163, 39, 42, 0.14);
+  box-shadow: 0 0 0 4px rgba(163, 39, 42, 0.16);
 }
 
 /* The error carries an icon as well as its colour, so the state survives for

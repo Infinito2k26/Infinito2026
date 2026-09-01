@@ -40,41 +40,40 @@ export default function GalleryPage() {
 
     return (
         <PublicLayout>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <h1 className={styles.pageTitle}>Gallery</h1>
-                    <p className={styles.pageSubtitle}>
-                        Moments from Infinito 2K26.
-                    </p>
-                </header>
+            <header className={styles.header}>
+                <p className="eyebrow">From the fest</p>
+                <h1 className={`${styles.pageTitle} glow`}>Gallery</h1>
+                <p className={styles.pageSubtitle}>
+                    Moments from Infinito 2K26.
+                </p>
+            </header>
 
-                {isLoading ? (
-                    <SectionSpinner message="Loading gallery..." />
-                ) : error ? (
-                    <ErrorState description={error} onRetry={fetchGallery} />
-                ) : items.length === 0 ? (
-                    <EmptyState
-                        title="No photos yet"
-                        description="Check back once the fest is underway."
-                    />
-                ) : (
-                    <div className={styles.grid}>
-                        {items.map((item) => (
-                            <figure key={item.id} className={styles.tile}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={item.imageUrl}
-                                    alt={item.caption ?? ""}
-                                    className={styles.image}
-                                />
-                                {item.caption && (
-                                    <figcaption className={styles.caption}>{item.caption}</figcaption>
-                                )}
-                            </figure>
-                        ))}
-                    </div>
-                )}
-            </div>
+            {isLoading ? (
+                <SectionSpinner message="Loading gallery..." />
+            ) : error ? (
+                <ErrorState description={error} onRetry={fetchGallery} />
+            ) : items.length === 0 ? (
+                <EmptyState
+                    title="No photos yet"
+                    description="Check back once the fest is underway."
+                />
+            ) : (
+                <div className={styles.grid}>
+                    {items.map((item) => (
+                        <figure key={item.id} className={styles.tile}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={item.imageUrl}
+                                alt={item.caption ?? ""}
+                                className={styles.image}
+                            />
+                            {item.caption && (
+                                <figcaption className={styles.caption}>{item.caption}</figcaption>
+                            )}
+                        </figure>
+                    ))}
+                </div>
+            )}
         </PublicLayout>
     );
 }

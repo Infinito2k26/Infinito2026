@@ -11,6 +11,7 @@
     min-height: 180px;
     max-height: 320px;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .art {
@@ -18,6 +19,14 @@
     /* Bottom-anchored so the dark ruin band — the one part of the art with
        guaranteed contrast — stays visible even in a short banner crop. */
     object-position: center bottom;
+    transform: scale(1.08);
+    animation: art-settle 10s var(--ease) forwards;
+}
+
+@keyframes art-settle {
+    to {
+        transform: scale(1);
+    }
 }
 
 .formPanel {
@@ -36,6 +45,19 @@
     gap: 2px;
     margin-bottom: var(--space-6);
     color: inherit;
+    opacity: 0;
+    animation: brand-in 500ms var(--ease) forwards;
+}
+
+@keyframes brand-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .brand:hover {
@@ -61,6 +83,19 @@
 .formSlot {
     width: 100%;
     max-width: 420px;
+    opacity: 0;
+    animation: form-in 550ms var(--ease) 120ms forwards;
+}
+
+@keyframes form-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- Desktop: side by side, art panel on the right ------------------------ */

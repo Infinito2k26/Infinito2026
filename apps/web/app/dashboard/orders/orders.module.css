@@ -1,34 +1,31 @@
 .container {
-    width: 100%;
-    padding: 1rem;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
 }
 
 .header {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-4);
 }
 
 .pageTitle {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
-    margin-bottom: 0.5rem;
+    margin-top: 0;
 }
 
 .pageSubtitle {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    color: var(--text-muted);
 }
 
 .list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-3);
 }
 
 .orderCard {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    background: var(--bone-50);
 }
 
 .orderHeader {
@@ -38,20 +35,24 @@
 }
 
 .orderDate {
-    font-size: 0.8125rem;
-    color: var(--color-text-secondary);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
 }
 
 .itemList {
-    font-size: 0.875rem;
-    color: var(--color-text-primary);
+    font-size: var(--fs-micro);
+    color: var(--char-800);
     padding-left: 1.25rem;
     margin: 0;
 }
 
 .total {
+    font-family: var(--f-caps);
     font-size: 1rem;
     font-weight: 700;
-    color: var(--color-accent-primary);
+    color: var(--crimson-700);
     text-align: right;
 }

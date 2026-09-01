@@ -95,6 +95,19 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: var(--space-4);
+  perspective: 1200px;
+}
+
+/* A fixed 3D tilt (not cursor-tracked — that needs JS) reserved for the
+   landing showcase; every other poster-card grid in the product keeps the
+   plain lift so dense list pages don't feel gimmicky. */
+.posterTilt {
+  transition: transform var(--t-reveal) var(--ease);
+  transform-style: preserve-3d;
+}
+
+.posterTilt:hover {
+  transform: rotateY(-6deg) rotateX(3deg) translateY(-4px);
 }
 
 .sectionFoot {
@@ -131,6 +144,14 @@
   border: var(--hairline);
   border-left: 3px solid var(--ember-500);
   border-radius: var(--radius-sm);
+  transition: transform var(--t-reveal) var(--ease), box-shadow var(--t-reveal) var(--ease),
+    border-left-color var(--t-state) var(--ease);
+}
+
+.day:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md), 0 0 20px rgba(212, 98, 47, 0.18);
+  border-left-color: var(--crimson-700);
 }
 
 .dayLabel {
@@ -178,6 +199,13 @@
   opacity: 0.35;
   width: 56px;
   height: 56px;
+  animation: legacy-spin 40s linear infinite;
+}
+
+@keyframes legacy-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .legacyTitle {
@@ -208,12 +236,25 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  transition: background var(--t-state) var(--ease);
+  transition: background var(--t-state) var(--ease), transform var(--t-state) var(--ease),
+    box-shadow var(--t-state) var(--ease);
+  animation: legacy-cta-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes legacy-cta-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 98, 47, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(212, 98, 47, 0);
+  }
 }
 
 .legacyCta:hover {
   background: var(--crimson-600);
   color: var(--bone-50);
+  transform: translateY(-2px) scale(1.03);
+  animation-play-state: paused;
 }
 
 .legacyCta:focus-visible {

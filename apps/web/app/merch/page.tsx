@@ -101,47 +101,46 @@ export default function MerchPage() {
 
     return (
         <PublicLayout>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <div>
-                        <h1 className={styles.pageTitle}>Merch</h1>
-                        <p className={styles.pageSubtitle}>Official Infinito 2K26 merchandise.</p>
-                    </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => router.push("/merch/checkout")}
-                        disabled={cart.items.length === 0}
-                    >
-                        Cart ({cart.items.reduce((n, i) => n + i.quantity, 0)}) — ₹{cart.total}
-                    </Button>
-                </header>
+            <header className={styles.header}>
+                <div>
+                    <p className="eyebrow">Wear the fest</p>
+                    <h1 className={`${styles.pageTitle} glow`}>Merch</h1>
+                    <p className={styles.pageSubtitle}>Official Infinito 2K26 merchandise.</p>
+                </div>
+                <Button
+                    variant="outline"
+                    onClick={() => router.push("/merch/checkout")}
+                    disabled={cart.items.length === 0}
+                >
+                    Cart ({cart.items.reduce((n, i) => n + i.quantity, 0)}) — ₹{cart.total}
+                </Button>
+            </header>
 
-                {isLoading ? (
-                    <SectionSpinner message="Loading products..." />
-                ) : error ? (
-                    <ErrorState description={error} onRetry={fetchProducts} />
-                ) : products.length === 0 ? (
-                    <EmptyState title="No products yet" description="Check back soon." />
-                ) : (
-                    <div className={styles.grid}>
-                        {products.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                product={product}
-                                onAdd={(size, quantity) =>
-                                    cart.addItem({
-                                        productId: product.id,
-                                        name: product.name,
-                                        price: Number(product.price),
-                                        size,
-                                        quantity,
-                                    })
-                                }
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+            {isLoading ? (
+                <SectionSpinner message="Loading products..." />
+            ) : error ? (
+                <ErrorState description={error} onRetry={fetchProducts} />
+            ) : products.length === 0 ? (
+                <EmptyState title="No products yet" description="Check back soon." />
+            ) : (
+                <div className={styles.grid}>
+                    {products.map((product) => (
+                        <ProductCard
+                            key={product.id}
+                            product={product}
+                            onAdd={(size, quantity) =>
+                                cart.addItem({
+                                    productId: product.id,
+                                    name: product.name,
+                                    price: Number(product.price),
+                                    size,
+                                    quantity,
+                                })
+                            }
+                        />
+                    ))}
+                </div>
+            )}
         </PublicLayout>
     );
 }

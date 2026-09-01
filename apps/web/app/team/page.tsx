@@ -48,51 +48,50 @@ export default function TeamPage() {
 
     return (
         <PublicLayout>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <h1 className={styles.pageTitle}>Team</h1>
-                    <p className={styles.pageSubtitle}>
-                        The people behind Infinito 2K26.
-                    </p>
-                </header>
+            <header className={styles.header}>
+                <p className="eyebrow">Who runs it</p>
+                <h1 className={`${styles.pageTitle} glow`}>Team</h1>
+                <p className={styles.pageSubtitle}>
+                    The people behind Infinito 2K26.
+                </p>
+            </header>
 
-                {isLoading ? (
-                    <SectionSpinner message="Loading team..." />
-                ) : error ? (
-                    <ErrorState description={error} onRetry={fetchTeam} />
-                ) : departments.length === 0 ? (
-                    <EmptyState
-                        title="Team not published yet"
-                        description="Check back soon."
-                    />
-                ) : (
-                    departments.map((dept) => (
-                        <section key={dept.department} className={styles.section}>
-                            <h2 className={styles.deptTitle}>{dept.department}</h2>
-                            <div className={styles.grid}>
-                                {dept.members.map((member) => (
-                                    <Card key={member.id} className={styles.memberCard}>
-                                        <div className={styles.photoWrap}>
-                                            {member.photoUrl ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={member.photoUrl}
-                                                    alt={member.name}
-                                                    className={styles.photo}
-                                                />
-                                            ) : (
-                                                <UserCircle size={40} className={styles.photoFallback} />
-                                            )}
-                                        </div>
-                                        <p className={styles.memberName}>{member.name}</p>
-                                        {member.role && <p className={styles.memberRole}>{member.role}</p>}
-                                    </Card>
-                                ))}
-                            </div>
-                        </section>
-                    ))
-                )}
-            </div>
+            {isLoading ? (
+                <SectionSpinner message="Loading team..." />
+            ) : error ? (
+                <ErrorState description={error} onRetry={fetchTeam} />
+            ) : departments.length === 0 ? (
+                <EmptyState
+                    title="Team not published yet"
+                    description="Check back soon."
+                />
+            ) : (
+                departments.map((dept) => (
+                    <section key={dept.department} className={styles.section}>
+                        <h2 className={styles.deptTitle}>{dept.department}</h2>
+                        <div className={styles.grid}>
+                            {dept.members.map((member) => (
+                                <Card key={member.id} className={styles.memberCard}>
+                                    <div className={styles.photoWrap}>
+                                        {member.photoUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={member.photoUrl}
+                                                alt={member.name}
+                                                className={styles.photo}
+                                            />
+                                        ) : (
+                                            <UserCircle size={40} className={styles.photoFallback} />
+                                        )}
+                                    </div>
+                                    <p className={styles.memberName}>{member.name}</p>
+                                    {member.role && <p className={styles.memberRole}>{member.role}</p>}
+                                </Card>
+                            ))}
+                        </div>
+                    </section>
+                ))
+            )}
         </PublicLayout>
     );
 }

@@ -1,29 +1,30 @@
 .widget {
   width: 100%;
   max-width: 900px;
-  /*Width of component*/
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 2rem;
-
+  background-color: var(--bone-50);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-6);
 }
 
 .header {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-4);
   text-align: center;
 }
 
 .title {
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: var(--color-text-primary);
+  font-family: var(--f-caps);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--crimson-800);
 }
 
 .subtitle {
-  margin-top: 0.25rem;
-  font-size: 1rem;
-  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+  font-size: 0.9375rem;
+  color: var(--text-muted);
 }
 
 /* ---------- List layout  ---------- */
@@ -32,21 +33,21 @@
   display: flex;
   flex-direction: column;
   list-style: none;
-  gap: 1rem;
+  gap: var(--space-3);
 }
 
 .listItem {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  transition: background-color 0.15s ease;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-state) var(--ease);
 }
 
 .listItem:hover {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--bone-100);
 }
 
 .listInfo {
@@ -73,28 +74,28 @@
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  color: var(--char-800);
+  background-color: var(--bone-200);
+  border: var(--hairline);
 }
 
 .listItem--rank-1 .rankBadge {
-  background-color: var(--color-accent-primary);
-  border-color: var(--color-accent-primary);
-  color: #ffffff;
+  background-color: var(--ember-600);
+  border-color: var(--ember-600);
+  color: var(--bone-100);
 }
 
 .listItem--rank-2 .rankBadge,
 .listItem--rank-3 .rankBadge {
-  background-color: var(--color-accent-secondary);
-  border-color: var(--color-accent-secondary);
-  color: #ffffff;
+  background-color: var(--ember-300);
+  border-color: var(--ember-300);
+  color: var(--char-900);
 }
 
 .name {
   display: block;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--char-800);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -102,7 +103,7 @@
 
 .college {
   display: block;
-  color: var(--color-text-secondary);
+  color: var(--text-muted);
   font-size: 0.8125rem;
   white-space: nowrap;
   overflow: hidden;
@@ -112,24 +113,19 @@
 .referrals {
   flex-shrink: 0;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--char-800);
   font-variant-numeric: tabular-nums;
 }
 
 @media (min-width: 768px) {
   .widget {
     max-width: 1000px;
-    /*Width of component*/
-    padding: 1.5rem;
-  }
-
-  .title {
-    font-size: 1.25rem;
+    padding: var(--space-5);
   }
 
   .listItem {
-    padding: 0.875rem 1rem;
-    gap: 1rem;
+    padding: 0.875rem var(--space-4);
+    gap: var(--space-4);
   }
 
   .rankBadge {

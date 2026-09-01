@@ -1,67 +1,69 @@
 .page {
     max-width: 64rem;
     margin: 0 auto;
-    padding: 1.5rem;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--space-5);
 }
 
 .title {
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
+    margin-top: 0;
 }
 
 .subtitle {
-    margin-top: 0.5rem;
-    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    color: var(--text-muted);
 }
 
 .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: var(--space-4);
 }
 
 .teamCard {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    background: var(--bone-50);
 }
 
 .teamName {
-    font-size: 1.125rem;
+    font-family: var(--f-caps);
+    font-size: 0.9375rem;
     font-weight: 700;
-    color: var(--color-text-primary);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--crimson-800);
 }
 
 .eventName {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
 }
 
 .metaRow {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
-    font-size: 0.8125rem;
-    color: var(--color-text-secondary);
-    margin-top: 0.5rem;
+    gap: var(--space-3);
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
 }
 
 .rosterList {
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     padding-left: 1.25rem;
-    font-size: 0.8125rem;
-    color: var(--color-text-secondary);
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
     list-style: disc;
 }
 
 .inviteCode {
-    font-family: monospace;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     font-weight: 700;
-    color: var(--color-accent-primary);
+    color: var(--crimson-700);
     word-break: break-all;
     text-align: right;
 }

@@ -51,12 +51,20 @@ export default function Hero() {
         Infinito 2026 — Ruins of Ragnarok, IIT Patna, 9–11 October 2026
       </h1>
 
-      <picture>
-        <source media="(min-width: 1280px)" srcSet={desktop} />
-        <source media="(min-width: 769px)" srcSet={tablet} />
-        <source media="(max-width: 768px)" srcSet={mobile} />
-        <img {...rest} alt={ALT} className={styles.art} />
-      </picture>
+      <div className={styles.artWrap}>
+        <picture>
+          <source media="(min-width: 1280px)" srcSet={desktop} />
+          <source media="(min-width: 769px)" srcSet={tablet} />
+          <source media="(max-width: 768px)" srcSet={mobile} />
+          <img {...rest} alt={ALT} className={styles.art} />
+        </picture>
+
+        <div className={styles.embers} aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className={styles.ember} />
+          ))}
+        </div>
+      </div>
 
       <div className={styles.actions}>
         <Link href="/register" className={styles.primary}>

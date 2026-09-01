@@ -7,13 +7,14 @@
   background: var(--bone-50);
   box-shadow: var(--shadow-sm);
   color: inherit;
-  transition: box-shadow var(--t-enter) var(--ease),
-    transform var(--t-enter) var(--ease);
+  transition: box-shadow var(--t-reveal) var(--ease),
+    transform var(--t-reveal) var(--ease);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--ember-500), 0 14px 32px rgba(36, 31, 30, 0.28),
+    0 0 24px rgba(212, 98, 47, 0.25);
+  transform: translateY(-6px) scale(1.015);
 }
 
 .card:focus-visible {
@@ -38,7 +39,7 @@
 }
 
 .card:hover .image {
-  transform: scale(1.02);
+  transform: scale(1.07);
 }
 
 .strip {

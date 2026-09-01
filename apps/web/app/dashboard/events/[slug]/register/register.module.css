@@ -1,112 +1,181 @@
 .container {
-    width: 100%;
-    padding: 1rem;
-    background-color: var(--color-bg-primary);
-    min-height: 100vh;
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 640px;
+    margin-inline: auto;
 }
 
 .card {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-5);
 }
 
 .title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--color-text-primary);
+    margin-top: 0;
 }
+
+/* ---------- Step indicator ---------- */
+
+.steps {
+    display: flex;
+    align-items: center;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.stepConnector {
+    flex: 1;
+    height: 1px;
+    background: var(--bone-300);
+    margin: 0 var(--space-2);
+}
+
+.stepConnectorDone {
+    composes: stepConnector;
+    background: var(--crimson-700);
+}
+
+.stepNumber {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--bone-300);
+    background: var(--bone-50);
+    font-family: var(--f-caps);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--char-500);
+}
+
+.stepNumberActive {
+    composes: stepNumber;
+    border-color: var(--crimson-700);
+    background: var(--crimson-700);
+    color: var(--bone-100);
+}
+
+.stepNumberDone {
+    composes: stepNumber;
+    border-color: var(--crimson-700);
+    color: var(--crimson-700);
+}
+
+.stepLabel {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.stepLabelActive {
+    composes: stepLabel;
+    color: var(--crimson-800);
+}
+
+/* ---------- Team step ---------- */
 
 .tabRow {
     display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: 1rem;
+    gap: var(--space-2);
+    border-bottom: var(--hairline);
+    margin-bottom: var(--space-4);
 }
 
 .tab,
 .tabActive {
     padding: 0.625rem 1rem;
-    font-size: 0.875rem;
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
     font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
     cursor: pointer;
-    font-family: inherit;
 }
 
 .tab {
-    color: var(--color-text-secondary);
+    color: var(--char-500);
 }
 
 .tabActive {
-    color: var(--color-accent-primary);
-    border-bottom-color: var(--color-accent-primary);
+    color: var(--crimson-700);
+    border-bottom-color: var(--crimson-700);
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .detailsForm {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-5);
 }
 
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: var(--space-1);
 }
 
 .label {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .select {
     padding: 0.625rem 0.75rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-    font-size: 0.9375rem;
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
+    font-size: var(--fs-body);
     font-family: inherit;
 }
 
 .select:focus {
-    outline: 2px solid var(--color-accent-primary);
+    outline: 2px solid var(--crimson-700);
     outline-offset: 1px;
 }
 
 .checkboxRow {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--color-text-primary);
+    gap: var(--space-2);
+    font-size: var(--fs-body);
+    color: var(--char-800);
     cursor: pointer;
 }
 
 .fileDropzone {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md);
-    border: 1.5px dashed var(--color-border);
-    background-color: var(--color-surface);
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1.5px dashed var(--bone-300);
+    background-color: var(--bone-50);
+    color: var(--text-muted);
+    font-size: var(--fs-micro);
     cursor: pointer;
 }
 
 .fileDropzone:hover {
-    border-color: var(--color-accent-primary);
+    border-color: var(--crimson-700);
 }
 
 .hiddenFileInput {
@@ -120,35 +189,35 @@
 
 .errorText {
     font-size: 0.8125rem;
-    color: var(--color-danger, #dc2626);
+    color: var(--err);
 }
 
 .teamCreatedPanel {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .successText {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .hintText {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-    line-height: 1.5;
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    line-height: var(--lh-body);
 }
 
 .linkRow {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    background-color: var(--bone-200);
+    border: var(--hairline);
 }
 
 .linkValue {
@@ -156,43 +225,33 @@
     min-width: 0;
     overflow-x: auto;
     white-space: nowrap;
-    font-family: "SFMono-Regular", "JetBrains Mono", ui-monospace, monospace;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.8125rem;
-    color: var(--color-text-primary);
+    color: var(--char-800);
 }
 
 .copyBtn {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: var(--space-1);
     padding: 0.4375rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 600;
     font-family: inherit;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background-color: var(--bone-50);
+    color: var(--char-800);
     cursor: pointer;
 }
 
 .continueBtn {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
     width: 100%;
 }
 
 @media (min-width: 768px) {
-    .container {
-        padding: 2rem;
-        max-width: 640px;
-        margin: 0 auto;
-    }
-
-    .card {
-        padding: 2rem;
-    }
-
     .continueBtn {
         width: auto;
         min-width: 200px;

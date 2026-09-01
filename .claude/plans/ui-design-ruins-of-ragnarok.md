@@ -373,11 +373,151 @@ above it.
      simplification, upload CORS fix, homepage nav fix). One conflict, in `navbar.tsx`,
      resolved in favor of the themed rebuild — it already carried both of that branch's
      nav fixes (no stray "Upcoming" badges, Register pointed at `/register`).
-7. [ ] **Auth and participant.** Auth screens, dashboard, the three-step registration wizard,
-   credential pass.
-8. [ ] **CA portal.** The ember-forward sub-brand and its four routes.
-9. [ ] **Admin.** The nine sections on the shared table, plus the gate scanner screen.
+7. [x] **Auth and participant.** Done, 2026-09-01:
+   - [x] `login`, `signup`, `forgot-password`, `register` (waitlist) moved onto the new
+     `AuthLayout` split shell.
+   - [x] `signup` has the password-strength meter (`lib/password-strength.ts`).
+   - [x] `dashboard/credential` restyled as the dark `--char-900` pass (§10).
+   - [x] `reset-password` — checked: it already reuses `AuthLayout` and
+     `forgot-password.module.css`, no separate module needed. Confirmed done.
+   - [x] `/dashboard` — corrected: this route has no UI of its own, it's a role-based
+     redirect dispatcher (`/dashboard/events` for participants, `/dashboard/ca` for CAs,
+     `/admin` for staff). Nothing to theme here.
+   - [x] `/dashboard/events` (the participant's actual home) and
+     `/dashboard/events/[slug]` — retokenized: dropped the fighting heading overrides and
+     the stray full-bleed `.container` (padding/`background-color`/`min-height:100vh`),
+     moved spacing onto the token scale.
+   - [x] `/dashboard/teams`, `/dashboard/settings`, `/dashboard/analytics`,
+     `/dashboard/orders` — same retokenization pass. `settings.module.css` also had a
+     hardcoded `#fecaca` border on the sign-out button (§13's hex criterion) — replaced
+     with `var(--err)`. `/dashboard/analytics` is still just an `EmptyState` stub, no
+     chart implementation exists yet to theme.
+   - [x] The registration wizard (`/dashboard/events/[slug]/register`) — turned out the
+     `team` → `details` → `payment` state machine already existed (individual events skip
+     straight to `details`); what was actually missing was the "explicit" part — no visible
+     progress UI. Added a `StepIndicator` (numbered circles + connectors + Cinzel labels,
+     current/done/upcoming states) rendered above the step content. Retokenized
+     `register.module.css` and the four sub-components it composes —
+     `CustomFieldRenderer`, `SubOptionPicker`, `AccommodationSection`,
+     `UpiPaymentSection` — the last of which is shared with `merch/checkout`, so that page
+     picked up the same retheme for free.
+8. [x] **CA portal.** Done, 2026-09-01: `dashboard/ca` (hub), `apply`, `onboard`, `tasks`,
+   and `CAHeroSection` / `StatCard` / `ReferralCodeDisplay` / `LeaderboardWidget` /
+   `PendingStateView` / `RejectedStateView` all retokenized. Ember-forward, but not
+   literally: ember-600 text is AA-safe only at large sizes (§5's own contrast table —
+   4.4:1, "large text only"), so it carries the identity on things that qualify —
+   page `<h1>`s, the hero title (with the blackletter glow), stat/leaderboard icons,
+   badges, the referral code box's dashed border, button hover states — while small
+   Cinzel labels and button fills stay on the already-proven-safe crimson-700/bone-100
+   pair. `ReferralCodeDisplay`'s copy button now has a real confirmation state (icon +
+   "Copied" for 2s, mirroring the pattern already used for the team invite-link copy in
+   the registration wizard) — previously it just fired `console.log` with zero UI
+   feedback. `PendingStateView` got a next step (a link to `/events` while waiting) —
+   `RejectedStateView` already had real copy and a reapply button, nothing to add there.
+   Also fixed hardcoded hex along the way: `LeaderboardWidget`'s two `#ffffff` rank-badge
+   colors, and `tasks.module.css`'s status-badge colors (`#d97706`/`#059669`/`#dc2626`
+   ×3) — those were pending/approved/rejected status colors, mapped onto the existing
+   `--warn`/`--ok`/`--err` tokens rather than arbitrary hex.
+9. [x] **Admin.** Done, 2026-09-01, at deliberately lower fidelity than Saga/CA — see the
+   scope note below. All ~15 sections (the original nine plus `admin/content/team`,
+   `admin/content/sponsors`, `admin/content/gallery`, `admin/merch/products`,
+   `admin/merch/orders` from the merch merge), `event-form` and `rulebook-manager`
+   (shared by the events create/edit pages), and `admin-index` retokenized. Fixed every
+   hardcoded status-color hex along the way (`#059669`/`#d97706`/`#dc2626`/`#10b981`/
+   `#ef4444`, repeated across payments, ca-applications, and ca-tasks-assignments —
+   three near-identical review-card components independently reinvented the same
+   approve/reject colors) onto `--ok`/`--warn`/`--err`/`--info`. `admin-sidebar.tsx`
+   needed nothing — it already consumes the same tokenized classes as the participant
+   `Sidebar`. Also added the five new sections to `admin-index`'s card grid, which had
+   drifted out of sync with the sidebar nav since the merch merge.
+
+   **The plan's own `/admin/scans` description is stale.** §10 names `/admin/scans` as
+   the phone-at-a-gate scanning screen needing "large targets and unmistakable pass/fail
+   feedback" — that was written before `develop`'s gate-scan redesign shipped. In the
+   actual codebase, `/admin/scans` is a desk-bound audit log (a table of past scans, for
+   admins reviewing history) and the phone-at-the-gate screen is `/scan/[token]` (built in
+   that redesign, and already touched once this session to remove its auth gate — see
+   below). Themed `/admin/scans` as an ordinary "lowest intensity" admin table instead,
+   and gave `/scan/[token]` the dark-screen/large-target/loud-feedback treatment the plan
+   actually wanted: `--char-900` ground (`components/ui/card` swapped for a plain `div`
+   to sidestep a real cascade-order risk — its own `background` rule and mine are equal
+   specificity, so which one wins isn't guaranteed by className order; the credential
+   pass sidesteps this the same way), 60px direction-toggle buttons, 56px log button, and
+   a result banner filled solid with `--ok`/`--warn` rather than a tinted badge.
+
+   **Scope note.** Per §4/§10, admin is deliberately "lowest theme intensity" — bone
+   ground, Inter, Cinzel only in table headers, crimson only for primary/destructive —
+   which is a much smaller design surface than Saga or CA got. Given that and the sheer
+   size here (~5,300 lines across 15 sections, closer to 3× the CA portal), this pass was
+   a faster, more mechanical token/hex-cleanup sweep rather than the bespoke per-page
+   polish Saga and CA got — correct and consistent, not hand-tuned. The plan's own
+   `data-table` primitive (§9's component table lists it as built in step 4) does not
+   actually exist anywhere in the repo; each admin table still hand-rolls its own
+   `<table>` markup. They're now visually consistent with each other by convention (same
+   `.headCell`/`.bodyRow`/`.cell` recipe copied across files), not by sharing code. A
+   real `data-table` component (sticky header, zebra striping, row actions, card-list
+   fallback below 640px, per §9) is still a real gap against the acceptance criteria and
+   is follow-up work, not something this pass built.
 10. [ ] **Polish.** Motion, reduced-motion pass, accessibility audit, Lighthouse, cross-device QA.
+
+**Merged with `develop`, 2026-09-01.** This branch was 10 commits behind and has now been
+merged (one conflict in `navbar.tsx` — develop had reintroduced the `status: 'Upcoming'`
+badges on Sports/About that were already fixed here; kept the fix, added develop's new
+Team/Sponsors/Gallery/Merch links). That brought in merch store, event rulebooks,
+team/sponsors/gallery pages, and a gate-scan redesign (`/admin/scans` now works
+differently — QR encodes a scan URL, dashboard gated by guard login).
+
+**Legacy alias layer.** `globals.css` (§5, right after the layout tokens) now remaps the
+pre-theme placeholder variable names (`--color-bg-primary`, `--color-text-primary`, etc.)
+onto the new palette, and the global `h1`/`h2`/`h3` element rules already apply
+Grenze Gotisch / Cinzel. This means every page merged in from `develop` inherited correct
+*colours* immediately — none of it is visually broken — but several fought the global
+heading rules by hardcoding `font-size`/`color`/`font-weight` on class-specificity
+selectors, which silently overrides the element-level rules that would otherwise theme
+them for free.
+
+**Retheme pass on the four new Saga pages, 2026-09-01.** `team`, `sponsors`, `gallery`,
+`merch` (+ `merch/checkout`) had their header/grid CSS rewritten onto the token scale
+(matching `about.module.css`/`events.module.css`), the stray `.container` wrapper with
+hardcoded padding/`min-height:100vh` removed (`PublicLayout`'s `<main>` doesn't constrain
+width — every other Saga page centers its own sections), and heading overrides that fought
+the global blackletter/Cinzel rules deleted so `h1`/`h2`/`h3` inherit them. `lint`,
+`check-types`, and a manual `curl` against the dev server (port 3001; 3000 turned out to be
+a stale API build) confirm all four 200 and render the themed classes. No browser
+automation tool was available in this session, so this was verified structurally, not with
+an actual screenshot — a real visual pass is still owed before ship.
+`merch/checkout` is Forge-tier (behind `AuthGuard`) but was never wrapped in a layout
+shell — it renders with no nav/sidebar at all, matching the focused-checkout pattern; left
+that structure alone and only retokenized it.
+
+**Retheme pass on the participant dashboard, 2026-09-01.** `/dashboard/events` (the
+participant home — `/dashboard` itself is a redirect, see step 7 above),
+`/dashboard/events/[slug]`, `/dashboard/teams`, `/dashboard/settings`,
+`/dashboard/analytics`, `/dashboard/orders` — same retokenization treatment as the Saga
+pages. Forge tier gets a deliberate deviation from Saga here: per §4, Forge component
+titles (team names, order cards) use small Cinzel caps instead of inheriting the global
+blackletter `h2`, since blackletter repeated across a dense card grid reads as noise, not
+identity — only the page's own `h1` stays blackletter. `lint`, `check-types`, and
+`next build` (45/45 routes) all pass.
+
+**`/scan/[token]` auth removed, 2026-09-01 — a deliberate product decision, not a theming
+change.** This screen (gate QR scan → participant profile) required a logged-in
+VOLUNTEER/ADMIN/SUPER_ADMIN both client-side (`AuthGuard`) and server-side
+(`identity.controller.ts`'s `GET scan/:token`), and the frontend guard had no return-path
+handling — a gate volunteer scanning while logged out was dumped on a bare `/login` and
+lost the scan entirely. Asked the user which to fix: the redirect, or drop the auth
+requirement outright. They chose to drop it. `GET /identity/scan/:token` is now public —
+anyone with the link sees the holder's name/phone/photo/ID with no login. `POST
+/identity/scan` (the action that actually logs an entry/exit) is still guarded, since it
+attributes the scan to a specific staff member. E2E coverage updated to match
+(`identity.e2e-spec.ts`); 16/16 pass.
+
+**Asset inventory, checked 2026-09-01.** `apps/web/public/` currently holds exactly the
+files listed in §1's table and nothing else — the 3 `main-*` hero crops and the 12
+`event-*.jpg` posters. No art exists yet for merch, rulebooks, team/sponsors/gallery, the
+CA portal, or any admin screen. Steps 8–9 and the newly-merged develop pages will ship on
+tokens/ornament/`sport-icon` alone (per §7/§9) unless new art is commissioned — don't
+re-ask whether banner art is available, it isn't, beyond what's already in `public/`.
 
 Steps 1–5 are the foundation: until they are done, anything built on top will need
 reworking. 6 through 9 are independent of each other and can be taken in any order once 5

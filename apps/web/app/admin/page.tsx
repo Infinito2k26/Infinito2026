@@ -9,6 +9,11 @@ const SECTIONS = [
     { title: "Gate Scans", href: "/admin/scans", description: "Most recent QR credential scans across all gates." },
     { title: "CA Applications", href: "/admin/ca-applications", description: "Review pending Campus Ambassador applications." },
     { title: "CA Tasks", href: "/admin/ca-tasks", description: "Manage tasks and brands for the CA program." },
+    { title: "Team", href: "/admin/content/team", description: "Edit the organizing team roster shown on the public site." },
+    { title: "Sponsors", href: "/admin/content/sponsors", description: "Manage sponsor logos and tiers." },
+    { title: "Gallery", href: "/admin/content/gallery", description: "Upload and caption photos for the public gallery." },
+    { title: "Merch Products", href: "/admin/merch/products", description: "Manage merch catalogue and publish status." },
+    { title: "Merch Orders", href: "/admin/merch/orders", description: "Fulfil and track merch orders." },
 ];
 
 export default function AdminIndexPage() {

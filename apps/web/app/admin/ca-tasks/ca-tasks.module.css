@@ -3,239 +3,242 @@
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: var(--space-4) var(--spacing-container) var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-6);
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .pageTitle {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
+  margin-top: 0;
 }
 
 .pageSubtitle {
   font-size: 0.9375rem;
-  color: var(--color-text-secondary);
-  margin-top: 0.25rem;
+  color: var(--text-muted);
+  margin-top: var(--space-1);
 }
 
 .createCard {
-  border-top: 4px solid var(--color-accent-primary);
-  background-color: var(--color-surface);
-  padding: 1.5rem;
+  border-top: 4px solid var(--crimson-700);
+  background-color: var(--bone-50);
+  padding: var(--space-5);
 }
 
 .cardTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-  color: var(--color-text-primary);
+  font-family: var(--f-caps);
+  font-size: 0.9375rem;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  margin-bottom: var(--space-4);
+  color: var(--crimson-800);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2);
 }
 
 .label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--char-800);
 }
 
 .textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 1rem;
   font-family: inherit;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  color: var(--char-800);
+  background-color: var(--bone-100);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
   resize: vertical;
   outline: none;
 }
 
 .textarea:focus {
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-accent-primary-rgb), 0.15);
+  border-color: var(--crimson-700);
+  box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.15);
 }
 
 .select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 1rem;
   font-family: inherit;
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  color: var(--char-800);
+  background-color: var(--bone-100);
+  border: var(--hairline);
+  border-radius: var(--radius-sm);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
+  background-position: right var(--space-4) center;
   background-size: 1em;
   outline: none;
 }
 
 .select:focus {
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 3px rgba(var(--color-accent-primary-rgb), 0.15);
+  border-color: var(--crimson-700);
+  box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.15);
 }
 
 .inputError {
-  border-color: var(--color-error);
+  border-color: var(--err);
 }
 
 .errorText {
   font-size: 0.75rem;
-  color: var(--color-error);
+  color: var(--err);
 }
 
 .brandToggleWrapper {
-  background-color: var(--color-bg-secondary);
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--color-border);
+  background-color: var(--bone-200);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--bone-300);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .checkboxGroup {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .checkbox {
   width: 1.125rem;
   height: 1.125rem;
-  accent-color: var(--color-accent-primary);
+  accent-color: var(--crimson-700);
   cursor: pointer;
 }
 
 .checkboxLabel {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--char-800);
   cursor: pointer;
 }
 
 .formActions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 
 /* List UI */
 .listContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .taskCard {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.25rem;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  background-color: var(--bone-50);
 }
 
 .archivedCard {
   opacity: 0.7;
-  background-color: var(--color-bg-secondary);
+  background-color: var(--bone-200);
 }
 
 .taskHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .taskTitle {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--char-800);
 }
 
 .statusBadge {
+  font-family: var(--f-caps);
   font-size: 0.6875rem;
   font-weight: 700;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem var(--space-2);
   border-radius: var(--radius-sm);
   text-transform: uppercase;
 }
 
 .statusActive {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  background-color: rgba(74, 107, 63, 0.1);
+  color: var(--ok);
 }
 
 .statusArchived {
-  background-color: var(--color-border);
-  color: var(--color-text-secondary);
+  background-color: var(--bone-300);
+  color: var(--char-500);
 }
 
 .taskDetails {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .detailTag, .brandTag, .teamTag {
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.25rem 0.625rem;
+  padding: 0.25rem var(--space-3);
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-primary);
+  border: var(--hairline);
+  background-color: var(--bone-100);
+  color: var(--char-800);
 }
 
 .brandTag {
-  background-color: rgba(var(--color-accent-primary-rgb), 0.1);
-  color: var(--color-accent-primary);
-  border-color: rgba(var(--color-accent-primary-rgb), 0.3);
+  background-color: rgba(139, 26, 26, 0.08);
+  color: var(--crimson-700);
+  border-color: rgba(139, 26, 26, 0.25);
 }
 
 .taskActions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  border-top: 1px solid var(--color-border);
-  padding-top: 1rem;
+  gap: var(--space-3);
+  border-top: var(--hairline);
+  padding-top: var(--space-4);
 }
 
 .reviewLink {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  background-color: var(--color-text-primary);
-  color: var(--color-bg-primary);
-  border-radius: var(--radius-md);
+  gap: var(--space-2);
+  padding: 0.625rem var(--space-4);
+  background-color: var(--char-800);
+  color: var(--bone-100);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: opacity var(--t-state) var(--ease);
 }
 
 .reviewLink:hover {
@@ -246,20 +249,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
+  gap: var(--space-2);
+  padding: 0.625rem var(--space-4);
   background-color: transparent;
-  color: var(--color-error);
-  border: 1px solid var(--color-error);
-  border-radius: var(--radius-md);
+  color: var(--err);
+  border: 1px solid var(--err);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--t-state) var(--ease);
 }
 
 .archiveBtn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(163, 39, 42, 0.1);
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-4);
 }
 
 /* ---------- Desktop Scaling ---------- */
@@ -273,7 +281,7 @@
   .grid2Col {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    gap: var(--space-5);
   }
 
   .taskCard {
@@ -288,8 +296,4 @@
     padding-top: 0;
     align-items: center;
   }
-}
-.emptyState {
-    color: var(--color-text-secondary);
-    padding: 1rem;
 }

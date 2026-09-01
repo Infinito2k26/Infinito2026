@@ -35,6 +35,43 @@ const IDENTITY_TYPES: { value: IdentityType; label: string }[] = [
 
 type Step = "team" | "details" | "payment";
 
+const STEP_LABELS: Record<Step, string> = {
+    team: "Team",
+    details: "Details",
+    payment: "Payment",
+};
+
+function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
+    const currentIndex = steps.indexOf(current);
+    return (
+        <div className={styles.steps}>
+            {steps.map((step, i) => {
+                const done = i < currentIndex;
+                const active = i === currentIndex;
+                return (
+                    <React.Fragment key={step}>
+                        {i > 0 && (
+                            <div className={done || active ? styles.stepConnectorDone : styles.stepConnector} />
+                        )}
+                        <div className={styles.step}>
+                            <span
+                                className={
+                                    active ? styles.stepNumberActive : done ? styles.stepNumberDone : styles.stepNumber
+                                }
+                            >
+                                {i + 1}
+                            </span>
+                            <span className={active ? styles.stepLabelActive : styles.stepLabel}>
+                                {STEP_LABELS[step]}
+                            </span>
+                        </div>
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+}
+
 interface TeamRef {
     id: string;
     inviteCode: string;
@@ -102,6 +139,7 @@ export default function RegisterPage() {
     }
 
     const isTeamEvent = event.registrationType === "TEAM";
+    const steps: Step[] = isTeamEvent ? ["team", "details", "payment"] : ["details", "payment"];
 
     const handleSubmitRegistration = async () => {
         setSubmitError(null);
@@ -135,6 +173,8 @@ export default function RegisterPage() {
         <div className={styles.container}>
             <Card className={styles.card}>
                 <h1 className={styles.title}>Register — {event.name}</h1>
+
+                <StepIndicator steps={steps} current={step} />
 
                 {step === "team" && isTeamEvent && (
                     <TeamStep

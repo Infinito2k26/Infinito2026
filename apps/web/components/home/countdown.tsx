@@ -42,7 +42,7 @@ export default function Countdown({ target }: { target: string }) {
       <div className={styles.parts}>
         {parts.map(({ value, label }) => (
           <div key={label} className={styles.part}>
-            <span className={styles.value}>
+            <span key={value} className={styles.value}>
               {String(value).padStart(2, "0")}
             </span>
             <span className={styles.unit}>{label}</span>
