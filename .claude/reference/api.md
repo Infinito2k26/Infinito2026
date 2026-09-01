@@ -103,6 +103,17 @@ Response `data` shape:
 
 `PATCH /events/:id` rejects (`400`) lowering `capacity` below the event's current non-cancelled `Registration` count. This is an admin-side safety guard only — full at-registration-time capacity enforcement belongs to the Registration module.
 
+#### Event Rulebooks
+
+| Method | Path                              | Access | Purpose                                          |
+| ------ | --------------------------------- | ------ | ------------------------------------------------- |
+| GET    | `/events/:slug/rulebooks`         | Public | List rulebooks for a published event               |
+| GET    | `/admin/events/:eventId/rulebooks`| Admin  | List rulebooks for any event, including drafts     |
+| POST   | `/admin/events/:eventId/rulebooks`| Admin  | Attach a rulebook (multipart — link or PDF upload) |
+| DELETE | `/admin/rulebooks/:id`            | Admin  | Remove a rulebook                                  |
+
+`POST /admin/events/:eventId/rulebooks` body: `title`, `version?`, and **exactly one of** `fileUrl` (pasted external link, `http`/`https` only) or `file` (multipart PDF upload, max 10 MB). `400` if neither is given; a malformed or non-http(s) `fileUrl` is also rejected. Response `fileUrl` is the raw stored value for an external link, or a time-limited signed URL when it was an uploaded file — same treatment on every list response.
+
 ### Teams and Registrations
 
 | Method | Path                     | Access              | Purpose              |
