@@ -1,0 +1,138 @@
+.page {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    margin-top: 0.5rem;
+    color: var(--color-text-secondary);
+}
+
+.tabRow {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.tab,
+.tabActive {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.tab {
+    color: var(--color-text-secondary);
+}
+
+.tabActive {
+    color: var(--color-accent-primary);
+    border-bottom-color: var(--color-accent-primary);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.orderCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.buyer {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.amount {
+    font-size: 1.0625rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.itemList {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.screenshotLink {
+    display: inline-block;
+}
+
+.screenshotThumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+}
+
+.txn {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+}
+
+.rejection {
+    font-size: 0.8125rem;
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+}
+
+.rejectForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.textarea {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    resize: vertical;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1rem;
+}

@@ -1,0 +1,133 @@
+.page {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    margin-top: 0.5rem;
+    color: var(--color-text-secondary);
+}
+
+.formCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.textarea {
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--color-danger, #dc2626);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.tableCard {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    color: var(--color-text-secondary);
+}
+
+.headCell {
+    padding: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: 0.75rem;
+    color: var(--color-text-primary);
+}
+
+.actionsCell {
+    padding: 0.75rem;
+}
+
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+    .row {
+        flex-direction: row;
+    }
+
+    .row > * {
+        flex: 1;
+    }
+}

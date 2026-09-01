@@ -11,6 +11,7 @@ const NAV_ITEMS = [
     { label: 'Team', href: '/team' },
     { label: 'Sponsors', href: '/sponsors' },
     { label: 'Gallery', href: '/gallery' },
+    { label: 'Merch', href: '/merch' },
 ];
 
 const Navbar = () => {

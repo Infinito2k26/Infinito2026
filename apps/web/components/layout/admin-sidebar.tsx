@@ -21,6 +21,8 @@ const ADMIN_ITEMS: AdminItem[] = [
   { label: "Team", href: "/admin/content/team" },
   { label: "Sponsors", href: "/admin/content/sponsors" },
   { label: "Gallery", href: "/admin/content/gallery" },
+  { label: "Merch Products", href: "/admin/merch/products" },
+  { label: "Merch Orders", href: "/admin/merch/orders" },
 ];
 
 export default function AdminSidebar() {

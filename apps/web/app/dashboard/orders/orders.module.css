@@ -1,0 +1,57 @@
+.container {
+    width: 100%;
+    padding: 1rem;
+}
+
+.header {
+    margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.pageSubtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.orderCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.orderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.orderDate {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+}
+
+.itemList {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.total {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-accent-primary);
+    text-align: right;
+}
