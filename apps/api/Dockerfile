@@ -32,6 +32,11 @@ COPY --from=builder /repo/node_modules node_modules
 COPY --from=builder /repo/apps/api/dist apps/api/dist
 COPY --from=builder /repo/apps/api/prisma apps/api/prisma
 COPY --from=builder /repo/apps/api/package.json apps/api/package.json
+# prisma.config.ts carries the datasource url (schema.prisma has none) —
+# without it, `prisma migrate deploy` in this container has nowhere to read
+# DATABASE_URL from and fails, even though the app itself (PrismaService
+# builds its own connection from ConfigService) runs fine without it.
+COPY --from=builder /repo/apps/api/prisma.config.ts apps/api/prisma.config.ts
 
 WORKDIR /repo/apps/api
 EXPOSE 3000
