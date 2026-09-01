@@ -275,3 +275,7 @@
         min-width: 120px;
     }
 }
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1rem;
+}

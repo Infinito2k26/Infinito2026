@@ -41,6 +41,60 @@ interface CustomFieldDef {
 export class RegistrationsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async listRegistrations(page = 1, limit = 20, status?: string) {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
+    const skip = (page - 1) * limit;
+
+    if (status && !(status in RegistrationStatus)) {
+      throw new BadRequestException(
+        `Invalid registration status. Allowed values: ${Object.values(RegistrationStatus).join(', ')}`,
+      );
+    }
+
+    const where = status ? { status: status as RegistrationStatus } : {};
+
+    const [registrations, total] = await this.prisma.$transaction([
+      this.prisma.registration.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          isIITP: true,
+          createdAt: true,
+          event: { select: { id: true, name: true } },
+          user: { select: { id: true, name: true, email: true } },
+          team: {
+            select: {
+              id: true,
+              name: true,
+              captain: { select: { id: true, name: true, email: true } },
+            },
+          },
+          payments: {
+            select: { id: true, status: true, amount: true },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      }),
+      this.prisma.registration.count({ where }),
+    ]);
+
+    return {
+      registrations,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async create(userId: string, dto: CreateRegistrationDto) {
     const event = await this.prisma.event.findUnique({
       where: { id: dto.eventId },

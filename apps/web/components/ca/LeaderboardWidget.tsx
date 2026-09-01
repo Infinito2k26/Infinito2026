@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { SectionSpinner } from "@/components/ui/section-spinner";
 import styles from "./LeaderboardWidget.module.css";
 interface LeaderboardEntry {
   rank: number;
@@ -13,15 +16,6 @@ interface LeaderboardEntry {
 interface LeaderboardWidgetProps {
   data?: Array<{ rank: number; name: string; college: string; referrals: number }>;
 }
-// Temporary local fixture used when no `data` prop is supplied.
-// Replace with API data once backend integration is complete.
-const MOCK_DATA: LeaderboardEntry[] = [
-  { rank: 1, name: "Aditi Sharma", college: "IIT Bombay", referrals: 128 },
-  { rank: 2, name: "Rohan Mehta", college: "BITS Pilani", referrals: 111 },
-  { rank: 3, name: "Sneha Iyer", college: "NIT Trichy", referrals: 97 },
-  { rank: 4, name: "Karan Patel", college: "VIT Vellore", referrals: 84 },
-  { rank: 5, name: "Priya Nair", college: "Delhi University", referrals: 76 },
-];
 
 /**
  * Returns the appropriate list item class.
@@ -37,24 +31,23 @@ function getListItemClass(rank: number) {
 export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLeaderboard = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await api.get('/leaderboard/ca');
+      setLeaderboard(Array.isArray(res?.data) ? res.data : []);
+    } catch (err) {
+      console.error("Failed to fetch leaderboard", err);
+      setError(err instanceof Error ? err.message : "Failed to load the leaderboard.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const response = await api.get('/leaderboard/ca');
-        if (response && Array.isArray(response)) {
-            setLeaderboard(response);
-        } else {
-            setLeaderboard(MOCK_DATA);
-        }
-      } catch (err) {
-        console.error("Failed to fetch leaderboard", err);
-        setLeaderboard(MOCK_DATA);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     if (!data) {
         fetchLeaderboard();
     } else {
@@ -62,8 +55,6 @@ export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
         setIsLoading(false);
     }
   }, [data]);
-
-  const rows = leaderboard;
 
   return (
     <div className={styles.widget}>
@@ -73,10 +64,14 @@ export default function LeaderboardWidget({ data }: LeaderboardWidgetProps) {
       </div>
 
       {isLoading ? (
-        <div className="p-4 text-center text-sm text-gray-500">Loading leaderboard...</div>
+        <SectionSpinner message="Loading leaderboard..." />
+      ) : error ? (
+        <ErrorState description={error} onRetry={fetchLeaderboard} />
+      ) : leaderboard.length === 0 ? (
+        <EmptyState title="No referrals yet" description="Be the first to climb the leaderboard." />
       ) : (
         <ul className={styles.list}>
-        {rows.map((entry) => (
+        {leaderboard.map((entry) => (
           <li key={entry.rank} className={getListItemClass(entry.rank)}>
             <span className={styles.rankBadge}>
               {entry.rank}

@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { InjectQueue } from '@nestjs/bullmq';
+
 import { ConfigService } from '@nestjs/config';
 
 import { JwtService } from '@nestjs/jwt';
@@ -18,17 +20,25 @@ import * as bcrypt from 'bcrypt';
 
 import { createHash, randomUUID } from 'crypto';
 
+import type { Queue } from 'bullmq';
+
 import { Env } from '../config/env.schema';
 
 import { PrismaService } from '../prisma/prisma.service';
+
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 import { LoginDto } from './dto/login.dto';
 
 import { RegisterDto } from './dto/register.dto';
 
+import { ResetPasswordDto } from './dto/reset-password.dto';
+
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
 
 import type { RefreshTokenStore } from './refresh-token-store.interface';
+
+const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
 export interface UserProfile {
   id: string;
@@ -68,6 +78,8 @@ export class AuthService {
     private readonly config: ConfigService<Env, true>,
     @Inject(REFRESH_TOKEN_STORE)
     private readonly refreshStore: RefreshTokenStore,
+    @InjectQueue('password-reset-email')
+    private readonly passwordResetEmailQueue: Queue,
   ) {}
 
   async register(dto: RegisterDto): Promise<UserProfile> {
@@ -141,6 +153,62 @@ export class AuthService {
 
   async logout(userId: string): Promise<void> {
     await this.refreshStore.revoke(userId);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // Always behave the same way regardless of whether the email exists,
+    // so this endpoint can't be used to enumerate registered accounts.
+    if (!user) {
+      return;
+    }
+
+    const rawToken = randomUUID();
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+      },
+    });
+
+    const webOrigin = this.config.get('WEB_ORIGIN', { infer: true });
+    const resetLink = `${webOrigin}/reset-password?token=${rawToken}`;
+
+    await this.passwordResetEmailQueue.add('send', {
+      email: user.email,
+      resetLink,
+    });
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    const tokenHash = hashToken(dto.token);
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    // A password reset invalidates any existing session — force re-login.
+    await this.refreshStore.revoke(resetToken.userId);
   }
 
   async me(userId: string): Promise<UserProfile> {

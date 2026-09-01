@@ -1,0 +1,62 @@
+.pageWrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: var(--color-bg-primary);
+}
+
+.privacyPolicyCard {
+    width: 100%;
+    max-width: 48rem;
+    padding: 2rem 1.5rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.header {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.updated {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    color: var(--color-text-primary);
+    line-height: 1.6;
+}
+
+.content h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.content ul {
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+@media (min-width: 640px) {
+    .privacyPolicyCard {
+        padding: 2.5rem 2rem;
+    }
+}

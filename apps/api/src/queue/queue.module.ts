@@ -8,6 +8,7 @@ import { LeaderboardProcessor } from './jobs/leaderboard.processor';
 import { LeaderboardModule } from '../leaderboard/leaderboard.module';
 import { CredentialIssueProcessor } from '../identity/jobs/credential-issue.processor';
 import { IdentityModule } from '../identity/identity.module';
+import { PasswordResetEmailProcessor } from '../auth/jobs/password-reset-email.processor';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { IdentityModule } from '../identity/identity.module';
       { name: 'leaderboard-recalc' },
       { name: 'social-metrics-fetch' },
       { name: 'payment-confirmed' },
+      { name: 'password-reset-email' },
     ),
     LeaderboardModule,
     IdentityModule,
@@ -39,6 +41,7 @@ import { IdentityModule } from '../identity/identity.module';
     ReferralFlushProcessor,
     LeaderboardProcessor,
     CredentialIssueProcessor,
+    PasswordResetEmailProcessor,
   ],
   exports: [BullModule],
 })

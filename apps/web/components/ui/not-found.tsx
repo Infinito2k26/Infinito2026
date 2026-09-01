@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Button from "./button"
 import { SearchX } from "lucide-react"
+import styles from "./not-found.module.css"
 
 interface NotFoundProps {
     title?: string
@@ -18,20 +19,17 @@ export function NotFound({
     className,
 }: NotFoundProps) {
     return (
-        <div
-            className={`flex w-full flex-col items-center justify-center gap-3 px-6 py-24 text-center ${className ?? ""
-                }`}
-        >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <SearchX className="h-12 w-12 text-gray-400 mb-4" />
+        <div className={`${styles.wrapper} ${className ?? ""}`}>
+            <div className={styles.iconCircle}>
+                <SearchX size={24} />
             </div>
-            <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-                <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
+            <div className={styles.textGroup}>
+                <h3 className={styles.title}>{title}</h3>
+                <p className={styles.description}>{description}</p>
             </div>
             {backHref && backLabel && (
                 <Link href={backHref} tabIndex={-1}>
-                    <Button variant="ghost" className="mt-2" tabIndex={0}>
+                    <Button variant="ghost" className={styles.backBtn} tabIndex={0}>
                         {backLabel}
                     </Button>
                 </Link>

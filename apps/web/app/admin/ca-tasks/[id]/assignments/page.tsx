@@ -135,9 +135,9 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
     const fetchAssignments = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
-            setTaskInfo(data?.task ?? null);
-            setAssignments(data?.assignments ?? []);
+            const res = await api.get(`/admin/ca-tasks/${params.id}/assignments`);
+            setTaskInfo(res?.data?.task ?? null);
+            setAssignments(res?.data?.assignments ?? []);
         } catch (err) {
             console.error("Failed to load assignments", err);
         } finally {
@@ -176,9 +176,9 @@ export default function TaskAssignmentsPage({ params }: { params: { id: string }
 
             <div className={styles.listContainer}>
                 {isLoading ? (
-                    <p className="text-muted-foreground p-4">Loading submissions...</p>
+                    <p className={styles.emptyState}>Loading submissions...</p>
                 ) : assignments.length === 0 ? (
-                    <p className="text-muted-foreground p-4">No submissions yet.</p>
+                    <p className={styles.emptyState}>No submissions yet.</p>
                 ) : assignments.map((assignment) => (
                     <Card key={assignment.id} className={styles.assignmentCard}>
                         <div className={styles.cardTop}>

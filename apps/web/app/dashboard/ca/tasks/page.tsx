@@ -55,8 +55,8 @@ export default function CATasksPage() {
     const fetchTasks = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/ca/tasks');
-            setTasks(data ?? []);
+            const res = await api.get('/ca/tasks');
+            setTasks(res?.data ?? []);
         } catch (err) {
             console.error("Failed to load tasks", err);
         } finally {
@@ -125,7 +125,7 @@ export default function CATasksPage() {
 
             <div className={styles.taskList}>
                 {tasks.length === 0 ? (
-                    <p className="text-muted-foreground p-4">No active tasks right now.</p>
+                    <p className={styles.emptyState}>No active tasks right now.</p>
                 ) : tasks.map((task) => {
                     const assignment = task.assignments[0];
                     // Backend only allows a first submission — once an assignment exists

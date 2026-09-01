@@ -5,10 +5,12 @@ import {
   Patch,
   Body,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   Req,
   Query,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
 import {
   CreateBrandDto,
@@ -27,6 +29,7 @@ import type { AuthenticatedRequest } from '../common/interfaces/authenticated-re
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@SkipThrottle()
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -41,7 +44,10 @@ export class AdminController {
   }
 
   @Patch('brands/:id')
-  async updateBrand(@Param('id') id: string, @Body() dto: UpdateBrandDto) {
+  async updateBrand(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBrandDto,
+  ) {
     return this.adminService.updateBrand(id, dto);
   }
 
@@ -57,7 +63,7 @@ export class AdminController {
 
   @Get('ca-tasks/:id/assignments')
   async getTaskAssignments(
-    @Param('id') taskId: string,
+    @Param('id', ParseUUIDPipe) taskId: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
@@ -74,13 +80,16 @@ export class AdminController {
   }
 
   @Patch('ca-tasks/:id')
-  async updateTask(@Param('id') id: string, @Body() dto: UpdateTaskDto) {
+  async updateTask(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
     return this.adminService.updateTask(id, dto);
   }
 
   @Patch('ca-task-assignments/:id/verify')
   async verifyTask(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyTaskDto,
     @Req() req: AuthenticatedRequest,
   ) {
@@ -106,7 +115,7 @@ export class AdminController {
 
   @Patch('ca-applications/:id/review')
   async reviewApplication(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewApplicationDto,
     @Req() req: AuthenticatedRequest,
   ) {

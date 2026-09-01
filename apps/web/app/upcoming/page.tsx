@@ -1,14 +1,16 @@
-'use client';
-import React from 'react';
-import {Bot} from "lucide-react";
+import PublicLayout from '@/components/layout/public-layout';
+import styles from './upcoming.module.css';
 
 export default function UpcomingPage() {
     return (
-        <div style={{ padding: '4rem', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f59e0b' }}>Under Development <Bot size={50} /></h1>
-            <p style={{ fontSize: '1.25rem', color: '#666', maxWidth: '600px' }}>
-                We are currently finalizing the details for this year&apos;s massive celebration of athleticism and spirit. Stay tuned!
-            </p>
-        </div>
+        <PublicLayout>
+            <div className={styles.wrapper}>
+                <h1 className={styles.title}>Coming Soon</h1>
+                <p className={styles.description}>
+                    This page isn&apos;t live yet. We&apos;re still building it out — check back closer to the
+                    fest for updates.
+                </p>
+            </div>
+        </PublicLayout>
     );
 }

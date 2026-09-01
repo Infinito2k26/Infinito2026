@@ -197,7 +197,7 @@ describe('Identity: credential issuance + GET /identity/mine (e2e)', () => {
   });
 });
 
-describe('Identity: GET /identity/validate/:token (public, e2e)', () => {
+describe('Identity: GET /identity/scan/:token (gate dashboard, e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let identityService: IdentityService;
@@ -214,18 +214,58 @@ describe('Identity: GET /identity/validate/:token (public, e2e)', () => {
     await app.close();
   });
 
-  it('rejects a tampered token without requiring authentication (critical test #9)', async () => {
-    const res = await request(app.getHttpServer())
-      .get(`/api/identity/validate/${randomUUID()}.not-a-real-signature`)
-      .expect(200);
-
-    expect((res.body as SuccessResponse<{ valid: boolean }>).data.valid).toBe(
-      false,
-    );
+  it('rejects unauthenticated requests with 401', async () => {
+    await request(app.getHttpServer())
+      .get(`/api/identity/scan/${randomUUID()}.not-a-real-signature`)
+      .expect(401);
   });
 
-  it('validates a real, correctly signed token for an issued credential', async () => {
-    const user = await registerAndLogin(app, 'E2E Validate Token');
+  it('rejects a PARTICIPANT caller with 403 (volunteer/admin only)', async () => {
+    const user = await registerAndLogin(app, 'E2E Scan Dashboard Forbidden');
+
+    await request(app.getHttpServer())
+      .get(`/api/identity/scan/${randomUUID()}.not-a-real-signature`)
+      .set('Authorization', `Bearer ${user.token}`)
+      .expect(403);
+  });
+
+  it('rejects a tampered token with 400 (critical test #9)', async () => {
+    const volunteer = await registerLoginWithRole(
+      app,
+      prisma,
+      'E2E Scan Dashboard Tampered',
+      UserRole.VOLUNTEER,
+    );
+
+    await request(app.getHttpServer())
+      .get(`/api/identity/scan/${randomUUID()}.not-a-real-signature`)
+      .set('Authorization', `Bearer ${volunteer.token}`)
+      .expect(400);
+  });
+
+  it('returns 404 for a structurally valid but unknown/revoked credential', async () => {
+    const volunteer = await registerLoginWithRole(
+      app,
+      prisma,
+      'E2E Scan Dashboard Unknown',
+      UserRole.VOLUNTEER,
+    );
+    const rawToken = tokenService.signToken(randomUUID());
+
+    await request(app.getHttpServer())
+      .get(`/api/identity/scan/${encodeURIComponent(rawToken)}`)
+      .set('Authorization', `Bearer ${volunteer.token}`)
+      .expect(404);
+  });
+
+  it('returns the full holder dashboard for a real, correctly signed token', async () => {
+    const volunteer = await registerLoginWithRole(
+      app,
+      prisma,
+      'E2E Scan Dashboard Volunteer',
+      UserRole.VOLUNTEER,
+    );
+    const user = await registerAndLogin(app, 'E2E Scan Dashboard Holder');
     const registration = await createRegistration(prisma, user.userId);
     await identityService.issueCredentialsForPayment(registration.id);
 
@@ -235,31 +275,22 @@ describe('Identity: GET /identity/validate/:token (public, e2e)', () => {
     const rawToken = tokenService.signToken(credential.id);
 
     const res = await request(app.getHttpServer())
-      .get(`/api/identity/validate/${encodeURIComponent(rawToken)}`)
+      .get(`/api/identity/scan/${encodeURIComponent(rawToken)}`)
+      .set('Authorization', `Bearer ${volunteer.token}`)
       .expect(200);
 
     const body = (
       res.body as SuccessResponse<{
-        valid: boolean;
         credentialId: string;
-        holderName: string | null;
+        holder: { name: string; photoUrl: string | null };
+        event: { name: string };
+        scanCount: number;
       }>
     ).data;
-    expect(body.valid).toBe(true);
     expect(body.credentialId).toBe(credential.id);
-    expect(body.holderName).toBe('E2E Validate Token');
-  });
-
-  it('reports invalid for a structurally valid but unknown/revoked credential', async () => {
-    const rawToken = tokenService.signToken(randomUUID());
-
-    const res = await request(app.getHttpServer())
-      .get(`/api/identity/validate/${encodeURIComponent(rawToken)}`)
-      .expect(200);
-
-    expect((res.body as SuccessResponse<{ valid: boolean }>).data.valid).toBe(
-      false,
-    );
+    expect(body.holder.name).toBe('E2E Scan Dashboard Holder');
+    expect(body.holder.photoUrl).toBeNull();
+    expect(body.scanCount).toBe(0);
   });
 });
 

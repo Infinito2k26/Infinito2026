@@ -5,7 +5,7 @@ import styles from "./layout.module.css";
 
 const NAV_ITEMS = [
     { label: 'Home', href: '/' },
-    { label: 'Events', href: '/events', status: 'Upcoming' },
+    { label: 'Events', href: '/events' },
     { label: 'Sports', href: '/sports', status: 'Upcoming' },
     { label: 'About', href: '/about', status: 'Upcoming' },
 ];
@@ -38,7 +38,7 @@ const Navbar = () => {
                 </div>
 
                 <div className={styles.navbar_list_right}>
-                    <Link href="/register" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Register</Link>
+                    <Link href="/signup" className={`${styles.navbar_item} ${styles.navbar_signup}`}>Register</Link>
                     <Link href="/login" className={styles.navbar_item}>Login</Link>
                 </div>
 
@@ -73,7 +73,7 @@ const Navbar = () => {
                         )}
                     </Link>
                 ))}
-                <Link href="/register" className={styles.mobile_menu_item} onClick={closeMenu}>Register</Link>
+                <Link href="/signup" className={styles.mobile_menu_item} onClick={closeMenu}>Register</Link>
                 <Link href="/login" className={styles.mobile_menu_item} onClick={closeMenu}>Login</Link>
             </div>
         </nav>

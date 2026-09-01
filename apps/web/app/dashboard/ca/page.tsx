@@ -7,6 +7,7 @@ import  StatCard  from "@/components/ca/StatCard";
 import LeaderboardWidget from "@/components/ca/LeaderboardWidget";
 import { Users, Trophy, Target } from "lucide-react";
 import { api } from "@/lib/api";
+import styles from "./ca-dashboard.module.css";
 
 interface CAProfile {
     refCode: string;
@@ -23,8 +24,8 @@ export default function CADashboardPage() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const data = await api.get('/ca/me');
-                setCaData(data);
+                const res = await api.get('/ca/me');
+                setCaData(res.data);
             } catch (err: unknown) {
                 const status = (err as { status?: number })?.status;
                 if (status === 404) {
@@ -82,17 +83,17 @@ export default function CADashboardPage() {
     }
 
     return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className={styles.page}>
         <div>
-        <h1 className="text-3xl font-bold tracking-tight">Campus Ambassador Portal</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className={styles.title}>Campus Ambassador Portal</h1>
+        <p className={styles.subtitle}>
             Track your referrals, climb the leaderboard, and unlock your perks.
         </p>
         </div>
 
       {/* Top Row: The Action Center */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+        <div className={styles.actionRow}>
+        <div className={styles.referralCol}>
           {/* Passing the smart handlers down to the dumb UI */}
             <ReferralCodeDisplay
             code={caData.refCode}
@@ -101,34 +102,33 @@ export default function CADashboardPage() {
           />
         </div>
 
-        <div className="md:col-span-1">
+        <div>
             <StatCard
             title="Target College"
             value={caData.assignedCollegeName}
-            icon={<Target className="h-5 w-5 text-gray-400" />}
+            icon={<Target size={20} />}
             isTextValue={true}
           />
         </div>
         </div>
 
       {/* Middle Row: The Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className={styles.metricsRow}>
         <StatCard
             title="Total Referrals"
             value={caData.referralCount}
-            icon={<Users className="h-5 w-5 text-blue-500" />}
+            icon={<Users size={20} />}
         />
         <StatCard
             title="Current Rank"
             value={caData.rank ? `#${caData.rank}` : '—'}
-            icon={<Trophy className="h-5 w-5 text-yellow-500" />}
+            icon={<Trophy size={20} />}
         />
         </div>
 
       {/* Bottom Row: The Competition */}
-        <div className="mt-12">
-        <h2 className="text-xl font-bold mb-4">Global Leaderboard</h2>
-        {/* Pass an array of dummy leaderboard data down to the widget */}
+        <div className={styles.leaderboardSection}>
+        <h2 className={styles.leaderboardTitle}>Global Leaderboard</h2>
         <LeaderboardWidget />
         </div>
     </div>

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./layout.module.css";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
 
@@ -11,7 +11,6 @@ type SideItem = {
   label: string;
   icon: React.ReactNode;
   href: string;
-  status?: string;
 };
 
 const InfinityIcon = () => (
@@ -58,19 +57,33 @@ const SettingsIcon = () => (
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
   </svg>
 );
+const ShieldIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
 
 const SIDE_ITEMS: SideItem[] = [
   { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
-  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events", status: "Upcoming" },
-  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams", status: "Upcoming" },
+  { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events" },
+  { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams" },
   { label: "My Credential", icon: <QrCodeIcon />, href: "/dashboard/credential" },
-  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics", status: "Upcoming" },
-  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings", status: "Upcoming" },
+  { label: "Analytics", icon: <BarChartIcon />, href: "/dashboard/analytics" },
+  { label: "Settings",  icon: <SettingsIcon />, href: "/dashboard/settings" },
 ];
 
+const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN"]);
+
 export default function Sidebar() {
-  const [activeLabel, setActiveLabel] = useState("Dashboard");
+  const pathname = usePathname();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    api.get("/auth/me")
+      .then((res) => setIsAdmin(ADMIN_ROLES.has(res?.data?.role)))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -96,38 +109,38 @@ export default function Sidebar() {
       {/* ── Sidebar links ── */}
       <nav className={styles.sidebarNav} >
         <ul className={styles.sidebarNavList}>
-          {SIDE_ITEMS.map(({ label, icon, href, status }) => {
-            const active = activeLabel === label;
+          {SIDE_ITEMS.map(({ label, icon, href }) => {
+            const active = pathname === href;
             return (
               <li key={label}>
                 <Link
                   href={href}
                   className={`${styles.sidebarLink} ${active ? styles.sidebarLinkActive : ""}`}
-                  onClick={(e) => {
-                    if (status) {
-                      e.preventDefault();
-                      return;
-                    }
-                    setActiveLabel(label);
-                  }}
-                  style={status ? { opacity: 0.6, cursor: "not-allowed" } : {}}
                 >
                   <span className={styles.sidebarIcon}>
                     {icon}
                   </span>
                   <span className={styles.sidebarLabel}>{label}</span>
-                  {status && (
-                    <span style={{ marginLeft: "auto", fontSize: "0.6rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "10px", fontWeight: "bold" }}>
-                      {status}
-                    </span>
-                  )}
-                  {active && !status && (
+                  {active && (
                     <span className={styles.activePip} />
                   )}
                 </Link>
               </li>
             );
           })}
+          {isAdmin && (
+            <li key="Admin">
+              <Link
+                href="/admin"
+                className={`${styles.sidebarLink} ${pathname.startsWith("/admin") ? styles.sidebarLinkActive : ""}`}
+              >
+                <span className={styles.sidebarIcon}>
+                  <ShieldIcon />
+                </span>
+                <span className={styles.sidebarLabel}>Admin Panel</span>
+              </Link>
+            </li>
+          )}
           <li key="Logout">
             <button
                 className={styles.sidebarLink}

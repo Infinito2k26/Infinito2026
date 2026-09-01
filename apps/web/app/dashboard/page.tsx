@@ -11,12 +11,12 @@ export default function DashboardDispatcher() {
   useEffect(() => {
     const checkRoleAndRedirect = async () => {
       try {
-        const data = await api.get('/auth/me');
-        const user = data.profile || data;
+        const res = await api.get('/auth/me');
+        const user = res.data;
 
         if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
           router.replace('/admin');
-        } else if (user?.role === 'CA') {
+        } else if (user?.role === 'CAMPUS_AMBASSADOR') {
           router.replace('/dashboard/ca');
         } else {
           // Standard user dashboard

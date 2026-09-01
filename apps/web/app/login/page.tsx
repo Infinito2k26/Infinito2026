@@ -39,12 +39,13 @@ export default function LoginPage() {
         try {
             setApiError('');
             const res = await api.post('/auth/login', data);
-            
-            if (res && res.accessToken) {
-                localStorage.setItem('infinito_token', res.accessToken);
+            const { accessToken, user } = res?.data ?? {};
+
+            if (accessToken) {
+                localStorage.setItem('infinito_token', accessToken);
             }
-            
-            const role = res?.user?.role;
+
+            const role = user?.role;
             if (role === 'ADMIN') {
                 router.push('/admin');
             } else if (role === 'CAMPUS_AMBASSADOR') {
@@ -105,6 +106,9 @@ export default function LoginPage() {
                             error={errors.password?.message}
                             {...register('password')}
                         />
+                        <Link href="/forgot-password" className={styles.link}>
+                            Forgot password?
+                        </Link>
                     </div>
 
                     <Button

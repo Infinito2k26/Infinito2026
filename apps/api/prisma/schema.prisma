@@ -188,9 +188,23 @@ model User {
   brand              Brand?              @relation("BrandUsers", fields: [brandId], references: [id])
   caApplications         CAApplication[] @relation("CAApplicant")
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
+  passwordResetTokens    PasswordResetToken[]
 
   @@index([isIITP, role])
   @@index([brandId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Event {

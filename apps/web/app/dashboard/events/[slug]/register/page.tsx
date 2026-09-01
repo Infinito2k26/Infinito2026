@@ -58,7 +58,7 @@ export default function RegisterPage() {
     const [step, setStep] = useState<Step>("team");
     const [team, setTeam] = useState<TeamRef | null>(null);
     const [teamAction, setTeamAction] = useState<"create" | "join">(
-        searchParams.get("teamId") ? "join" : "create",
+        searchParams.get("inviteCode") ? "join" : "create",
     );
     const [joinedNotCaptain, setJoinedNotCaptain] = useState(false);
 
@@ -141,7 +141,6 @@ export default function RegisterPage() {
                         event={event}
                         teamAction={teamAction}
                         setTeamAction={setTeamAction}
-                        initialTeamId={searchParams.get("teamId") ?? ""}
                         initialInviteCode={searchParams.get("inviteCode") ?? ""}
                         onTeamCreated={(t) => {
                             setTeam(t);
@@ -228,7 +227,6 @@ interface TeamStepProps {
     event: EventDetail;
     teamAction: "create" | "join";
     setTeamAction: (a: "create" | "join") => void;
-    initialTeamId: string;
     initialInviteCode: string;
     onTeamCreated: (team: TeamRef) => void;
     onJoined: () => void;
@@ -241,7 +239,6 @@ function TeamStep({
     event,
     teamAction,
     setTeamAction,
-    initialTeamId,
     initialInviteCode,
     onTeamCreated,
     onJoined,
@@ -253,7 +250,7 @@ function TeamStep({
     const [copied, setCopied] = useState(false);
 
     const joinLink = createdTeam
-        ? `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard/events/${event.slug}/register?teamId=${createdTeam.id}&inviteCode=${createdTeam.inviteCode}`
+        ? `${typeof window !== "undefined" ? window.location.origin : ""}/dashboard/events/${event.slug}/register?inviteCode=${createdTeam.inviteCode}`
         : "";
 
     const copyJoinLink = async () => {
@@ -329,7 +326,6 @@ function TeamStep({
                 />
             ) : (
                 <JoinTeamForm
-                    initialTeamId={initialTeamId}
                     initialInviteCode={initialInviteCode}
                     onJoined={onJoined}
                 />
@@ -542,15 +538,12 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
 }
 
 function JoinTeamForm({
-    initialTeamId,
     initialInviteCode,
     onJoined,
 }: {
-    initialTeamId: string;
     initialInviteCode: string;
     onJoined: () => void;
 }) {
-    const [teamId, setTeamId] = useState(initialTeamId);
     const [inviteCode, setInviteCode] = useState(initialInviteCode);
     const [idType, setIdType] = useState<IdentityType>("COLLEGE_ID");
     const [idNumber, setIdNumber] = useState("");
@@ -564,7 +557,6 @@ function JoinTeamForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const nextErrors: Record<string, string> = {};
-        if (!teamId.trim()) nextErrors.teamId = "Required";
         if (!inviteCode.trim()) nextErrors.inviteCode = "Required";
         if (!idNumber.trim()) nextErrors.idNumber = "Required";
         const photoError = validateRosterFile(photo);
@@ -585,7 +577,7 @@ function JoinTeamForm({
             formData.append("photo", photo as File);
             formData.append("idFile", idFile as File);
 
-            await api.post(`/teams/${teamId.trim()}/join`, formData);
+            await api.post(`/teams/join`, formData);
             onJoined();
         } catch (err) {
             setApiError(err instanceof ApiError ? err.message : "Failed to join team.");
@@ -597,19 +589,12 @@ function JoinTeamForm({
     return (
         <form className={styles.form} onSubmit={handleSubmit}>
             <Input
-                id="join-teamId"
-                label="Team ID *"
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                error={errors.teamId}
-                hint="Ask your captain for the join link or team ID"
-            />
-            <Input
                 id="join-inviteCode"
                 label="Invite code *"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
                 error={errors.inviteCode}
+                hint="Ask your captain for the join link or invite code"
             />
 
             <div className={styles.field}>

@@ -1,12 +1,21 @@
-import React from 'react';
+import Link from 'next/link';
+import PublicLayout from '@/components/layout/public-layout';
+import Button from '@/components/ui/button';
+import styles from './sports.module.css';
 
 export default function SportsPage() {
     return (
-        <div style={{ padding: '4rem', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f59e0b' }}>Sports</h1>
-            <p style={{ fontSize: '1.25rem', color: '#666', maxWidth: '600px' }}>
-                Get ready for intense competition and thrilling sports action. The sports calendar will be unveiled here shortly.
-            </p>
-        </div>
+        <PublicLayout>
+            <div className={styles.wrapper}>
+                <h1 className={styles.title}>Sports</h1>
+                <p className={styles.description}>
+                    Get ready for intense competition and thrilling sports action. The full sports
+                    calendar is being finalized — in the meantime, browse the events already open.
+                </p>
+                <Link href="/events">
+                    <Button variant="secondary">Browse Events</Button>
+                </Link>
+            </div>
+        </PublicLayout>
     );
 }

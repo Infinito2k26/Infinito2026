@@ -4,9 +4,13 @@ import { Job } from 'bullmq';
 import { IdentityService } from '../identity.service';
 
 interface PaymentConfirmedJobData {
-  paymentId: string;
+  // Only registrationId is consumed below — payments.service.ts sends
+  // paymentId/verifiedById too, but teams.service.ts re-enqueues this same
+  // job (to backfill a credential for someone who joins a team after it's
+  // already CONFIRMED) with just the registration id.
+  paymentId?: string;
   registrationId: string;
-  verifiedById: string;
+  verifiedById?: string;
 }
 
 @Processor('payment-confirmed')

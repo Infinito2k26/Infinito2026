@@ -1,6 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppConfigModule } from './config/config.module';
+import { Env } from './config/env.schema';
 import { CommonModule } from './common/common.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -20,8 +23,6 @@ import { PaymentsModule } from './payments/payments.module';
 import { IdentityModule } from './identity/identity.module';
 import { EventsModule } from './events/events.module';
 import { TeamsModule } from './teams/teams.module';
-import { APP_FILTER } from '@nestjs/core';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -31,7 +32,15 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     QueueModule,
     HealthModule,
     PrismaModule,
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => [
+        {
+          ttl: config.get('THROTTLE_TTL_MS', { infer: true }),
+          limit: config.get('THROTTLE_LIMIT', { infer: true }),
+        },
+      ],
+    }),
     AuthModule,
     CaModule,
     LeadsModule,
@@ -44,13 +53,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     TeamsModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
-  ],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

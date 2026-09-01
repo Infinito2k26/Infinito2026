@@ -290,3 +290,7 @@
     width: auto;
   }
 }
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1rem;
+}

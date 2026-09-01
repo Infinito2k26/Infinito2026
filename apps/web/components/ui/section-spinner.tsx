@@ -1,4 +1,5 @@
 import Spinner from "./spinner"
+import styles from "./section-spinner.module.css"
 
 interface SectionSpinnerProps {
     message?: string;
@@ -6,14 +7,14 @@ interface SectionSpinnerProps {
     className?: string
 }
 
-export function SectionSpinner({message,minHeight = "200px", className }: SectionSpinnerProps) {
+export function SectionSpinner({ message, minHeight = "200px", className }: SectionSpinnerProps) {
     return (
         <div
-            className={`flex w-full flex-col items-center justify-center gap-2 py-12 ${className ?? ""}`}
-            style={{minHeight}}
+            className={`${styles.wrapper} ${className ?? ""}`}
+            style={{ minHeight }}
         >
-            <Spinner size="md" className="text-primary" />
-            {message && <p className="text-sm text-muted-foreground">{message}</p>}
+            <Spinner size="md" />
+            {message && <p className={styles.message}>{message}</p>}
         </div>
     )
 }

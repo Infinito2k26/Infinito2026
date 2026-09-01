@@ -26,6 +26,33 @@
   color: var(--color-text-secondary);
 }
 
+.tabRow {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab,
+.tabActive {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tab {
+  color: var(--color-text-secondary);
+}
+
+.tabActive {
+  color: var(--color-accent-primary);
+  border-bottom-color: var(--color-accent-primary);
+}
+
 /* Card List */
 .listContainer {
   display: flex;
@@ -275,4 +302,9 @@
     width: 96px;
     height: 96px;
   }
+}
+
+.emptyState {
+    color: var(--color-text-secondary);
+    padding: 1rem;
 }

@@ -1,12 +1,18 @@
-import React from 'react';
+import PublicLayout from '@/components/layout/public-layout';
+import styles from './about.module.css';
 
 export default function AboutPage() {
     return (
-        <div style={{ padding: '4rem', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#f59e0b' }}>About Us</h1>
-            <p style={{ fontSize: '1.25rem', color: '#666', maxWidth: '600px' }}>
-                Infinito 2K26 is the annual sports fest of IIT Patna. We are currently finalizing the details for this year&apos;s massive celebration of athleticism and spirit. Stay tuned!
-            </p>
-        </div>
+        <PublicLayout>
+            <div className={styles.wrapper}>
+                <h1 className={styles.title}>About Infinito</h1>
+                <p className={styles.description}>
+                    Infinito 2K26 is the annual sports fest of IIT Patna — Eastern India&apos;s largest
+                    inter-college sporting event, bringing together athletes from across the region to
+                    compete, connect, and celebrate sport. Full details on this year&apos;s edition are
+                    on their way.
+                </p>
+            </div>
+        </PublicLayout>
     );
 }

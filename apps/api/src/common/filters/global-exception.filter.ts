@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import { Request, Response } from 'express';
 import { ErrorResponse } from '../envelope/envelope.types';
 
@@ -40,6 +41,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         'Unhandled exception',
         exception instanceof Error ? exception.stack : String(exception),
       );
+      Sentry.captureException(exception);
     }
 
     const body: ErrorResponse = {
