@@ -1,0 +1,206 @@
+/* ---------- Base Layout Structure (Mobile First: 375px) ---------- */
+.container {
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profileCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1.25rem;
+}
+
+.photoWrap {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photoFallback {
+    color: var(--color-text-secondary);
+}
+
+.holderName {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.holderMeta {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.iitpBadge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-accent-primary);
+    border: 1px solid var(--color-accent-primary);
+    border-radius: var(--radius-sm, 4px);
+    padding: 0.0625rem 0.375rem;
+}
+
+.infoGrid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    text-align: left;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.8125rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.infoRow:last-child {
+    border-bottom: none;
+}
+
+.infoLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.infoValue {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    text-align: right;
+}
+
+.addonRow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.addonBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-sm, 4px);
+    padding: 0.25rem 0.5rem;
+}
+
+.actionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem;
+}
+
+.actionTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.directionToggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.directionBtn {
+    padding: 0.625rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.directionBtnActive {
+    border-color: var(--color-accent-primary);
+    color: var(--color-accent-primary);
+    background-color: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
+}
+
+.gateInput {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+}
+
+.logBtn {
+    width: 100%;
+}
+
+.logError {
+    font-size: 0.8125rem;
+    color: var(--color-danger);
+}
+
+.resultBanner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.resultValid {
+    color: #059669;
+    background-color: rgba(5, 150, 105, 0.1);
+}
+
+.resultWarn {
+    color: #d97706;
+    background-color: rgba(217, 119, 6, 0.1);
+}
+
+/* ---------- Desktop Scaling Grid Adjustments ---------- */
+@media (min-width: 768px) {
+    .container {
+        max-width: 32rem;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .profileCard {
+        padding: 2rem;
+    }
+}
