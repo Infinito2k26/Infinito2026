@@ -5,8 +5,13 @@
 #   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 #
 # .env.prod must set: POSTGRES_PASSWORD, DATABASE_URL, REDIS_URL,
-# CLOUDINARY_*, JWT_*_SECRET, QR_SIGNING_SECRET, WEB_ORIGIN, and optionally
-# RESEND_API_KEY / SENTRY_DSN — see apps/api/.env.example for the full list.
+# CLOUDINARY_*, JWT_*_SECRET, QR_SIGNING_SECRET, WEB_ORIGIN, CADDY_DOMAIN,
+# and optionally RESEND_API_KEY / SENTRY_DSN — see apps/api/.env.example.
+#
+# CADDY_DOMAIN gets real Let's Encrypt HTTPS with zero DNS setup, via a free
+# sslip.io hostname that resolves to this VM's own IP (e.g. a VM at
+# 34.93.239.194 uses 34-93-239-194.sslip.io) — swap in a real domain later,
+# same mechanism, no compose change needed.
 
 services:
   postgres:
@@ -45,8 +50,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env.prod
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,9 +60,28 @@ services:
     networks:
       - infinito_prod_network
 
+  # Terminates real HTTPS at the edge — the api service itself only listens
+  # on plain HTTP inside the compose network (see api.expose above).
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${CADDY_DOMAIN:?Set CADDY_DOMAIN in .env.prod} --to api:3000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    networks:
+      - infinito_prod_network
+
 volumes:
   postgres_prod_data:
   redis_prod_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   infinito_prod_network:
