@@ -13,7 +13,7 @@ describe('RolesService', () => {
       findMany: jest.Mock;
       findFirst: jest.Mock;
       create: jest.Mock;
-      update: jest.Mock;
+      update: jest.Mock<Promise<unknown>, [unknown]>;
     };
     rolePermission: {
       deleteMany: jest.Mock;
@@ -27,7 +27,7 @@ describe('RolesService', () => {
         findMany: jest.fn(),
         findFirst: jest.fn(),
         create: jest.fn(),
-        update: jest.fn(),
+        update: jest.fn<Promise<unknown>, [unknown]>(),
       },
       rolePermission: {
         deleteMany: jest.fn(),
@@ -53,7 +53,12 @@ describe('RolesService', () => {
       await service.createRole({
         name: 'Registration Team',
         permissions: [
-          { service: 'EVENTS' as never, canRead: true, canWrite: true, canDelete: false },
+          {
+            service: 'EVENTS',
+            canRead: true,
+            canWrite: true,
+            canDelete: false,
+          },
         ],
       });
 
@@ -63,7 +68,12 @@ describe('RolesService', () => {
           description: undefined,
           permissions: {
             create: [
-              { service: 'EVENTS', canRead: true, canWrite: true, canDelete: false },
+              {
+                service: 'EVENTS',
+                canRead: true,
+                canWrite: true,
+                canDelete: false,
+              },
             ],
           },
         },
@@ -107,7 +117,12 @@ describe('RolesService', () => {
 
       await service.updateRole('role-1', {
         permissions: [
-          { service: 'PAYMENTS' as never, canRead: true, canWrite: false, canDelete: false },
+          {
+            service: 'PAYMENTS',
+            canRead: true,
+            canWrite: false,
+            canDelete: false,
+          },
         ],
       });
 
@@ -121,7 +136,12 @@ describe('RolesService', () => {
           description: undefined,
           permissions: {
             create: [
-              { service: 'PAYMENTS', canRead: true, canWrite: false, canDelete: false },
+              {
+                service: 'PAYMENTS',
+                canRead: true,
+                canWrite: false,
+                canDelete: false,
+              },
             ],
           },
         },
