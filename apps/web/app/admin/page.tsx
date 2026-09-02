@@ -15,6 +15,7 @@ const SECTIONS = [
     { title: "Gallery", href: "/admin/content/gallery", description: "Upload and caption photos for the public gallery." },
     { title: "Merch Products", href: "/admin/merch/products", description: "Manage merch catalogue and publish status." },
     { title: "Merch Orders", href: "/admin/merch/orders", description: "Fulfil and track merch orders." },
+    { title: "Settings", href: "/admin/settings", description: "Payment QR/VPA and fest dates — no deploy needed." },
 ];
 
 export default function AdminIndexPage() {
