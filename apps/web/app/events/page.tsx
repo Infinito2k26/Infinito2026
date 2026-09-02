@@ -91,6 +91,10 @@ export default function EventsPage() {
                     Every event open for entry this edition. Pick one, check the fee and slots, and
                     log in to register.
                 </p>
+                <p className={styles.description}>
+                    Before you register, please read the{" "}
+                    <a href="/registration-guidelines">Registration Guidelines</a>.
+                </p>
             </header>
 
             <div className={styles.controls}>
