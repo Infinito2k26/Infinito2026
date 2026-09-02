@@ -89,6 +89,28 @@ Response `data` shape:
 
 `POST /auth/forgot-password`: body `{ email }`. `POST /auth/reset-password`: body `{ email, code, newPassword }` — `code` is the 6-digit string emailed by the first call, checked against the most recent unexpired, unused `PasswordResetToken` for that email. A wrong code increments `PasswordResetToken.failedAttempts`; 5 wrong codes locks that token out (400) even if the correct code is later supplied — request a new one via `forgot-password` again. This is link-free by design: an OTP typed back in sidesteps two failure modes a reset link has — email security scanners auto-clicking (and burning) a single-use link, and a link opened on a different device than the one mid-login-flow. Email verification (`verify-email`) stays link-based, since it's a one-time confirm-you-own-this-inbox action rather than something the user needs to transcribe.
 
+### Site Settings
+
+| Method | Path                       | Access | Purpose                                                |
+| ------ | -------------------------- | ------ | ------------------------------------------------------- |
+| GET    | `/settings`                | Public | Payment config + fest dates, editable without a deploy |
+| PATCH  | `/admin/settings/payment`  | Admin  | Update UPI VPA/payee name and/or the QR image          |
+| PATCH  | `/admin/settings/fest-dates` | Admin | Update fest start/end, registration-close, date-range label |
+
+`GET /settings` returns nulls for every field until an admin first sets them
+via the two `PATCH` endpoints below (see `SiteSettings` in `database.md`).
+Frontend consumers (`UpiPaymentSection`'s callers, the landing page's
+countdown) fall back to their previous hardcoded constants when a field comes
+back null.
+
+`PATCH /admin/settings/payment`: multipart form, `upiVpa?`, `upiPayeeName?`,
+`qrImage?` (image file, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, via
+the shared `UploadsService`). Only the fields present in the body are
+updated; omitting `qrImage` preserves the existing image.
+
+`PATCH /admin/settings/fest-dates`: JSON body, `festStartAt?`/`festEndAt?`/
+`registrationCloseAt?` (ISO 8601), `dateRangeLabel?` (display string).
+
 ### Events
 
 | Method | Path                  | Access              | Purpose               |

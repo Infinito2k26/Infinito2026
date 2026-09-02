@@ -268,6 +268,34 @@ Lookup for a reset is scoped by `(userId, usedAt: null, expiresAt > now)` ordere
 
 ---
 
+### SiteSettings
+
+Single-row config editable from `/admin/settings`, so payment details and fest
+dates can change without a code deploy. Always read/written via the fixed id
+`"singleton"` (a typed table, not a generic key-value store — see
+`SettingsService`). Public `GET /settings` returns nulls for every field until
+an admin first sets them; consumers fall back to their previous hardcoded
+constants when a field is null so a fresh deploy isn't blank.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | String PK | Always `"singleton"` |
+| `upiVpa` | String? | |
+| `upiPayeeName` | String? | |
+| `paymentQrImageUrl` | String? | `UploadsService` storage key, signed at read time |
+| `festStartAt` | DateTime? | Drives the landing-page countdown target |
+| `festEndAt` | DateTime? | |
+| `registrationCloseAt` | DateTime? | |
+| `dateRangeLabel` | String? | Display string, e.g. "9-11 October 2026" — kept separate from the raw dates so prose formatting isn't computed ad-hoc per component |
+| `updatedAt` | DateTime | |
+| `updatedByUserId` | UUID FK → User? | |
+
+**Known gap:** the landing hero image (`main-desktop.png`/etc) has the fest
+theme title and dates baked into the artwork's pixels — changing
+`SiteSettings` does not and cannot change what the hero image itself displays.
+
+---
+
 ### Event
 
 One row per event. Admin-created. All fields drive the registration form dynamically — no code change required to add a sport or esports title.
