@@ -25,6 +25,7 @@ interface UserRow {
     isEmailVerified: boolean;
     bannedAt: string | null;
     createdAt: string;
+    customRole: { id: string; name: string } | null;
 }
 
 interface UsersListResponse {
@@ -124,6 +125,7 @@ export default function AdminUsersPage() {
                                 <th className={styles.headCell}>Name</th>
                                 <th className={styles.headCell}>Email</th>
                                 <th className={styles.headCell}>Role</th>
+                                <th className={styles.headCell}>Custom Role</th>
                                 <th className={styles.headCell}>College</th>
                                 <th className={styles.headCell}>Status</th>
                             </tr>
@@ -138,6 +140,7 @@ export default function AdminUsersPage() {
                                     </td>
                                     <td className={styles.cell}>{user.email}</td>
                                     <td className={styles.cell}>{user.role.replace("_", " ")}</td>
+                                    <td className={styles.cell}>{user.customRole?.name ?? "—"}</td>
                                     <td className={styles.cell}>{user.college ?? "—"}</td>
                                     <td className={styles.cell}>
                                         {user.bannedAt ? (

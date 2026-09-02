@@ -8,25 +8,8 @@ import Modal from "@/components/ui/modal";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { api, ApiError } from "@/lib/api";
+import { ADMIN_SERVICES as SERVICES, ADMIN_SERVICE_LABELS, type AdminServiceKey } from "@/lib/admin-services";
 import styles from "./admin-roles.module.css";
-
-const SERVICES = [
-    "EVENTS",
-    "REGISTRATIONS",
-    "PAYMENTS",
-    "MERCH",
-    "TEAMS",
-    "CONTENT",
-    "IDENTITY",
-    "SETTINGS",
-    "CA",
-    "LEADS",
-    "LEADERBOARD",
-    "UPLOADS",
-    "ADMIN_USERS",
-] as const;
-
-type AdminServiceKey = (typeof SERVICES)[number];
 
 interface RolePermission {
     service: AdminServiceKey;
@@ -208,7 +191,7 @@ export default function AdminRolesPage() {
                                                 .filter((p) => p.canRead || p.canWrite || p.canDelete)
                                                 .map((p) => (
                                                     <span key={p.service} className={styles.serviceBadge}>
-                                                        {p.service}
+                                                        {ADMIN_SERVICE_LABELS[p.service]}
                                                     </span>
                                                 ))}
                                         </div>
@@ -250,7 +233,7 @@ export default function AdminRolesPage() {
                             <tbody>
                                 {SERVICES.map((service) => (
                                     <tr key={service}>
-                                        <td>{service}</td>
+                                        <td>{ADMIN_SERVICE_LABELS[service]}</td>
                                         <td>
                                             <input
                                                 type="checkbox"
