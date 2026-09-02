@@ -187,6 +187,7 @@ model User {
   iitpEmail       String?   @unique // .iitp.ac.in email confirmed via Microsoft OAuth
   isIITPVerified  Boolean   @default(false)
   isEmailVerified Boolean   @default(false)
+  bannedAt        DateTime? // set/cleared via PATCH /admin/users/:id/status — distinct from deletedAt, see database.md
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -206,6 +207,8 @@ model User {
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
   merchOrders            MerchOrder[]
+  auditLogsAsActor       AdminAuditLog[] @relation("AuditActor")
+  auditLogsAsTarget      AdminAuditLog[] @relation("AuditTarget")
 
   @@index([isIITP, role])
   @@index([brandId])
@@ -758,4 +761,21 @@ model CaReferralLead {
   registrationId String?   @db.Uuid
 
   @@map("ca_referral_leads")
+}
+
+// Accountability record for admin user-management writes (role change,
+// ban/unban). Immutable — written once, never updated.
+model AdminAuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  actorUserId    String   @db.Uuid
+  targetUserId   String   @db.Uuid
+  action         String // e.g. "ROLE_CHANGE", "BAN", "UNBAN"
+  previousValue  String?
+  newValue       String?
+  createdAt      DateTime @default(now())
+
+  actor  User @relation("AuditActor", fields: [actorUserId], references: [id])
+  target User @relation("AuditTarget", fields: [targetUserId], references: [id])
+
+  @@index([targetUserId, createdAt])
 }
