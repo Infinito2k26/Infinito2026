@@ -81,7 +81,7 @@ export class AuthController {
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto);
     return {
-      message: 'If that email is registered, a reset link has been sent.',
+      message: 'If that email is registered, a reset code has been sent.',
     };
   }
 

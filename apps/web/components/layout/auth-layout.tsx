@@ -4,9 +4,9 @@ import Navbar from "./navbar";
 import styles from "./auth-layout.module.css";
 
 /**
- * The shared split layout for login, signup, forgot-password and
- * reset-password: form on bone at left, a cropped poster at right that
- * collapses to a slim banner above the form on mobile.
+ * The shared split layout for login, signup, and forgot-password: form on
+ * bone at left, a cropped poster at right that collapses to a slim banner
+ * above the form on mobile.
  *
  * `main-mobile.png` is reused here rather than a sport poster — its 4:5
  * portrait crop fills a tall side panel cleanly, and like the landing hero it

@@ -18,7 +18,7 @@ import { User } from '@prisma/client';
 
 import * as bcrypt from 'bcrypt';
 
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomInt, randomUUID } from 'crypto';
 
 import type { Queue } from 'bullmq';
 
@@ -42,6 +42,7 @@ import type { RefreshTokenStore } from './refresh-token-store.interface';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_RESET_ATTEMPTS = 5;
 
 export interface UserProfile {
   id: string;
@@ -173,39 +174,56 @@ export class AuthService {
       return;
     }
 
-    const rawToken = randomUUID();
+    // A 6-digit code the user types back in, not a link — sidesteps two
+    // link-based failure modes: email security scanners auto-clicking (and
+    // burning) a single-use link, and a link opened on a different device
+    // than the one mid-login-flow.
+    const rawCode = randomInt(100000, 999999).toString();
     await this.prisma.passwordResetToken.create({
       data: {
         userId: user.id,
-        tokenHash: hashToken(rawToken),
+        tokenHash: hashToken(rawCode),
         expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
       },
     });
 
-    const webOrigin = this.config.get('WEB_ORIGIN', { infer: true });
-    const resetLink = `${webOrigin}/reset-password?token=${rawToken}`;
-
     await this.passwordResetEmailQueue.add('send', {
       email: user.email,
-      resetLink,
+      code: rawCode,
     });
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
-    const tokenHash = hashToken(dto.token);
-    const resetToken = await this.prisma.passwordResetToken.findUnique({
-      where: { tokenHash },
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
     });
 
-    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
-      throw new BadRequestException('Invalid or expired reset token');
+    if (!user) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+
+    const resetToken = await this.prisma.passwordResetToken.findFirst({
+      where: { userId: user.id, usedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!resetToken || resetToken.failedAttempts >= MAX_RESET_ATTEMPTS) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+
+    if (resetToken.tokenHash !== hashToken(dto.code)) {
+      await this.prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { failedAttempts: { increment: 1 } },
+      });
+      throw new BadRequestException('Invalid or expired code');
     }
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 10);
 
     await this.prisma.$transaction([
       this.prisma.user.update({
-        where: { id: resetToken.userId },
+        where: { id: user.id },
         data: { passwordHash },
       }),
       this.prisma.passwordResetToken.update({
@@ -215,7 +233,7 @@ export class AuthService {
     ]);
 
     // A password reset invalidates any existing session — force re-login.
-    await this.refreshStore.revoke(resetToken.userId);
+    await this.refreshStore.revoke(user.id);
   }
 
   async verifyEmail(dto: VerifyEmailDto): Promise<void> {
