@@ -68,10 +68,12 @@ enum AdminService {
   PAYMENTS
   MERCH
   TEAMS
-  CONTENT
-  IDENTITY
+  CONTENT   // "Team" org-bio admin page — not the whole Content module
+  GALLERY
+  IDENTITY  // Gate Scans admin page
   SETTINGS
-  CA
+  CA        // CA tasks/applications; Brand/sponsor management is SPONSORS
+  SPONSORS  // Brand model — sponsor tiers + public /sponsors listing
   LEADS
   LEADERBOARD
   UPLOADS

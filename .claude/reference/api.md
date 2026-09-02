@@ -129,7 +129,10 @@ updated; omitting `qrImage` preserves the existing image.
 
 `GET /admin/users`: query `page`/`limit` (default 20, max 100), `search`
 (matches name/email/college, case-insensitive substring), `role` (one of
-`UserRole`, 400 if invalid).
+`UserRole`, 400 if invalid). Each row includes `customRole: { id, name } | null`
+so the admin UI can show a user's assigned custom role alongside their base
+`UserRole` — without it, a custom-role assignment has no visible effect on
+this list (the base `role` column never changes).
 
 `role` and `status` `PATCH` endpoints share the same guards: an admin cannot
 act on their own account (403), every change writes an `AdminAuditLog` row
@@ -159,9 +162,15 @@ them to `ADMIN`. A user holds at most one `CustomRole` at a time
 | DELETE | `/admin/roles/:id`  | SUPER_ADMIN  | Soft-delete a role (409 if still assigned to any user) |
 
 `POST`/`PATCH` body: `{ name: string; description?: string; permissions: { service: AdminService; canRead: boolean; canWrite: boolean; canDelete: boolean }[] }`.
-`AdminService` values map 1:1 to the admin modules below: `EVENTS`,
-`REGISTRATIONS`, `PAYMENTS`, `MERCH`, `TEAMS`, `CONTENT`, `IDENTITY`,
-`SETTINGS`, `CA`, `LEADS`, `LEADERBOARD`, `UPLOADS`, `ADMIN_USERS`.
+`AdminService` values: `EVENTS`, `REGISTRATIONS`, `PAYMENTS`, `MERCH`,
+`TEAMS`, `CONTENT` (the "Team" org-bio page — not the whole Content module),
+`GALLERY`, `IDENTITY` (Gate Scans), `SETTINGS`, `CA` (CA tasks/applications),
+`SPONSORS` (the Brand model — sponsor tiers/public listing), `LEADS`,
+`LEADERBOARD`, `UPLOADS`, `ADMIN_USERS`. `CONTENT`/`GALLERY` and `CA`/`SPONSORS`
+were deliberately split even though `GalleryItem` lives in the same module as
+team bios, and `Brand` is shared between the CA program and the public
+Sponsors page — each pairing is a distinct concern an admin may want to grant
+separately (e.g. a role that edits Gallery but not the org's Team bios).
 
 Enforcement: `PermissionsGuard` + `@RequirePermission(service, action)`
 decorate individual handlers (GET→read, POST/PATCH/PUT→write, DELETE→delete)
