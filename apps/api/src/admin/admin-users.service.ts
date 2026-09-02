@@ -155,6 +155,47 @@ export class AdminUsersService {
     return updated;
   }
 
+  async updateCustomRole(
+    actorId: string,
+    targetId: string,
+    customRoleId: string | null,
+  ) {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetId },
+    });
+    if (!target) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (customRoleId) {
+      const role = await this.prisma.customRole.findFirst({
+        where: { id: customRoleId, deletedAt: null },
+      });
+      if (!role) {
+        throw new NotFoundException('Custom role not found');
+      }
+    }
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: targetId },
+        data: { customRoleId },
+        omit: { passwordHash: true },
+      }),
+      this.prisma.adminAuditLog.create({
+        data: {
+          actorUserId: actorId,
+          targetUserId: targetId,
+          action: 'CUSTOM_ROLE_CHANGE',
+          previousValue: target.customRoleId,
+          newValue: customRoleId,
+        },
+      }),
+    ]);
+
+    return updated;
+  }
+
   async updateStatus(actorId: string, targetId: string, banned: boolean) {
     if (actorId === targetId) {
       throw new ForbiddenException('You cannot ban or unban your own account');

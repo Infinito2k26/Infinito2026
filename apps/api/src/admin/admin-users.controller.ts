@@ -16,6 +16,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { AdminUsersService } from './admin-users.service';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UpdateUserCustomRoleDto } from './dto/update-user-custom-role.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 
@@ -56,6 +57,20 @@ export class AdminUsersController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.adminUsersService.updateRole(req.user.id, id, dto.role);
+  }
+
+  @Patch(':id/custom-role')
+  @Roles(UserRole.SUPER_ADMIN)
+  async updateCustomRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserCustomRoleDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminUsersService.updateCustomRole(
+      req.user.id,
+      id,
+      dto.customRoleId,
+    );
   }
 
   @Patch(':id/status')
