@@ -318,3 +318,120 @@ describe('Roles & permissions (e2e)', () => {
     expect(body.success).toBe(false);
   });
 });
+
+// Own app instance: this file's first describe block already uses most of
+// the shared login-throttle budget (10/min per process) — see the note on
+// registerAndLogin above. This block needs 3 more logins, so it gets its own
+// throttle bucket.
+describe('Roles & permissions: service granularity (e2e)', () => {
+  let app: INestApplication<App>;
+
+  beforeAll(async () => {
+    app = await createApp();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  async function registerAndLogin(name: string, role?: UserRole) {
+    const email = `${randomUUID()}@infinito.dev`;
+    const prisma = app.get(PrismaService);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email, password: PASSWORD, name, consent: true })
+      .expect(201);
+
+    if (role) {
+      await prisma.user.update({ where: { email }, data: { role } });
+    }
+
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email, password: PASSWORD })
+      .expect(200);
+
+    const data = (
+      login.body as SuccessResponse<{ accessToken: string; user: UserProfile }>
+    ).data;
+
+    return { email, token: data.accessToken, userId: data.user.id };
+  }
+
+  it('SPONSORS is separate from CA, and GALLERY is separate from CONTENT', async () => {
+    const superAdmin = await registerAndLogin(
+      'E2E Super Admin Split Services',
+      UserRole.SUPER_ADMIN,
+    );
+
+    const caOnlyRole = await request(app.getHttpServer())
+      .post('/api/admin/roles')
+      .set('Authorization', `Bearer ${superAdmin.token}`)
+      .send({
+        name: `CA Only ${randomUUID()}`,
+        permissions: [
+          { service: 'CA', canRead: true, canWrite: true, canDelete: false },
+        ],
+      })
+      .expect(201);
+    const caOnlyRoleId = (caOnlyRole.body as SuccessResponse<{ id: string }>)
+      .data.id;
+
+    const contentOnlyRole = await request(app.getHttpServer())
+      .post('/api/admin/roles')
+      .set('Authorization', `Bearer ${superAdmin.token}`)
+      .send({
+        name: `Content Only ${randomUUID()}`,
+        permissions: [
+          {
+            service: 'CONTENT',
+            canRead: true,
+            canWrite: true,
+            canDelete: false,
+          },
+        ],
+      })
+      .expect(201);
+    const contentOnlyRoleId = (
+      contentOnlyRole.body as SuccessResponse<{ id: string }>
+    ).data.id;
+
+    const caMember = await registerAndLogin('E2E CA Only Member');
+    await request(app.getHttpServer())
+      .patch(`/api/admin/users/${caMember.userId}/custom-role`)
+      .set('Authorization', `Bearer ${superAdmin.token}`)
+      .send({ customRoleId: caOnlyRoleId })
+      .expect(200);
+
+    // CA access granted, but brands (now SPONSORS) stays denied.
+    await request(app.getHttpServer())
+      .get('/api/admin/ca-tasks')
+      .set('Authorization', `Bearer ${caMember.token}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .get('/api/admin/brands')
+      .set('Authorization', `Bearer ${caMember.token}`)
+      .expect(403);
+
+    const contentMember = await registerAndLogin('E2E Content Only Member');
+    await request(app.getHttpServer())
+      .patch(`/api/admin/users/${contentMember.userId}/custom-role`)
+      .set('Authorization', `Bearer ${superAdmin.token}`)
+      .send({ customRoleId: contentOnlyRoleId })
+      .expect(200);
+
+    // CONTENT (team bios) access granted, but gallery stays denied.
+    await request(app.getHttpServer())
+      .post('/api/admin/team')
+      .set('Authorization', `Bearer ${contentMember.token}`)
+      .field('name', 'E2E Team Member')
+      .field('department', 'Organizing Committee')
+      .expect(201);
+    await request(app.getHttpServer())
+      .patch('/api/admin/gallery/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${contentMember.token}`)
+      .send({ caption: 'nope' })
+      .expect(403);
+  });
+});
