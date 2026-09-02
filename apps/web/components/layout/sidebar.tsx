@@ -18,10 +18,10 @@ const InfinityIcon = () => (
     <path d="M18 8c-2.5 0-4 4-6 4s-3.5-4-6-4a4 4 0 0 0 0 8c2.5 0 4-4 6-4s3.5 4 6 4a4 4 0 0 0 0-8z" />
   </svg>
 );
-const LayoutIcon = () => (
+const HomeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
 );
 
@@ -70,7 +70,7 @@ const ShoppingBagIcon = () => (
 );
 
 const SIDE_ITEMS: SideItem[] = [
-  { label: "Dashboard", icon: <LayoutIcon />, href: "/dashboard" },
+  { label: "Home", icon: <HomeIcon />, href: "/dashboard" },
   { label: "Events",    icon: <CalendarIcon />, href: "/dashboard/events" },
   { label: "Teams",     icon: <UsersIcon />,   href: "/dashboard/teams" },
   { label: "My Credential", icon: <QrCodeIcon />, href: "/dashboard/credential" },
