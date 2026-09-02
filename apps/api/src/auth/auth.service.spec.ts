@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -32,6 +33,7 @@ const baseUser = {
   role: 'PARTICIPANT' as const,
   isEmailVerified: false,
   isIITPVerified: false,
+  bannedAt: null as Date | null,
   college: null as string | null,
   phone: null as string | null,
   passwordHash: '',
@@ -194,6 +196,21 @@ describe('AuthService', () => {
         expect.any(Date),
       );
     });
+
+    it('rejects a banned user with 403', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        bannedAt: new Date(),
+      });
+
+      await expect(
+        service.login({
+          email: baseUser.email,
+          password: 'correct-password',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(refreshStore.save).not.toHaveBeenCalled();
+    });
   });
 
   describe('refresh', () => {
@@ -210,6 +227,25 @@ describe('AuthService', () => {
 
       expect(refreshStore.revoke).toHaveBeenCalledWith(baseUser.id);
       expect(refreshStore.save).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects and revokes the session when the user was banned after login', async () => {
+      prisma.user.findUnique.mockResolvedValue(baseUser);
+      const { refreshToken } = await service.login({
+        email: baseUser.email,
+        password: 'correct-password',
+      });
+
+      refreshStore.verify.mockResolvedValue(true);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        bannedAt: new Date(),
+      });
+
+      await expect(service.refresh(refreshToken)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(refreshStore.revoke).toHaveBeenCalledWith(baseUser.id);
     });
 
     it('rejects a refresh token the store no longer recognizes (already rotated)', async () => {

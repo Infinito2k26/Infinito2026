@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -131,6 +132,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (user.bannedAt) {
+      throw new ForbiddenException('This account has been suspended');
+    }
+
     const tokens = await this.issueTokens(user);
     return { ...tokens, user: toProfile(user) };
   }
@@ -153,6 +158,11 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
+    }
+
+    if (user.bannedAt) {
+      await this.refreshStore.revoke(user.id);
+      throw new ForbiddenException('This account has been suspended');
     }
 
     await this.refreshStore.revoke(user.id);

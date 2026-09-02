@@ -242,11 +242,14 @@ The only entity that can authenticate. Team players do **not** need a User accou
 | `iitpEmail` | String? unique | `.iitp.ac.in` email confirmed via Microsoft OAuth. Null for non-IITP users. |
 | `isIITPVerified` | Boolean | Default false. True only after successful Microsoft OAuth on `.iitp.ac.in`. |
 | `isEmailVerified` | Boolean | Default false |
+| `bannedAt` | DateTime? | Set/cleared via `PATCH /admin/users/:id/status`. Distinct from `deletedAt` — see below. |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
 | `deletedAt` | DateTime? | Soft delete |
 
 **IITP verification flow:** User initiates "Verify IITP" → Microsoft OAuth → redirect with `.iitp.ac.in` token → backend confirms domain, sets `iitpEmail`, `isIITPVerified = true`, `isIITP = true`.
+
+**Why `bannedAt` is not `deletedAt`:** `deletedAt` is used elsewhere in soft-delete conventions; overloading it for "banned" risks a future soft-delete feature accidentally un-banning someone, or a ban accidentally triggering delete-semantics somewhere that checks `deletedAt`. A distinct column removes that ambiguity. `POST /auth/login` and `POST /auth/refresh` both reject (403) when `bannedAt` is set, and the ban call revokes the target's refresh token immediately (`RefreshTokenStore.revoke`) — but an already-issued access token (default 15m expiry) stays valid until it naturally expires, since the JWT strategy validates tokens from their signed claims only, without a DB lookup per request.
 
 ---
 
@@ -307,6 +310,26 @@ One row per verification email sent (register, or a resend). Same shape and hash
 | `tokenHash` | String unique | SHA-256 of the raw token sent by email |
 | `expiresAt` | DateTime | 24 hours from creation |
 | `usedAt` | DateTime? | Set on successful verify; a used or expired token is rejected |
+| `createdAt` | DateTime | |
+
+---
+
+### AdminAuditLog
+
+Accountability record for admin user-management writes (role change,
+ban/unban) — see `AdminUsersService`. Immutable: written once, never updated.
+Currently the only admin-write surface with an audit trail; extending it to
+other admin actions (event edits, CA task verification, payment approval) is
+a natural follow-up, not yet built.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `actorUserId` | UUID FK → User | The admin who made the change |
+| `targetUserId` | UUID FK → User | The user affected |
+| `action` | String | `"ROLE_CHANGE"`, `"BAN"`, or `"UNBAN"` |
+| `previousValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
+| `newValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
 | `createdAt` | DateTime | |
 
 ---
@@ -838,6 +861,7 @@ Line item within a `MerchOrder`. `priceAtPurchase` snapshots `Product.price` at 
 |-------|-------|---------|
 | User | unique `email` | Login lookup |
 | User | unique `iitpEmail` | IITP OAuth dedup |
+| AdminAuditLog | `(targetUserId, createdAt)` | Per-user audit history lookup |
 | User | `(isIITP, role)` | Admin filters |
 | Event | unique `slug` | Public event page |
 | Event | `(isPublished, registrationOpen)` | Public listing |

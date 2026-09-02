@@ -1,0 +1,174 @@
+.page {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 56rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.backLink {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.summaryCard,
+.sectionCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.summaryHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.title {
+    margin: 0;
+}
+
+.subtitle {
+    margin-top: var(--space-1);
+    color: var(--text-muted);
+}
+
+.sectionTitle {
+    margin-top: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.125rem var(--space-2);
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+.badgeActive {
+    color: var(--ok);
+    background: rgba(74, 107, 63, 0.1);
+}
+
+.badgeBanned {
+    color: var(--err);
+    background: rgba(163, 39, 42, 0.1);
+}
+
+.factGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    margin: 0;
+}
+
+.factGrid dt {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+}
+
+.factGrid dd {
+    margin: 0;
+    color: var(--char-800);
+}
+
+.actionsRow {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    border-top: var(--hairline);
+    padding-top: var(--space-4);
+}
+
+.roleAction {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+}
+
+.label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--char-800);
+    margin-bottom: var(--space-1);
+}
+
+.roleSelect {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    border: var(--hairline);
+    background: var(--bone-50);
+    color: var(--char-800);
+    font-size: 0.875rem;
+}
+
+.errorText {
+    font-size: 0.8125rem;
+    color: var(--err);
+}
+
+.emptyState {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: var(--hairline);
+    font-size: 0.875rem;
+    color: var(--char-800);
+}
+
+.listItem:last-child {
+    border-bottom: none;
+}
+
+.listMeta {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.caSummary {
+    font-size: 0.875rem;
+    color: var(--char-800);
+}
+
+.credentialBlock {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+    .factGrid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

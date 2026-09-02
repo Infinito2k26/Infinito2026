@@ -11,6 +11,7 @@ type AdminItem = {
 };
 
 const ADMIN_ITEMS: AdminItem[] = [
+  { label: "Users", href: "/admin/users" },
   { label: "Registrations", href: "/admin/registrations" },
   { label: "Payments", href: "/admin/payments" },
   { label: "Events", href: "/admin/events" },

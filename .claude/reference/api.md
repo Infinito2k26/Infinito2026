@@ -115,6 +115,29 @@ updated; omitting `qrImage` preserves the existing image.
 `PATCH /admin/settings/fest-dates`: JSON body, `festStartAt?`/`festEndAt?`/
 `registrationCloseAt?` (ISO 8601), `dateRangeLabel?` (display string).
 
+`login` and `refresh` both reject (403) when the user's `bannedAt` is set (see `User` in `database.md`); `refresh` also revokes the session before rejecting, so a banned user's refresh token stops working immediately. An already-issued access token still works until it naturally expires (default 15m) — there's no per-request DB check in the JWT strategy.
+
+### Admin User Management
+
+| Method | Path                       | Access | Purpose                                                |
+| ------ | -------------------------- | ------ | ------------------------------------------------------- |
+| GET    | `/admin/users`             | Admin  | Search/filter/paginate all users                       |
+| GET    | `/admin/users/:id`         | Admin  | Full cross-entity detail: registrations, teams, CA profile/applications, credentials + scan history, merch orders |
+| PATCH  | `/admin/users/:id/role`    | Admin  | Change a user's role                                   |
+| PATCH  | `/admin/users/:id/status`  | Admin  | Ban or unban a user (`{ banned: boolean }`)             |
+
+`GET /admin/users`: query `page`/`limit` (default 20, max 100), `search`
+(matches name/email/college, case-insensitive substring), `role` (one of
+`UserRole`, 400 if invalid).
+
+Both `PATCH` endpoints share the same guards: an admin cannot act on their
+own account (403), every change writes an `AdminAuditLog` row (actor,
+target, before/after), and the target's refresh-token session is revoked
+immediately (`RefreshTokenStore.revoke`) so the change takes effect without
+waiting for their access token to expire. `PATCH .../role` additionally
+rejects (403) demoting the last remaining `SUPER_ADMIN` — checked by
+counting other `SUPER_ADMIN` rows before applying the change.
+
 ### Events
 
 | Method | Path                  | Access              | Purpose               |
@@ -335,7 +358,6 @@ Mirrors `Event.isPublished`/`PATCH /events/:id/publish` exactly: `POST /admin/me
 | PATCH  | `/admin/ca-task-assignments/:id/verify`   | Admin         | Verify CA task submission
 (compare-and-swap lock)|
 | GET    | `/admin/ca-tasks/:id/assignments`         | Admin         | List CA task assignments                         |
-| PATCH  | `/admin/users/:id/role`                   | Admin         | Promote or change a user's role                  |
 | POST   | `/ca/apply`                               | Authenticated | Apply to become a Campus Ambassador              |
 | GET    | `/ca/apply/me`                            | Authenticated | Get the caller's latest application status       |
 | GET    | `/admin/ca-applications`                  | Admin         | List CA applications (paginated, status filter)  |
