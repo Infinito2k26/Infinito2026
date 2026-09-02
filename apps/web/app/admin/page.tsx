@@ -3,6 +3,7 @@ import styles from "./admin-index.module.css";
 
 const SECTIONS = [
     { title: "Users", href: "/admin/users", description: "Search any user, change their role, or ban/unban their account." },
+    { title: "Roles", href: "/admin/roles", description: "Create scoped roles with per-service read/write/delete access." },
     { title: "Registrations", href: "/admin/registrations", description: "Every registration across all events, with live payment status." },
     { title: "Payments", href: "/admin/payments", description: "Review UPI screenshot + transaction ID submissions." },
     { title: "Events", href: "/admin/events", description: "Create, edit, and publish events." },
