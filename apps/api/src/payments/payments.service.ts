@@ -52,6 +52,17 @@ export class PaymentsService {
       );
     }
 
+    const payer = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { isEmailVerified: true, isIITPVerified: true },
+    });
+
+    if (!payer.isEmailVerified && !payer.isIITPVerified) {
+      throw new ForbiddenException(
+        'Verify your email before submitting a payment',
+      );
+    }
+
     if (registration.status !== 'PENDING_PAYMENT') {
       throw new ConflictException(
         `Registration is not awaiting payment (current status: ${registration.status})`,

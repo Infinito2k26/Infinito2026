@@ -29,6 +29,7 @@ const baseUser = {
   name: 'Test User',
   role: 'PARTICIPANT' as const,
   isEmailVerified: false,
+  isIITPVerified: false,
   college: null as string | null,
   phone: null as string | null,
   passwordHash: '',
@@ -42,6 +43,11 @@ interface MockPrisma {
     update: jest.Mock<Promise<MockUser>, [{ data: Partial<MockUser> }]>;
   };
   passwordResetToken: {
+    create: jest.Mock<Promise<MockResetToken>, [unknown]>;
+    findUnique: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
+    update: jest.Mock<Promise<MockResetToken>, [unknown]>;
+  };
+  emailVerificationToken: {
     create: jest.Mock<Promise<MockResetToken>, [unknown]>;
     findUnique: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
     update: jest.Mock<Promise<MockResetToken>, [unknown]>;
@@ -64,6 +70,12 @@ describe('AuthService', () => {
       [string, { email: string; resetLink: string }]
     >;
   };
+  let emailVerificationQueue: {
+    add: jest.Mock<
+      Promise<void>,
+      [string, { email: string; verifyLink: string }]
+    >;
+  };
   let service: AuthService;
 
   beforeEach(async () => {
@@ -76,6 +88,11 @@ describe('AuthService', () => {
         update: jest.fn<Promise<MockUser>, [{ data: Partial<MockUser> }]>(),
       },
       passwordResetToken: {
+        create: jest.fn<Promise<MockResetToken>, [unknown]>(),
+        findUnique: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
+        update: jest.fn<Promise<MockResetToken>, [unknown]>(),
+      },
+      emailVerificationToken: {
         create: jest.fn<Promise<MockResetToken>, [unknown]>(),
         findUnique: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
         update: jest.fn<Promise<MockResetToken>, [unknown]>(),
@@ -98,12 +115,20 @@ describe('AuthService', () => {
       >(),
     };
 
+    emailVerificationQueue = {
+      add: jest.fn<
+        Promise<void>,
+        [string, { email: string; verifyLink: string }]
+      >(),
+    };
+
     service = new AuthService(
       prisma as never,
       new JwtService(),
       config as never,
       refreshStore,
       passwordResetEmailQueue as never,
+      emailVerificationQueue as never,
     );
   });
 
@@ -302,6 +327,65 @@ describe('AuthService', () => {
           newPassword: 'x'.repeat(8),
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('verifyEmail', () => {
+    const validVerificationToken: MockResetToken = {
+      id: 'verify-1',
+      userId: baseUser.id,
+      tokenHash: 'irrelevant-because-findUnique-is-mocked',
+      expiresAt: new Date(Date.now() + 1000 * 60),
+      usedAt: null,
+    };
+
+    it('marks the user verified and consumes the token', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue(
+        validVerificationToken,
+      );
+
+      await service.verifyEmail({ token: 'raw-token' });
+
+      const updateData = prisma.user.update.mock.calls[0][0].data;
+      expect(updateData.isEmailVerified).toBe(true);
+      expect(prisma.emailVerificationToken.update).toHaveBeenCalledWith({
+        where: { id: validVerificationToken.id },
+        data: { usedAt: expect.any(Date) as Date },
+      });
+    });
+
+    it('rejects an expired or unknown token', async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.verifyEmail({ token: 'raw-token' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resendVerification', () => {
+    it('queues a new verification email for an unverified user', async () => {
+      prisma.user.findUnique.mockResolvedValue(baseUser);
+
+      await service.resendVerification({ email: baseUser.email });
+
+      expect(prisma.emailVerificationToken.create).toHaveBeenCalledTimes(1);
+      const [jobName, jobData] = emailVerificationQueue.add.mock.calls[0];
+      expect(jobName).toBe('send');
+      expect(jobData.email).toBe(baseUser.email);
+    });
+
+    it('does nothing for an already-verified user, to avoid enumeration', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
+
+      await service.resendVerification({ email: baseUser.email });
+
+      expect(prisma.emailVerificationToken.create).not.toHaveBeenCalled();
+      expect(emailVerificationQueue.add).not.toHaveBeenCalled();
     });
   });
 });

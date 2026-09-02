@@ -34,11 +34,14 @@ import { RegisterDto } from './dto/register.dto';
 
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
+import { VerifyEmailDto } from './dto/verify-email.dto';
+
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
 
 import type { RefreshTokenStore } from './refresh-token-store.interface';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface UserProfile {
   id: string;
@@ -80,6 +83,8 @@ export class AuthService {
     private readonly refreshStore: RefreshTokenStore,
     @InjectQueue('password-reset-email')
     private readonly passwordResetEmailQueue: Queue,
+    @InjectQueue('email-verification')
+    private readonly emailVerificationQueue: Queue,
   ) {}
 
   async register(dto: RegisterDto): Promise<UserProfile> {
@@ -107,6 +112,8 @@ export class AuthService {
         consentedAt: new Date(),
       },
     });
+
+    await this.queueVerificationEmail(user);
 
     return toProfile(user);
   }
@@ -209,6 +216,72 @@ export class AuthService {
 
     // A password reset invalidates any existing session — force re-login.
     await this.refreshStore.revoke(resetToken.userId);
+  }
+
+  async verifyEmail(dto: VerifyEmailDto): Promise<void> {
+    const tokenHash = hashToken(dto.token);
+    const verificationToken =
+      await this.prisma.emailVerificationToken.findUnique({
+        where: { tokenHash },
+      });
+
+    if (
+      !verificationToken ||
+      verificationToken.usedAt ||
+      verificationToken.expiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: verificationToken.userId },
+        data: { isEmailVerified: true },
+      }),
+      this.prisma.emailVerificationToken.update({
+        where: { id: verificationToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+  }
+
+  async resendVerification(dto: ForgotPasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // Always behave the same way regardless of whether the email exists or
+    // is already verified, so this endpoint can't be used to enumerate accounts.
+    if (!user || user.isEmailVerified || user.isIITPVerified) {
+      return;
+    }
+
+    await this.queueVerificationEmail(user);
+  }
+
+  private async queueVerificationEmail(user: User): Promise<void> {
+    // isIITPVerified already proves a real institute email via Microsoft
+    // OAuth — those users don't need the generic verification loop too.
+    if (user.isEmailVerified || user.isIITPVerified) {
+      return;
+    }
+
+    const rawToken = randomUUID();
+    await this.prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
+      },
+    });
+
+    const webOrigin = this.config.get('WEB_ORIGIN', { infer: true });
+    const verifyLink = `${webOrigin}/verify-email?token=${rawToken}`;
+
+    await this.emailVerificationQueue.add('send', {
+      email: user.email,
+      verifyLink,
+    });
   }
 
   async me(userId: string): Promise<UserProfile> {

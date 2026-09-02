@@ -86,6 +86,10 @@ Response `data` shape:
 | GET    | `/auth/me`       | Authenticated  | Current user                          |
 | POST   | `/auth/forgot-password` | Public | Request a reset link (enumeration-safe: always 200) |
 | POST   | `/auth/reset-password`  | Public | Consume a reset token, set new password |
+| POST   | `/auth/verify-email` | Public | Consume a verification token, set `isEmailVerified = true` |
+| POST   | `/auth/resend-verification` | Public | Re-send the verification email (enumeration-safe: always 200) |
+
+`register` queues a verification email automatically (skipped for `isIITPVerified` users). `POST /payments` (registration payment submission) rejects with 403 for a payer who is neither `isEmailVerified` nor `isIITPVerified`.
 
 ### Events
 

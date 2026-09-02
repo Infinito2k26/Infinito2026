@@ -205,6 +205,7 @@ model User {
   caApplications         CAApplication[] @relation("CAApplicant")
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
   merchOrders            MerchOrder[]
 
   @@index([isIITP, role])
@@ -212,6 +213,19 @@ model User {
 }
 
 model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
   id        String    @id @default(uuid()) @db.Uuid
   userId    String    @db.Uuid
   tokenHash String    @unique
