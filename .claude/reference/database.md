@@ -62,6 +62,22 @@ enum UserRole {
   PARTICIPANT
 }
 
+enum AdminService {
+  EVENTS
+  REGISTRATIONS
+  PAYMENTS
+  MERCH
+  TEAMS
+  CONTENT
+  IDENTITY
+  SETTINGS
+  CA
+  LEADS
+  LEADERBOARD
+  UPLOADS
+  ADMIN_USERS
+}
+
 enum BroadCategory {
   OUTDOOR
   INDOOR
@@ -243,6 +259,7 @@ The only entity that can authenticate. Team players do **not** need a User accou
 | `isIITPVerified` | Boolean | Default false. True only after successful Microsoft OAuth on `.iitp.ac.in`. |
 | `isEmailVerified` | Boolean | Default false |
 | `bannedAt` | DateTime? | Set/cleared via `PATCH /admin/users/:id/status`. Distinct from `deletedAt` — see below. |
+| `customRoleId` | UUID? FK → CustomRole | Optional scoped admin-panel access layered on top of `role`. Assigned via `PATCH /admin/users/:id/custom-role` (SUPER_ADMIN only). See `CustomRole` below. |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
 | `deletedAt` | DateTime? | Soft delete |
@@ -327,10 +344,55 @@ a natural follow-up, not yet built.
 | `id` | UUID PK | |
 | `actorUserId` | UUID FK → User | The admin who made the change |
 | `targetUserId` | UUID FK → User | The user affected |
-| `action` | String | `"ROLE_CHANGE"`, `"BAN"`, or `"UNBAN"` |
-| `previousValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
-| `newValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
+| `action` | String | `"ROLE_CHANGE"`, `"CUSTOM_ROLE_CHANGE"`, `"BAN"`, or `"UNBAN"` |
+| `previousValue` | String? | Role name, `CustomRole.id`, or `"ACTIVE"`/`"BANNED"` |
+| `newValue` | String? | Role name, `CustomRole.id`, or `"ACTIVE"`/`"BANNED"` |
 | `createdAt` | DateTime | |
+
+---
+
+### CustomRole
+
+Admin-managed, dynamically created role granting scoped read/write/delete
+access to specific admin services — additive on top of the fixed `UserRole`
+enum, not a replacement for it. `SUPER_ADMIN`/`ADMIN` always have full access
+regardless of any `CustomRole`; a `CustomRole` exists to let a narrower group
+(e.g. "Registration Team") reach specific admin endpoints without being
+promoted to `ADMIN`. Managed exclusively via `admin/roles/*` (SUPER_ADMIN
+only) and assigned to a `User` via `PATCH /admin/users/:id/custom-role`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `name` | String unique | |
+| `description` | String? | |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+| `deletedAt` | DateTime? | Soft delete. Deletion is rejected (409) while any `User` still references this role — unassign first. |
+
+Relations: `permissions RolePermission[]`, `users User[]` (one role can be
+assigned to many users; a user holds at most one `CustomRole` via
+`User.customRoleId`).
+
+---
+
+### RolePermission
+
+One row per `(CustomRole, AdminService)` pair, holding the three independent
+action flags checked by `PermissionsGuard`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `roleId` | UUID FK → CustomRole | `onDelete: Cascade` |
+| `service` | AdminService | |
+| `canRead` | Boolean | Default false |
+| `canWrite` | Boolean | Default false |
+| `canDelete` | Boolean | Default false |
+
+`@@unique([roleId, service])` — a role has at most one permission row per
+service; updating a role's permissions replaces all rows for that role in a
+single transaction rather than patching individual services.
 
 ---
 
