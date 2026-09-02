@@ -21,29 +21,31 @@ import {
   ReviewApplicationDto,
 } from './dto/admin.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermission } from '../common/decorators/require-permission.decorator';
+import { AdminService as AdminServiceEnum } from '@prisma/client';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @SkipThrottle()
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Post('brands')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async createBrand(@Body() dto: CreateBrandDto) {
     return this.adminService.createBrand(dto);
   }
 
   @Get('brands')
+  @RequirePermission(AdminServiceEnum.CA, 'read')
   async getBrands() {
     return this.adminService.getBrands();
   }
 
   @Patch('brands/:id')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async updateBrand(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBrandDto,
@@ -52,16 +54,19 @@ export class AdminController {
   }
 
   @Post('ca-tasks')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async createTask(@Body() dto: CreateTaskDto) {
     return this.adminService.createTask(dto);
   }
 
   @Get('ca-tasks')
+  @RequirePermission(AdminServiceEnum.CA, 'read')
   async getTasks() {
     return this.adminService.getTasks();
   }
 
   @Get('ca-tasks/:id/assignments')
+  @RequirePermission(AdminServiceEnum.CA, 'read')
   async getTaskAssignments(
     @Param('id', ParseUUIDPipe) taskId: string,
     @Query('page') page?: string,
@@ -80,6 +85,7 @@ export class AdminController {
   }
 
   @Patch('ca-tasks/:id')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async updateTask(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTaskDto,
@@ -88,6 +94,7 @@ export class AdminController {
   }
 
   @Patch('ca-task-assignments/:id/verify')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async verifyTask(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyTaskDto,
@@ -98,6 +105,7 @@ export class AdminController {
   }
 
   @Get('ca-applications')
+  @RequirePermission(AdminServiceEnum.CA, 'read')
   async getApplications(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -114,6 +122,7 @@ export class AdminController {
   }
 
   @Patch('ca-applications/:id/review')
+  @RequirePermission(AdminServiceEnum.CA, 'write')
   async reviewApplication(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewApplicationDto,

@@ -13,19 +13,19 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { VerifyPaymentDto } from './dto/payments.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermission } from '../common/decorators/require-permission.decorator';
+import { AdminService } from '@prisma/client';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 
 @Controller('admin/payments')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @SkipThrottle()
 export class AdminPaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Get()
+  @RequirePermission(AdminService.PAYMENTS, 'read')
   async listPayments(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -42,6 +42,7 @@ export class AdminPaymentsController {
   }
 
   @Patch(':id/verify')
+  @RequirePermission(AdminService.PAYMENTS, 'write')
   async verifyPayment(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyPaymentDto,

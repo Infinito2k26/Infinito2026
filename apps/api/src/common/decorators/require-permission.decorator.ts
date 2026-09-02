@@ -12,4 +12,4 @@ export const PERMISSION_KEY = 'permission';
 export const RequirePermission = (
   service: AdminService,
   action: PermissionAction,
-) => SetMetadata(PERMISSION_KEY, { service, action } as RequiredPermission);
+) => SetMetadata(PERMISSION_KEY, { service, action });

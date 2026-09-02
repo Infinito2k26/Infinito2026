@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { UserRole } from '@prisma/client';
+import { AdminService } from '@prisma/client';
 import { MerchService } from './merch.service';
 import {
   CreateProductDto,
@@ -20,27 +20,29 @@ import {
   UpdateOrderStatusDto,
 } from './dto/merch.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermission } from '../common/decorators/require-permission.decorator';
 
 @Controller('admin/merch')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @SkipThrottle()
 export class AdminMerchController {
   constructor(private readonly merchService: MerchService) {}
 
   @Get('products')
+  @RequirePermission(AdminService.MERCH, 'read')
   async listProducts() {
     return this.merchService.listProducts(true);
   }
 
   @Post('products')
+  @RequirePermission(AdminService.MERCH, 'write')
   async createProduct(@Body() dto: CreateProductDto) {
     return this.merchService.createProduct(dto);
   }
 
   @Patch('products/:id')
+  @RequirePermission(AdminService.MERCH, 'write')
   async updateProduct(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductDto,
@@ -49,6 +51,7 @@ export class AdminMerchController {
   }
 
   @Patch('products/:id/publish')
+  @RequirePermission(AdminService.MERCH, 'write')
   async publishProduct(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: PublishProductDto,
@@ -57,6 +60,7 @@ export class AdminMerchController {
   }
 
   @Get('orders')
+  @RequirePermission(AdminService.MERCH, 'read')
   async listOrders(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -73,6 +77,7 @@ export class AdminMerchController {
   }
 
   @Patch('orders/:id/verify')
+  @RequirePermission(AdminService.MERCH, 'write')
   async verifyOrder(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: VerifyMerchOrderDto,
@@ -81,6 +86,7 @@ export class AdminMerchController {
   }
 
   @Patch('orders/:id/status')
+  @RequirePermission(AdminService.MERCH, 'write')
   async updateOrderStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
