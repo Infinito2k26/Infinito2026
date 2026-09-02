@@ -1,0 +1,28 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background-color: var(--bone-200);
+  border: 1px dashed var(--crimson-700);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.resendBtn {
+  border: none;
+  background: transparent;
+  color: var(--crimson-700);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.resendBtn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

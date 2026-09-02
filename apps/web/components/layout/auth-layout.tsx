@@ -1,12 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import Navbar from "./navbar";
 import styles from "./auth-layout.module.css";
 
 /**
- * The shared split layout for login, signup, forgot-password and
- * reset-password: form on bone at left, a cropped poster at right that
- * collapses to a slim banner above the form on mobile.
+ * The shared split layout for login, signup, and forgot-password: form on
+ * bone at left, a cropped poster at right that collapses to a slim banner
+ * above the form on mobile.
  *
  * `main-mobile.png` is reused here rather than a sport poster — its 4:5
  * portrait crop fills a tall side panel cleanly, and like the landing hero it
@@ -16,6 +16,7 @@ import styles from "./auth-layout.module.css";
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell}>
+      <Navbar />
       <div className={styles.artPanel}>
         <Image
           src="/main-mobile.png"
@@ -28,11 +29,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
 
       <div className={styles.formPanel}>
-        <Link href="/" className={styles.brand} aria-label="Infinito 2026, home">
-          <span className={styles.brandMark}>Infinito</span>
-          <span className={styles.brandSub}>Ruins of Ragnarok</span>
-        </Link>
-
         <div className={styles.formSlot}>{children}</div>
       </div>
     </div>

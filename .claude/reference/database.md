@@ -242,25 +242,94 @@ The only entity that can authenticate. Team players do **not** need a User accou
 | `iitpEmail` | String? unique | `.iitp.ac.in` email confirmed via Microsoft OAuth. Null for non-IITP users. |
 | `isIITPVerified` | Boolean | Default false. True only after successful Microsoft OAuth on `.iitp.ac.in`. |
 | `isEmailVerified` | Boolean | Default false |
+| `bannedAt` | DateTime? | Set/cleared via `PATCH /admin/users/:id/status`. Distinct from `deletedAt` — see below. |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
 | `deletedAt` | DateTime? | Soft delete |
 
 **IITP verification flow:** User initiates "Verify IITP" → Microsoft OAuth → redirect with `.iitp.ac.in` token → backend confirms domain, sets `iitpEmail`, `isIITPVerified = true`, `isIITP = true`.
 
+**Why `bannedAt` is not `deletedAt`:** `deletedAt` is used elsewhere in soft-delete conventions; overloading it for "banned" risks a future soft-delete feature accidentally un-banning someone, or a ban accidentally triggering delete-semantics somewhere that checks `deletedAt`. A distinct column removes that ambiguity. `POST /auth/login` and `POST /auth/refresh` both reject (403) when `bannedAt` is set, and the ban call revokes the target's refresh token immediately (`RefreshTokenStore.revoke`) — but an already-issued access token (default 15m expiry) stays valid until it naturally expires, since the JWT strategy validates tokens from their signed claims only, without a DB lookup per request.
+
 ---
 
 ### PasswordResetToken
 
-One row per forgot-password request. The raw token is emailed to the user (via the `password-reset-email` BullMQ queue) and never stored — only its SHA-256 hash is, matching the same pattern `RedisRefreshTokenStore` uses for refresh tokens.
+One row per forgot-password request. A 6-digit numeric code (`crypto.randomInt(100000, 999999)`) is emailed to the user (via the `password-reset-email` BullMQ queue) and never stored — only its SHA-256 hash is, matching the same pattern `RedisRefreshTokenStore` uses for refresh tokens. The user types the code back in on the reset-password page rather than clicking a link — see `POST /auth/reset-password` in `api.md`.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `userId` | UUID FK → User | |
+| `tokenHash` | String unique | SHA-256 of the 6-digit code sent by email |
+| `expiresAt` | DateTime | 30 minutes from creation |
+| `usedAt` | DateTime? | Set on successful reset; a used or expired token is rejected |
+| `failedAttempts` | Int | Default 0. Incremented on each wrong code; locked out (rejected) at 5 |
+| `createdAt` | DateTime | |
+
+Lookup for a reset is scoped by `(userId, usedAt: null, expiresAt > now)` ordered newest-first — not a global `tokenHash` lookup, since a 6-digit code (~1M possibilities) doesn't have the entropy for a link-token-style unique reverse-hash index to be safe against guessing; scoping to a specific user (resolved from the `email` in the request body) plus the `failedAttempts` lockout is the actual defense.
+
+---
+
+### SiteSettings
+
+Single-row config editable from `/admin/settings`, so payment details and fest
+dates can change without a code deploy. Always read/written via the fixed id
+`"singleton"` (a typed table, not a generic key-value store — see
+`SettingsService`). Public `GET /settings` returns nulls for every field until
+an admin first sets them; consumers fall back to their previous hardcoded
+constants when a field is null so a fresh deploy isn't blank.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | String PK | Always `"singleton"` |
+| `upiVpa` | String? | |
+| `upiPayeeName` | String? | |
+| `paymentQrImageUrl` | String? | `UploadsService` storage key, signed at read time |
+| `festStartAt` | DateTime? | Drives the landing-page countdown target |
+| `festEndAt` | DateTime? | |
+| `registrationCloseAt` | DateTime? | |
+| `dateRangeLabel` | String? | Display string, e.g. "9-11 October 2026" — kept separate from the raw dates so prose formatting isn't computed ad-hoc per component |
+| `updatedAt` | DateTime | |
+| `updatedByUserId` | UUID FK → User? | |
+
+**Known gap:** the landing hero image (`main-desktop.png`/etc) has the fest
+theme title and dates baked into the artwork's pixels — changing
+`SiteSettings` does not and cannot change what the hero image itself displays.
+
+---
+
+### EmailVerificationToken
+
+One row per verification email sent (register, or a resend). Same shape and hashing pattern as `PasswordResetToken`. Skipped entirely for users who already have `isIITPVerified = true` — a confirmed `.iitp.ac.in` OAuth login already proves a real institute email.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID PK | |
 | `userId` | UUID FK → User | |
 | `tokenHash` | String unique | SHA-256 of the raw token sent by email |
-| `expiresAt` | DateTime | 30 minutes from creation |
-| `usedAt` | DateTime? | Set on successful reset; a used or expired token is rejected |
+| `expiresAt` | DateTime | 24 hours from creation |
+| `usedAt` | DateTime? | Set on successful verify; a used or expired token is rejected |
+| `createdAt` | DateTime | |
+
+---
+
+### AdminAuditLog
+
+Accountability record for admin user-management writes (role change,
+ban/unban) — see `AdminUsersService`. Immutable: written once, never updated.
+Currently the only admin-write surface with an audit trail; extending it to
+other admin actions (event edits, CA task verification, payment approval) is
+a natural follow-up, not yet built.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `actorUserId` | UUID FK → User | The admin who made the change |
+| `targetUserId` | UUID FK → User | The user affected |
+| `action` | String | `"ROLE_CHANGE"`, `"BAN"`, or `"UNBAN"` |
+| `previousValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
+| `newValue` | String? | Role name or `"ACTIVE"`/`"BANNED"` |
 | `createdAt` | DateTime | |
 
 ---
@@ -792,6 +861,7 @@ Line item within a `MerchOrder`. `priceAtPurchase` snapshots `Product.price` at 
 |-------|-------|---------|
 | User | unique `email` | Login lookup |
 | User | unique `iitpEmail` | IITP OAuth dedup |
+| AdminAuditLog | `(targetUserId, createdAt)` | Per-user audit history lookup |
 | User | `(isIITP, role)` | Admin filters |
 | Event | unique `slug` | Public event page |
 | Event | `(isPublished, registrationOpen)` | Public listing |

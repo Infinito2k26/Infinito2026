@@ -2,6 +2,7 @@ import Link from "next/link";
 import styles from "./admin-index.module.css";
 
 const SECTIONS = [
+    { title: "Users", href: "/admin/users", description: "Search any user, change their role, or ban/unban their account." },
     { title: "Registrations", href: "/admin/registrations", description: "Every registration across all events, with live payment status." },
     { title: "Payments", href: "/admin/payments", description: "Review UPI screenshot + transaction ID submissions." },
     { title: "Events", href: "/admin/events", description: "Create, edit, and publish events." },
@@ -14,6 +15,7 @@ const SECTIONS = [
     { title: "Gallery", href: "/admin/content/gallery", description: "Upload and caption photos for the public gallery." },
     { title: "Merch Products", href: "/admin/merch/products", description: "Manage merch catalogue and publish status." },
     { title: "Merch Orders", href: "/admin/merch/orders", description: "Fulfil and track merch orders." },
+    { title: "Settings", href: "/admin/settings", description: "Payment QR/VPA and fest dates — no deploy needed." },
 ];
 
 export default function AdminIndexPage() {

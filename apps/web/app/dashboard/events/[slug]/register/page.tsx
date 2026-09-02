@@ -16,6 +16,7 @@ import CustomFieldRenderer from "@/components/registration/CustomFieldRenderer";
 import SubOptionPicker from "@/components/registration/SubOptionPicker";
 import AccommodationSection, { AccommodationValue } from "@/components/registration/AccommodationSection";
 import UpiPaymentSection from "@/components/registration/UpiPaymentSection";
+import { useSitePaymentSettings } from "@/lib/site-settings";
 
 import styles from "./register.module.css";
 
@@ -87,6 +88,7 @@ function validateRosterFile(file: File | null): string | undefined {
 export default function RegisterPage() {
     const params = useParams<{ slug: string }>();
     const searchParams = useSearchParams();
+    const paymentSettings = useSitePaymentSettings();
 
     const [event, setEvent] = useState<EventDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -254,8 +256,9 @@ export default function RegisterPage() {
                         amountDue={Number(registration.payment.amount)}
                         registrationId={registration.id}
                         isIITP={Number(registration.payment.amount) === 0}
-                        vpa={process.env.NEXT_PUBLIC_UPI_VPA ?? ""}
-                        payeeName={process.env.NEXT_PUBLIC_UPI_PAYEE_NAME}
+                        vpa={paymentSettings.vpa}
+                        payeeName={paymentSettings.payeeName}
+                        qrImageUrl={paymentSettings.qrImageUrl}
                     />
                 )}
             </Card>

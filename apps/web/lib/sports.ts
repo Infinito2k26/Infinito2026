@@ -166,8 +166,11 @@ function normalize(name: string): string {
 
 export function findSportForEventName(name: string): Sport | undefined {
   const target = normalize(name);
+  // Substring, not exact match: real event names carry a year/gender suffix
+  // ("Cricket 2K26", "Kabaddi Boys 2K26") that never equals the catalogue's
+  // bare "Cricket"/"Kabaddi" — but does contain it.
   return SPORTS.find(
-    (s) => normalize(s.name) === target || normalize(s.id) === target,
+    (s) => target.includes(normalize(s.name)) || target.includes(normalize(s.id)),
   );
 }
 

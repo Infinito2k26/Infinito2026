@@ -19,6 +19,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { RequestUser } from './strategies/jwt.strategy';
 
@@ -80,7 +81,7 @@ export class AuthController {
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto);
     return {
-      message: 'If that email is registered, a reset link has been sent.',
+      message: 'If that email is registered, a reset code has been sent.',
     };
   }
 
@@ -89,6 +90,22 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
     return { message: 'Password has been reset. Please log in again.' };
+  }
+
+  @Post('verify-email')
+  @HttpCode(200)
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    await this.authService.verifyEmail(dto);
+    return { message: 'Email verified.' };
+  }
+
+  @Post('resend-verification')
+  @HttpCode(200)
+  async resendVerification(@Body() dto: ForgotPasswordDto) {
+    await this.authService.resendVerification(dto);
+    return {
+      message: 'If that email needs verifying, a new link has been sent.',
+    };
   }
 
   @Get('me')

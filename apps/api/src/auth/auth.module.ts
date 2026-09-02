@@ -16,5 +16,6 @@ import { QueueModule } from '../queue/queue.module';
     JwtStrategy,
     { provide: REFRESH_TOKEN_STORE, useClass: RedisRefreshTokenStore },
   ],
+  exports: [REFRESH_TOKEN_STORE],
 })
 export class AuthModule {}
