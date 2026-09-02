@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Search } from "lucide-react";
 
 import PublicLayout from "@/components/layout/public-layout";
@@ -12,7 +13,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
 import { formatFeeSummary } from "@/lib/format-event-fee";
-import { findSportForEventName } from "@/lib/sports";
+import { findSportForEventName, SPORTS } from "@/lib/sports";
 import type { EventSummary } from "@/lib/types/event";
 
 import styles from "./events.module.css";
@@ -31,11 +32,21 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 ];
 
 export default function EventsPage() {
+    const searchParams = useSearchParams();
+    // /sports links here as ?sport=<id> — reuse the same name-substring match
+    // findSportForEventName() uses elsewhere in this file, so a "Cricket"
+    // click pre-fills the search box with "Cricket" instead of landing on
+    // the full unfiltered list.
+    const sportParam = searchParams.get("sport");
+    const initialQuery = sportParam
+        ? (SPORTS.find((s) => s.id === sportParam)?.name ?? "")
+        : "";
+
     const [events, setEvents] = useState<EventSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [query, setQuery] = useState("");
+    const [query, setQuery] = useState(initialQuery);
     const [status, setStatus] = useState<StatusFilter>("all");
 
     const fetchEvents = async () => {
