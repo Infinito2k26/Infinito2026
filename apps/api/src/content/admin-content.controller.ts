@@ -72,7 +72,7 @@ export class AdminContentController {
   }
 
   @Post('gallery')
-  @RequirePermission(AdminService.CONTENT, 'write')
+  @RequirePermission(AdminService.GALLERY, 'write')
   @UseInterceptors(FileInterceptor('image', IMAGE_FILE_OPTIONS))
   async createGalleryItem(
     @Body() dto: CreateGalleryItemDto,
@@ -92,7 +92,7 @@ export class AdminContentController {
   }
 
   @Patch('gallery/:id')
-  @RequirePermission(AdminService.CONTENT, 'write')
+  @RequirePermission(AdminService.GALLERY, 'write')
   async updateGalleryItem(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGalleryItemDto,
@@ -101,7 +101,7 @@ export class AdminContentController {
   }
 
   @Delete('gallery/:id')
-  @RequirePermission(AdminService.CONTENT, 'delete')
+  @RequirePermission(AdminService.GALLERY, 'delete')
   async deleteGalleryItem(@Param('id', ParseUUIDPipe) id: string) {
     return this.contentService.deleteGalleryItem(id);
   }

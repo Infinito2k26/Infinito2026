@@ -58,6 +58,7 @@ export class AdminUsersService {
           isEmailVerified: true,
           bannedAt: true,
           createdAt: true,
+          customRole: { select: { id: true, name: true } },
         },
       }),
       this.prisma.user.count({ where }),

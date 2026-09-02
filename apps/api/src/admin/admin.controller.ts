@@ -33,19 +33,19 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Post('brands')
-  @RequirePermission(AdminServiceEnum.CA, 'write')
+  @RequirePermission(AdminServiceEnum.SPONSORS, 'write')
   async createBrand(@Body() dto: CreateBrandDto) {
     return this.adminService.createBrand(dto);
   }
 
   @Get('brands')
-  @RequirePermission(AdminServiceEnum.CA, 'read')
+  @RequirePermission(AdminServiceEnum.SPONSORS, 'read')
   async getBrands() {
     return this.adminService.getBrands();
   }
 
   @Patch('brands/:id')
-  @RequirePermission(AdminServiceEnum.CA, 'write')
+  @RequirePermission(AdminServiceEnum.SPONSORS, 'write')
   async updateBrand(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBrandDto,
