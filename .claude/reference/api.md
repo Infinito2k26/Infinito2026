@@ -84,8 +84,10 @@ Response `data` shape:
 | POST   | `/auth/refresh`  | Refresh cookie | Rotate refresh token                  |
 | DELETE | `/auth/logout`   | Authenticated  | Revoke session                        |
 | GET    | `/auth/me`       | Authenticated  | Current user                          |
-| POST   | `/auth/forgot-password` | Public | Request a reset link (enumeration-safe: always 200) |
-| POST   | `/auth/reset-password`  | Public | Consume a reset token, set new password |
+| POST   | `/auth/forgot-password` | Public | Request a 6-digit reset code by email (enumeration-safe: always 200) |
+| POST   | `/auth/reset-password`  | Public | Consume the code, set new password |
+
+`POST /auth/forgot-password`: body `{ email }`. `POST /auth/reset-password`: body `{ email, code, newPassword }` — `code` is the 6-digit string emailed by the first call, checked against the most recent unexpired, unused `PasswordResetToken` for that email. A wrong code increments `PasswordResetToken.failedAttempts`; 5 wrong codes locks that token out (400) even if the correct code is later supplied — request a new one via `forgot-password` again. This is link-free by design: an OTP typed back in sidesteps two failure modes a reset link has — email security scanners auto-clicking (and burning) a single-use link, and a link opened on a different device than the one mid-login-flow. Email verification (`verify-email`) stays link-based, since it's a one-time confirm-you-own-this-inbox action rather than something the user needs to transcribe.
 
 ### Events
 

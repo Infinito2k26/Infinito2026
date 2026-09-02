@@ -7,7 +7,7 @@ import { Env } from '../../config/env.schema';
 
 interface PasswordResetEmailJobData {
   email: string;
-  resetLink: string;
+  code: string;
 }
 
 @Processor('password-reset-email')
@@ -23,13 +23,13 @@ export class PasswordResetEmailProcessor extends WorkerHost {
   }
 
   async process(job: Job<PasswordResetEmailJobData>): Promise<void> {
-    const { email, resetLink } = job.data;
+    const { email, code } = job.data;
 
     if (!this.resend) {
-      // ponytail: no RESEND_API_KEY configured (local/dev) — log the link
+      // ponytail: no RESEND_API_KEY configured (local/dev) — log the code
       // instead of failing the job, so the reset flow stays testable.
       this.logger.warn(
-        `RESEND_API_KEY not set; would have emailed ${email}: ${resetLink}`,
+        `RESEND_API_KEY not set; would have emailed ${email} the code: ${code}`,
       );
       return;
     }
@@ -37,8 +37,8 @@ export class PasswordResetEmailProcessor extends WorkerHost {
     await this.resend.emails.send({
       from: this.config.get('EMAIL_FROM', { infer: true }),
       to: email,
-      subject: 'Reset your Infinito 2K26 password',
-      html: `<p>Someone requested a password reset for this account.</p><p><a href="${resetLink}">Click here to reset your password</a>. This link expires in 30 minutes.</p><p>If you didn't request this, you can safely ignore this email.</p>`,
+      subject: 'Your Infinito 2K26 password reset code',
+      html: `<p>Someone requested a password reset for this account.</p><p>Your code is: <strong style="font-size: 1.5em; letter-spacing: 0.1em;">${code}</strong></p><p>Enter this on the reset password page. It expires in 30 minutes.</p><p>If you didn't request this, you can safely ignore this email.</p>`,
     });
   }
 }

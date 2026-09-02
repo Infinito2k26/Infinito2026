@@ -252,16 +252,19 @@ The only entity that can authenticate. Team players do **not** need a User accou
 
 ### PasswordResetToken
 
-One row per forgot-password request. The raw token is emailed to the user (via the `password-reset-email` BullMQ queue) and never stored — only its SHA-256 hash is, matching the same pattern `RedisRefreshTokenStore` uses for refresh tokens.
+One row per forgot-password request. A 6-digit numeric code (`crypto.randomInt(100000, 999999)`) is emailed to the user (via the `password-reset-email` BullMQ queue) and never stored — only its SHA-256 hash is, matching the same pattern `RedisRefreshTokenStore` uses for refresh tokens. The user types the code back in on the reset-password page rather than clicking a link — see `POST /auth/reset-password` in `api.md`.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | UUID PK | |
 | `userId` | UUID FK → User | |
-| `tokenHash` | String unique | SHA-256 of the raw token sent by email |
+| `tokenHash` | String unique | SHA-256 of the 6-digit code sent by email |
 | `expiresAt` | DateTime | 30 minutes from creation |
 | `usedAt` | DateTime? | Set on successful reset; a used or expired token is rejected |
+| `failedAttempts` | Int | Default 0. Incremented on each wrong code; locked out (rejected) at 5 |
 | `createdAt` | DateTime | |
+
+Lookup for a reset is scoped by `(userId, usedAt: null, expiresAt > now)` ordered newest-first — not a global `tokenHash` lookup, since a 6-digit code (~1M possibilities) doesn't have the entropy for a link-token-style unique reverse-hash index to be safe against guessing; scoping to a specific user (resolved from the `email` in the request body) plus the `failedAttempts` lockout is the actual defense.
 
 ---
 
