@@ -299,6 +299,21 @@ theme title and dates baked into the artwork's pixels — changing
 
 ---
 
+### EmailVerificationToken
+
+One row per verification email sent (register, or a resend). Same shape and hashing pattern as `PasswordResetToken`. Skipped entirely for users who already have `isIITPVerified = true` — a confirmed `.iitp.ac.in` OAuth login already proves a real institute email.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | UUID PK | |
+| `userId` | UUID FK → User | |
+| `tokenHash` | String unique | SHA-256 of the raw token sent by email |
+| `expiresAt` | DateTime | 24 hours from creation |
+| `usedAt` | DateTime? | Set on successful verify; a used or expired token is rejected |
+| `createdAt` | DateTime | |
+
+---
+
 ### AdminAuditLog
 
 Accountability record for admin user-management writes (role change,
