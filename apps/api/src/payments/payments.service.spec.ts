@@ -19,6 +19,9 @@ describe('PaymentsService', () => {
       findUnique: jest.Mock;
       updateMany: jest.Mock;
     };
+    user: {
+      findUniqueOrThrow: jest.Mock;
+    };
     payment: {
       findUnique: jest.Mock;
       findFirst: jest.Mock;
@@ -38,6 +41,11 @@ describe('PaymentsService', () => {
       registration: {
         findUnique: jest.fn(),
         updateMany: jest.fn(),
+      },
+      user: {
+        findUniqueOrThrow: jest
+          .fn()
+          .mockResolvedValue({ isEmailVerified: true, isIITPVerified: false }),
       },
       payment: {
         findUnique: jest.fn(),
@@ -97,6 +105,23 @@ describe('PaymentsService', () => {
         userId: 'someone-else',
         team: null,
         status: 'PENDING_PAYMENT',
+      });
+
+      await expect(service.submitPayment('user-1', dto, file)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('throws ForbiddenException when the payer has not verified their email', async () => {
+      prisma.registration.findUnique.mockResolvedValue({
+        id: 'reg-1',
+        userId: 'user-1',
+        team: null,
+        status: 'PENDING_PAYMENT',
+      });
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        isEmailVerified: false,
+        isIITPVerified: false,
       });
 
       await expect(service.submitPayment('user-1', dto, file)).rejects.toThrow(

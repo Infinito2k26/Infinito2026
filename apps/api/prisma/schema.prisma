@@ -205,6 +205,7 @@ model User {
   caApplications         CAApplication[] @relation("CAApplicant")
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
   merchOrders            MerchOrder[]
   siteSettingsUpdates    SiteSettings[]  @relation("SiteSettingsUpdatedBy")
 
@@ -220,6 +221,19 @@ model PasswordResetToken {
   usedAt         DateTime?
   failedAttempts Int       @default(0) // locked out at MAX_RESET_ATTEMPTS wrong codes
   createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
