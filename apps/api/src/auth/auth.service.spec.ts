@@ -62,10 +62,7 @@ describe('AuthService', () => {
   let prisma: MockPrisma;
   let refreshStore: MockRefreshStore;
   let passwordResetEmailQueue: {
-    add: jest.Mock<
-      Promise<void>,
-      [string, { email: string; code: string }]
-    >;
+    add: jest.Mock<Promise<void>, [string, { email: string; code: string }]>;
   };
   let service: AuthService;
 
@@ -96,10 +93,7 @@ describe('AuthService', () => {
     };
 
     passwordResetEmailQueue = {
-      add: jest.fn<
-        Promise<void>,
-        [string, { email: string; code: string }]
-      >(),
+      add: jest.fn<Promise<void>, [string, { email: string; code: string }]>(),
     };
 
     service = new AuthService(
