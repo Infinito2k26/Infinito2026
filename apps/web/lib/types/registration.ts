@@ -16,6 +16,7 @@ export interface CreateRegistrationPayload {
     accommodationHeadcount?: number;
     messOnlyOpted?: boolean;
     messOnlyHeadcount?: number;
+    agreedToGuidelines: boolean;
 }
 
 export interface RegistrationResult {

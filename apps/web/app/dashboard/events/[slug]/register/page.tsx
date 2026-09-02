@@ -105,6 +105,7 @@ export default function RegisterPage() {
     const [customData, setCustomData] = useState<Record<string, unknown>>({});
     const [subOptionSelections, setSubOptionSelections] = useState<SubOptionSelection[]>([]);
     const [accommodation, setAccommodation] = useState<AccommodationValue>({});
+    const [agreedToGuidelines, setAgreedToGuidelines] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registration, setRegistration] = useState<RegistrationResult | null>(null);
@@ -155,6 +156,7 @@ export default function RegisterPage() {
                 customData: Object.keys(customData).length > 0 ? customData : undefined,
                 subOptionSelections: subOptionSelections.length > 0 ? subOptionSelections : undefined,
                 ...accommodation,
+                agreedToGuidelines,
             };
             const res = await api.post("/registrations", payload);
             setRegistration(res.data as RegistrationResult);
@@ -238,12 +240,25 @@ export default function RegisterPage() {
                             }
                         />
 
+                        <label className={styles.checkboxRow}>
+                            <input
+                                type="checkbox"
+                                checked={agreedToGuidelines}
+                                onChange={(e) => setAgreedToGuidelines(e.target.checked)}
+                            />
+                            I have read and agree to the{" "}
+                            <a href="/registration-guidelines" target="_blank" rel="noopener noreferrer">
+                                Registration Guidelines
+                            </a>
+                        </label>
+
                         {submitError && <p className={styles.errorText}>{submitError}</p>}
 
                         <Button
                             variant="primary"
                             size="lg"
                             loading={isSubmitting}
+                            disabled={!agreedToGuidelines}
                             onClick={handleSubmitRegistration}
                         >
                             Submit Registration

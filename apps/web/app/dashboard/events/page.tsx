@@ -60,6 +60,10 @@ export default function EventsPage() {
                 <p className={styles.pageSubtitle}>
                     Discover and register for upcoming events and competitions.
                 </p>
+                <p className={styles.pageSubtitle}>
+                    Before you register, please read the{" "}
+                    <a href="/registration-guidelines">Registration Guidelines</a>.
+                </p>
             </header>
 
             {events.length === 0 ? (
