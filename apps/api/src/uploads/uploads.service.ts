@@ -94,8 +94,11 @@ export class UploadsService {
     return { key: result.public_id };
   }
 
-  // Requires the Cloudinary account's token-based authentication add-on for the
-  // signed URL to actually expire after ttlSeconds; otherwise it stays valid indefinitely.
+  // ponytail: `auth_token`-based signing needs a per-account "Auth Token key"
+  // that was never configured here — passing `{ duration }` without `key`
+  // crashes with a raw TypeError from the SDK's HMAC call. `expires_at` gives
+  // the same time-limited signed URL using the API secret that's already
+  // configured, no extra account feature required.
   getSignedGetUrl(key: string, ttlSeconds = 900): string {
     if (this.useLocalDisk) {
       const port = this.config.get('PORT', { infer: true });
@@ -106,9 +109,7 @@ export class UploadsService {
       resource_type: resourceTypeForKey(key),
       type: 'authenticated',
       sign_url: true,
-      auth_token: {
-        duration: ttlSeconds,
-      },
+      expires_at: Math.floor(Date.now() / 1000) + ttlSeconds,
     });
   }
 }
