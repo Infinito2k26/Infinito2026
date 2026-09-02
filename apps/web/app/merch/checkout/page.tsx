@@ -9,6 +9,7 @@ import Button from "@/components/ui/button";
 import UpiPaymentSection from "@/components/registration/UpiPaymentSection";
 import { api, ApiError } from "@/lib/api";
 import { useMerchCart } from "@/lib/merch-cart";
+import { useSitePaymentSettings } from "@/lib/site-settings";
 import styles from "./checkout.module.css";
 
 interface MerchOrder {
@@ -19,6 +20,7 @@ interface MerchOrder {
 export default function MerchCheckoutPage() {
     const router = useRouter();
     const cart = useMerchCart();
+    const paymentSettings = useSitePaymentSettings();
 
     const [shippingName, setShippingName] = useState("");
     const [shippingPhone, setShippingPhone] = useState("");
@@ -106,8 +108,9 @@ export default function MerchCheckoutPage() {
                     ) : (
                         <UpiPaymentSection
                             amountDue={Number(order.totalAmount)}
-                            vpa={process.env.NEXT_PUBLIC_UPI_VPA ?? ""}
-                            payeeName={process.env.NEXT_PUBLIC_UPI_PAYEE_NAME}
+                            vpa={paymentSettings.vpa}
+                            payeeName={paymentSettings.payeeName}
+                            qrImageUrl={paymentSettings.qrImageUrl}
                             onSubmit={(formData) => api.post(`/merch/orders/${order.id}/payment`, formData)}
                             onSubmitted={() => router.push("/dashboard/orders")}
                         />

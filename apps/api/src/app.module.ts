@@ -25,6 +25,7 @@ import { EventsModule } from './events/events.module';
 import { TeamsModule } from './teams/teams.module';
 import { ContentModule } from './content/content.module';
 import { MerchModule } from './merch/merch.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { MerchModule } from './merch/merch.module';
     TeamsModule,
     ContentModule,
     MerchModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -87,6 +87,28 @@ Response `data` shape:
 | POST   | `/auth/forgot-password` | Public | Request a reset link (enumeration-safe: always 200) |
 | POST   | `/auth/reset-password`  | Public | Consume a reset token, set new password |
 
+### Site Settings
+
+| Method | Path                       | Access | Purpose                                                |
+| ------ | -------------------------- | ------ | ------------------------------------------------------- |
+| GET    | `/settings`                | Public | Payment config + fest dates, editable without a deploy |
+| PATCH  | `/admin/settings/payment`  | Admin  | Update UPI VPA/payee name and/or the QR image          |
+| PATCH  | `/admin/settings/fest-dates` | Admin | Update fest start/end, registration-close, date-range label |
+
+`GET /settings` returns nulls for every field until an admin first sets them
+via the two `PATCH` endpoints below (see `SiteSettings` in `database.md`).
+Frontend consumers (`UpiPaymentSection`'s callers, the landing page's
+countdown) fall back to their previous hardcoded constants when a field comes
+back null.
+
+`PATCH /admin/settings/payment`: multipart form, `upiVpa?`, `upiPayeeName?`,
+`qrImage?` (image file, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, via
+the shared `UploadsService`). Only the fields present in the body are
+updated; omitting `qrImage` preserves the existing image.
+
+`PATCH /admin/settings/fest-dates`: JSON body, `festStartAt?`/`festEndAt?`/
+`registrationCloseAt?` (ISO 8601), `dateRangeLabel?` (display string).
+
 ### Events
 
 | Method | Path                  | Access              | Purpose               |

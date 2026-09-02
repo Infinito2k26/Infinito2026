@@ -206,6 +206,7 @@ model User {
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
   merchOrders            MerchOrder[]
+  siteSettingsUpdates    SiteSettings[]  @relation("SiteSettingsUpdatedBy")
 
   @@index([isIITP, role])
   @@index([brandId])
@@ -758,4 +759,24 @@ model CaReferralLead {
   registrationId String?   @db.Uuid
 
   @@map("ca_referral_leads")
+}
+
+// Single-row config editable from the admin portal, so payment details and
+// fest dates can change without a code deploy. Always read/written via the
+// fixed id "singleton" — see SettingsService.
+model SiteSettings {
+  id                  String    @id @default("singleton")
+  upiVpa              String?
+  upiPayeeName        String?
+  paymentQrImageUrl   String?
+  festStartAt         DateTime?
+  festEndAt           DateTime?
+  registrationCloseAt DateTime?
+  dateRangeLabel      String? // display string, e.g. "9-11 October 2026"
+  updatedAt           DateTime  @updatedAt
+  updatedByUserId     String?   @db.Uuid
+
+  updatedBy User? @relation("SiteSettingsUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@map("site_settings")
 }
