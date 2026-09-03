@@ -147,7 +147,14 @@ export default function RegisterPage() {
 
     // A captain who already created a team for this event but never finished
     // registering would otherwise hit a 409 re-creating one — resume the
-    // existing unregistered team instead of showing the create/join form.
+    // existing team instead of showing the create/join form. This mirrors
+    // teams.service.ts's own duplicate-team guard: a team still blocks a new
+    // one unless its registration is CANCELLED/REFUNDED, so those are the
+    // only statuses where it's correct to fall through to create/join here
+    // too. A team with no registration yet resumes to Details; a team whose
+    // registration is already PENDING_PAYMENT/CONFIRMED/WAITLISTED resumes
+    // straight to Payment — landing back on the create-team form for either
+    // (as it used to) is exactly the original stuck-at-team-creation bug.
     useEffect(() => {
         if (!event || event.registrationType !== "TEAM") return;
         let cancelled = false;
@@ -160,14 +167,33 @@ export default function RegisterPage() {
                     isIITP: boolean;
                     role: "CAPTAIN" | "MEMBER";
                     event: { slug: string };
-                    registration: { id: string } | null;
+                    registration: {
+                        id: string;
+                        status: string;
+                        payments: { id: string; amount: string | number; mode: string; status: string }[];
+                    } | null;
                 }>;
                 const existing = teams.find(
-                    (t) => t.role === "CAPTAIN" && t.event.slug === event.slug && !t.registration,
+                    (t) =>
+                        t.role === "CAPTAIN" &&
+                        t.event.slug === event.slug &&
+                        (!t.registration || !["CANCELLED", "REFUNDED"].includes(t.registration.status)),
                 );
-                if (existing && existing.inviteCode && !cancelled) {
-                    setTeam({ id: existing.id, inviteCode: existing.inviteCode, isIITP: existing.isIITP });
-                    setResumedTeam(true);
+                if (!existing || !existing.inviteCode || cancelled) return;
+
+                setTeam({ id: existing.id, inviteCode: existing.inviteCode, isIITP: existing.isIITP });
+                setResumedTeam(true);
+
+                const latestPayment = existing.registration?.payments[0];
+                if (existing.registration && latestPayment) {
+                    setRegistration({
+                        id: existing.registration.id,
+                        eventId: event.id,
+                        status: existing.registration.status,
+                        payment: latestPayment,
+                    });
+                    setStep("payment");
+                } else {
                     setStep("details");
                 }
             } catch {
@@ -355,7 +381,13 @@ export default function RegisterPage() {
                     </div>
                 )}
 
-                {step === "payment" && registration && (
+                {step === "payment" && registration && registration.status === "CONFIRMED" && (
+                    <p className={styles.successText}>
+                        Your registration is confirmed — nothing else to do here.
+                    </p>
+                )}
+
+                {step === "payment" && registration && registration.status !== "CONFIRMED" && (
                     <UpiPaymentSection
                         amountDue={Number(registration.payment.amount)}
                         registrationId={registration.id}
@@ -363,6 +395,9 @@ export default function RegisterPage() {
                         vpa={paymentSettings.vpa}
                         payeeName={paymentSettings.payeeName}
                         qrImageUrl={paymentSettings.qrImageUrl}
+                        initiallySubmitted={["RECONCILIATION_PENDING", "SUCCESS"].includes(
+                            registration.payment.status,
+                        )}
                     />
                 )}
             </Card>

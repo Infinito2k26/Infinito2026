@@ -60,7 +60,17 @@ export class TeamsService {
           },
         },
         participants: { select: { id: true, name: true, role: true } },
-        registration: { select: { id: true, status: true } },
+        registration: {
+          select: {
+            id: true,
+            status: true,
+            payments: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { id: true, amount: true, mode: true, status: true },
+            },
+          },
+        },
       },
     });
 

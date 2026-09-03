@@ -134,8 +134,13 @@ export default function TeamsPage() {
                                     <InviteLinkRow link={joinLink} />
                                 )}
 
-                                {team.role === "CAPTAIN" && !team.registration && (
-                                    isEditing ? (
+                                {team.role === "CAPTAIN" && (
+                                    team.registration ? (
+                                        <p className={styles.lockedNote}>
+                                            Team details are locked — registration has already started for
+                                            this team.
+                                        </p>
+                                    ) : isEditing ? (
                                         <EditTeamForm
                                             team={team}
                                             onCancel={() => setEditingTeamId(null)}

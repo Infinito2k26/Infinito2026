@@ -248,6 +248,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 - Returns teams the caller captains or has joined (`captainId` match, or a `Participant` row with `userId` matching the caller). Each team is tagged `role: "CAPTAIN" | "MEMBER"`; `inviteCode` is only populated for the captain (`null` for members) — showing it to everyone would leak a credential that lets anyone claim a roster slot.
 - Includes the full editable field set (`collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`) plus `event.teamSizeMin`/`teamSizeMax`, so a captain-facing UI can prefill a `PATCH /teams/:id` form without a second request.
+- `registration`, when present, also includes its most recent `payments` entry (`id`, `amount`, `mode`, `status`) — enough for a client to resume straight to the payment/review step for a team that already has a `PENDING_PAYMENT`/`CONFIRMED`/`WAITLISTED` registration, instead of re-showing the create-team form (which would 409). Only `CANCELLED`/`REFUNDED` registrations don't block a fresh team, matching `POST /teams`'s own duplicate-team guard.
 
 #### `POST /teams/:id/join`
 

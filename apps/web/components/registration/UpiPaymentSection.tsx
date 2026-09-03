@@ -20,6 +20,8 @@ interface UpiPaymentSectionProps {
   registrationId?: string;
   /** Called once the screenshot + transaction ID are successfully submitted for review. */
   onSubmitted?: () => void;
+  /** True when resuming a registration whose payment proof was already submitted (RECONCILIATION_PENDING/SUCCESS) — skips straight to the "submitted" banner instead of showing the upload form again. */
+  initiallySubmitted?: boolean;
   /**
    * Override for what happens on submit — receives a FormData already
    * carrying transactionId/idempotencyKey/file. When omitted, defaults to
@@ -49,6 +51,7 @@ export default function UpiPaymentSection({
   registrationId,
   onSubmitted,
   onSubmit,
+  initiallySubmitted = false,
 }: UpiPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
   const [transactionId, setTransactionId] = useState("");
@@ -56,7 +59,7 @@ export default function UpiPaymentSection({
   const [fileError, setFileError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(initiallySubmitted);
   const isWaived = isIITP || amountDue === 0;
 
   const handleCopyVpa = async () => {
