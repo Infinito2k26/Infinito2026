@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Copy, Check } from "lucide-react";
 
 import Card from "@/components/ui/card";
@@ -76,6 +77,7 @@ function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
 interface TeamRef {
     id: string;
     inviteCode: string;
+    isIITP: boolean;
 }
 
 function validateRosterFile(file: File | null): string | undefined {
@@ -109,6 +111,8 @@ export default function RegisterPage() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registration, setRegistration] = useState<RegistrationResult | null>(null);
+    const [resumedTeam, setResumedTeam] = useState(false);
+    const [currentUserIsIITP, setCurrentUserIsIITP] = useState(false);
 
     const fetchEvent = async () => {
         setIsLoading(true);
@@ -133,6 +137,74 @@ export default function RegisterPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.slug]);
 
+    // For INDIVIDUAL events, IITP status comes from the user's own profile
+    // rather than a per-registration checkbox (that only exists for teams).
+    useEffect(() => {
+        api.get("/auth/me")
+            .then((res) => setCurrentUserIsIITP(Boolean(res?.data?.isIITP)))
+            .catch(() => {});
+    }, []);
+
+    // A captain who already created a team for this event but never finished
+    // registering would otherwise hit a 409 re-creating one — resume the
+    // existing team instead of showing the create/join form. This mirrors
+    // teams.service.ts's own duplicate-team guard: a team still blocks a new
+    // one unless its registration is CANCELLED/REFUNDED, so those are the
+    // only statuses where it's correct to fall through to create/join here
+    // too. A team with no registration yet resumes to Details; a team whose
+    // registration is already PENDING_PAYMENT/CONFIRMED/WAITLISTED resumes
+    // straight to Payment — landing back on the create-team form for either
+    // (as it used to) is exactly the original stuck-at-team-creation bug.
+    useEffect(() => {
+        if (!event || event.registrationType !== "TEAM") return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get("/teams/mine");
+                const teams = (res?.data ?? []) as Array<{
+                    id: string;
+                    inviteCode: string | null;
+                    isIITP: boolean;
+                    role: "CAPTAIN" | "MEMBER";
+                    event: { slug: string };
+                    registration: {
+                        id: string;
+                        status: string;
+                        payments: { id: string; amount: string | number; mode: string; status: string }[];
+                    } | null;
+                }>;
+                const existing = teams.find(
+                    (t) =>
+                        t.role === "CAPTAIN" &&
+                        t.event.slug === event.slug &&
+                        (!t.registration || !["CANCELLED", "REFUNDED"].includes(t.registration.status)),
+                );
+                if (!existing || !existing.inviteCode || cancelled) return;
+
+                setTeam({ id: existing.id, inviteCode: existing.inviteCode, isIITP: existing.isIITP });
+                setResumedTeam(true);
+
+                const latestPayment = existing.registration?.payments[0];
+                if (existing.registration && latestPayment) {
+                    setRegistration({
+                        id: existing.registration.id,
+                        eventId: event.id,
+                        status: existing.registration.status,
+                        payment: latestPayment,
+                    });
+                    setStep("payment");
+                } else {
+                    setStep("details");
+                }
+            } catch {
+                // Non-fatal — the create/join flow still works if this lookup fails.
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [event]);
+
     if (isLoading) {
         return <SectionSpinner message="Loading..." />;
     }
@@ -143,8 +215,9 @@ export default function RegisterPage() {
 
     const isTeamEvent = event.registrationType === "TEAM";
     const steps: Step[] = isTeamEvent ? ["team", "details", "payment"] : ["details", "payment"];
+    const isIITP = isTeamEvent ? (team?.isIITP ?? false) : currentUserIsIITP;
 
-    const handleSubmitRegistration = async () => {
+    const submitRegistration = async () => {
         setSubmitError(null);
         setIsSubmitting(true);
         try {
@@ -160,7 +233,7 @@ export default function RegisterPage() {
             };
             const res = await api.post("/registrations", payload);
             setRegistration(res.data as RegistrationResult);
-            setStep("payment");
+            return true;
         } catch (err) {
             if (err instanceof ApiError) {
                 setSubmitError(err.message);
@@ -168,9 +241,24 @@ export default function RegisterPage() {
                 setSubmitError("Failed to submit registration. Please try again.");
             }
             console.error("Registration submit failed", err);
+            return false;
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    // For IITP, there's no payment to make — but the registration is still
+    // only created once the participant explicitly confirms on the review
+    // step below, not the moment they leave the Details step, so it never
+    // reads as having registered them automatically.
+    const handleDetailsSubmit = async () => {
+        if (isIITP) {
+            setSubmitError(null);
+            setStep("payment");
+            return;
+        }
+        const ok = await submitRegistration();
+        if (ok) setStep("payment");
     };
 
     return (
@@ -198,6 +286,14 @@ export default function RegisterPage() {
 
                 {step === "details" && (
                     <div className={styles.detailsForm}>
+                        {resumedTeam && (
+                            <p className={styles.hintText}>
+                                Continuing your existing team for this event. Need to change its name, roster
+                                size, or invite more members? Manage it from{" "}
+                                <Link href="/dashboard/teams">your Teams page</Link>.
+                            </p>
+                        )}
+
                         {event.feeStructure === "GENDER_BASED" && (
                             <div className={styles.field}>
                                 <label className={styles.label} htmlFor="genderDeclared">
@@ -218,7 +314,7 @@ export default function RegisterPage() {
                             </div>
                         )}
 
-                        {event.hasAccommodation && (
+                        {event.hasAccommodation && !isIITP && (
                             <AccommodationSection
                                 isTeamEvent={isTeamEvent}
                                 value={accommodation}
@@ -259,14 +355,39 @@ export default function RegisterPage() {
                             size="lg"
                             loading={isSubmitting}
                             disabled={!agreedToGuidelines}
-                            onClick={handleSubmitRegistration}
+                            onClick={handleDetailsSubmit}
                         >
-                            Submit Registration
+                            {isIITP ? "Continue to Review" : "Submit Registration"}
                         </Button>
                     </div>
                 )}
 
-                {step === "payment" && registration && (
+                {step === "payment" && !registration && isIITP && (
+                    <div className={styles.detailsForm}>
+                        <p className={styles.hintText}>
+                            Since this is an IITP registration, no payment is required — but nothing is
+                            submitted yet. Review your details, then confirm below to submit your application.
+                            An organiser will verify your IITP status before it&apos;s confirmed.
+                        </p>
+                        {submitError && <p className={styles.errorText}>{submitError}</p>}
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            loading={isSubmitting}
+                            onClick={submitRegistration}
+                        >
+                            Submit Application
+                        </Button>
+                    </div>
+                )}
+
+                {step === "payment" && registration && registration.status === "CONFIRMED" && (
+                    <p className={styles.successText}>
+                        Your registration is confirmed — nothing else to do here.
+                    </p>
+                )}
+
+                {step === "payment" && registration && registration.status !== "CONFIRMED" && (
                     <UpiPaymentSection
                         amountDue={Number(registration.payment.amount)}
                         registrationId={registration.id}
@@ -274,6 +395,9 @@ export default function RegisterPage() {
                         vpa={paymentSettings.vpa}
                         payeeName={paymentSettings.payeeName}
                         qrImageUrl={paymentSettings.qrImageUrl}
+                        initiallySubmitted={["RECONCILIATION_PENDING", "SUCCESS"].includes(
+                            registration.payment.status,
+                        )}
                     />
                 )}
             </Card>
@@ -465,7 +589,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
 
             const res = await api.post("/teams", formData);
             const data = res.data as { team: { id: string; inviteCode: string } };
-            onCreated({ id: data.team.id, inviteCode: data.team.inviteCode });
+            onCreated({ id: data.team.id, inviteCode: data.team.inviteCode, isIITP });
         } catch (err) {
             setApiError(err instanceof ApiError ? err.message : "Failed to create team.");
         } finally {

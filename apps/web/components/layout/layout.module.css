@@ -524,15 +524,7 @@
   flex-direction: column;
   gap: 1px;
   color: var(--mist-400);
-}
-
-.footerContactRole {
-  font-family: var(--f-caps);
-  font-size: 0.5625rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--char-500);
+  margin-bottom: var(--space-2);
 }
 
 .footerContactName {

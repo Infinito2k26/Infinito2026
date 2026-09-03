@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Req,
   Param,
@@ -13,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TeamsService } from './teams.service';
-import { CreateTeamDto, JoinTeamDto } from './dto/teams.dto';
+import { CreateTeamDto, JoinTeamDto, UpdateTeamDto } from './dto/teams.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
 
@@ -80,12 +82,35 @@ export class TeamsController {
     return this.teamsService.createTeam(req.user.id, body, photo, idFile);
   }
 
+  @Patch(':id')
+  async update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateTeamDto,
+  ) {
+    return this.teamsService.updateTeam(id, req.user.id, body);
+  }
+
   @Post(':id/invitations')
   async rotateInvite(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.teamsService.rotateInviteCode(id, req.user.id);
+  }
+
+  @Delete(':teamId/participants/:participantId')
+  async removeParticipant(
+    @Req() req: AuthenticatedRequest,
+    @Param('teamId', ParseUUIDPipe) teamId: string,
+    @Param('participantId', ParseUUIDPipe) participantId: string,
+  ) {
+    await this.teamsService.removeParticipant(
+      teamId,
+      participantId,
+      req.user.id,
+    );
+    return { success: true };
   }
 
   @Post('join')

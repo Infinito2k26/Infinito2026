@@ -146,13 +146,8 @@
     gap: var(--space-2);
 }
 
-.rulebookLink {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    color: var(--crimson-700);
+.rulebookBtn {
+    width: 100%;
 }
 
 .registerBtn {
@@ -167,6 +162,7 @@
         gap: var(--space-5);
     }
 
+    .rulebookBtn,
     .registerBtn {
         width: auto;
         min-width: 200px;
