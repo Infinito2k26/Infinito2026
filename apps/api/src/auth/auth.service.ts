@@ -52,6 +52,16 @@ export interface UserProfile {
   role: User['role'];
   isEmailVerified: boolean;
   college: string | null;
+  customRole?: {
+    id: string;
+    name: string;
+    permissions: {
+      service: string;
+      canRead: boolean;
+      canWrite: boolean;
+      canDelete: boolean;
+    }[];
+  } | null;
 }
 
 export interface TokenPair {
@@ -315,13 +325,40 @@ export class AuthService {
   async me(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        customRole: {
+          select: {
+            id: true,
+            name: true,
+            deletedAt: true,
+            permissions: {
+              select: {
+                service: true,
+                canRead: true,
+                canWrite: true,
+                canDelete: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
 
-    return toProfile(user);
+    return {
+      ...toProfile(user),
+      customRole:
+        user.customRole && !user.customRole.deletedAt
+          ? {
+              id: user.customRole.id,
+              name: user.customRole.name,
+              permissions: user.customRole.permissions,
+            }
+          : null,
+    };
   }
 
   private async issueTokens(user: User): Promise<TokenPair> {

@@ -1,0 +1,161 @@
+.container {
+    padding: var(--space-4) var(--spacing-container) var(--space-8);
+    max-width: 72rem;
+    margin-inline: auto;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.headerText {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.pageTitle {
+    margin-top: 0;
+}
+
+.pageSubtitle {
+    color: var(--text-muted);
+    line-height: var(--lh-body);
+}
+
+.tableCard {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.emptyState {
+    color: var(--text-muted);
+    padding: var(--space-5) var(--space-4);
+    font-size: 0.875rem;
+}
+
+.table {
+    width: 100%;
+    min-width: 40rem;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.headRow {
+    border-bottom: var(--hairline);
+    text-align: left;
+}
+
+.headCell {
+    padding: var(--space-3);
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+    white-space: nowrap;
+}
+
+.bodyRow {
+    border-bottom: var(--hairline);
+    cursor: pointer;
+}
+
+.bodyRow:hover {
+    background: var(--bone-50);
+}
+
+.bodyRow:last-child {
+    border-bottom: none;
+}
+
+.cell {
+    padding: var(--space-3);
+    color: var(--char-800);
+    vertical-align: top;
+}
+
+.nameLink {
+    color: var(--char-900);
+    font-weight: 600;
+}
+
+.description {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+.serviceBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.serviceBadge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.125rem var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--bone-100);
+    color: var(--char-700);
+    white-space: nowrap;
+}
+
+.formGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 22rem;
+}
+
+.label {
+    font-family: var(--f-caps);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-micro);
+    text-transform: uppercase;
+    color: var(--char-500);
+}
+
+.permissionTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.permissionTable th,
+.permissionTable td {
+    padding: var(--space-2);
+    border-bottom: var(--hairline);
+    text-align: center;
+}
+
+.permissionTable th:first-child,
+.permissionTable td:first-child {
+    text-align: left;
+}
+
+.errorText {
+    color: var(--err);
+    font-size: 0.8125rem;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.modalActionsRight {
+    display: flex;
+    gap: var(--space-2);
+}

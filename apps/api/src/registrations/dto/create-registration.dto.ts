@@ -10,6 +10,7 @@ import {
   IsArray,
   IsString,
   ValidateNested,
+  Equals,
 } from 'class-validator';
 import { GenderCategory } from '@prisma/client';
 
@@ -75,4 +76,12 @@ export class CreateRegistrationDto {
   @ValidateNested({ each: true })
   @Type(() => SubOptionSelectionDto)
   subOptionSelections?: SubOptionSelectionDto[];
+
+  // Not persisted — just gates registration on having agreed to
+  // /registration-guidelines, mirroring the checkbox on the register page.
+  // TS-optional so RegistrationsService callers/tests that build this DTO
+  // directly (bypassing the ValidationPipe) don't need to set it; the real
+  // HTTP path still rejects a missing/false value via @Equals(true).
+  @Equals(true, { message: 'You must agree to the Registration Guidelines' })
+  agreedToGuidelines?: boolean;
 }

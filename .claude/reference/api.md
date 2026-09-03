@@ -121,22 +121,67 @@ updated; omitting `qrImage` preserves the existing image.
 
 | Method | Path                       | Access | Purpose                                                |
 | ------ | -------------------------- | ------ | ------------------------------------------------------- |
-| GET    | `/admin/users`             | Admin  | Search/filter/paginate all users                       |
-| GET    | `/admin/users/:id`         | Admin  | Full cross-entity detail: registrations, teams, CA profile/applications, credentials + scan history, merch orders |
-| PATCH  | `/admin/users/:id/role`    | Admin  | Change a user's role                                   |
-| PATCH  | `/admin/users/:id/status`  | Admin  | Ban or unban a user (`{ banned: boolean }`)             |
+| GET    | `/admin/users`               | Admin (ADMIN_USERS read)  | Search/filter/paginate all users                       |
+| GET    | `/admin/users/:id`           | Admin (ADMIN_USERS read)  | Full cross-entity detail: registrations, teams, CA profile/applications, credentials + scan history, merch orders |
+| PATCH  | `/admin/users/:id/role`      | ADMIN/SUPER_ADMIN only    | Change a user's base `UserRole`                        |
+| PATCH  | `/admin/users/:id/custom-role` | SUPER_ADMIN only        | Assign/unassign a `CustomRole` (`{ customRoleId: string \| null }`) |
+| PATCH  | `/admin/users/:id/status`    | Admin (ADMIN_USERS write) | Ban or unban a user (`{ banned: boolean }`)             |
 
 `GET /admin/users`: query `page`/`limit` (default 20, max 100), `search`
 (matches name/email/college, case-insensitive substring), `role` (one of
-`UserRole`, 400 if invalid).
+`UserRole`, 400 if invalid). Each row includes `customRole: { id, name } | null`
+so the admin UI can show a user's assigned custom role alongside their base
+`UserRole` — without it, a custom-role assignment has no visible effect on
+this list (the base `role` column never changes).
 
-Both `PATCH` endpoints share the same guards: an admin cannot act on their
-own account (403), every change writes an `AdminAuditLog` row (actor,
-target, before/after), and the target's refresh-token session is revoked
-immediately (`RefreshTokenStore.revoke`) so the change takes effect without
-waiting for their access token to expire. `PATCH .../role` additionally
-rejects (403) demoting the last remaining `SUPER_ADMIN` — checked by
-counting other `SUPER_ADMIN` rows before applying the change.
+`role` and `status` `PATCH` endpoints share the same guards: an admin cannot
+act on their own account (403), every change writes an `AdminAuditLog` row
+(actor, target, before/after), and the target's refresh-token session is
+revoked immediately (`RefreshTokenStore.revoke`) so the change takes effect
+without waiting for their access token to expire. `PATCH .../role`
+additionally rejects (403) demoting the last remaining `SUPER_ADMIN` —
+checked by counting other `SUPER_ADMIN` rows before applying the change.
+`PATCH .../custom-role` is intentionally restricted to `SUPER_ADMIN` — see
+"Admin Roles & Permissions" below.
+
+### Admin Roles & Permissions
+
+`SUPER_ADMIN`/`ADMIN` always have unrestricted access to every admin
+endpoint below — the permission system is additive, not a replacement.
+A `CustomRole` grants any user (including a `PARTICIPANT`) scoped
+read/write/delete access to one or more admin services without promoting
+them to `ADMIN`. A user holds at most one `CustomRole` at a time
+(`User.customRoleId`).
+
+| Method | Path                | Access       | Purpose                                    |
+| ------ | ------------------- | ------------ | ------------------------------------------- |
+| GET    | `/admin/roles`      | SUPER_ADMIN  | List roles with their permissions           |
+| GET    | `/admin/roles/:id`  | SUPER_ADMIN  | Role detail                                 |
+| POST   | `/admin/roles`      | SUPER_ADMIN  | Create a role + its permission set          |
+| PATCH  | `/admin/roles/:id`  | SUPER_ADMIN  | Update name/description/permissions         |
+| DELETE | `/admin/roles/:id`  | SUPER_ADMIN  | Soft-delete a role (409 if still assigned to any user) |
+
+`POST`/`PATCH` body: `{ name: string; description?: string; permissions: { service: AdminService; canRead: boolean; canWrite: boolean; canDelete: boolean }[] }`.
+`AdminService` values: `EVENTS`, `REGISTRATIONS`, `PAYMENTS`, `MERCH`,
+`TEAMS`, `CONTENT` (the "Team" org-bio page — not the whole Content module),
+`GALLERY`, `IDENTITY` (Gate Scans), `SETTINGS`, `CA` (CA tasks/applications),
+`SPONSORS` (the Brand model — sponsor tiers/public listing), `LEADS`,
+`LEADERBOARD`, `UPLOADS`, `ADMIN_USERS`. `CONTENT`/`GALLERY` and `CA`/`SPONSORS`
+were deliberately split even though `GalleryItem` lives in the same module as
+team bios, and `Brand` is shared between the CA program and the public
+Sponsors page — each pairing is a distinct concern an admin may want to grant
+separately (e.g. a role that edits Gallery but not the org's Team bios).
+
+Enforcement: `PermissionsGuard` + `@RequirePermission(service, action)`
+decorate individual handlers (GET→read, POST/PATCH/PUT→write, DELETE→delete)
+in place of the old controller-wide `@Roles(ADMIN, SUPER_ADMIN)`. `SUPER_ADMIN`
+and `ADMIN` bypass the check entirely; any other user must hold a `CustomRole`
+with the matching service permission or the request is rejected with 403.
+Role management itself (`admin/roles/*` and `PATCH .../custom-role`) is not
+delegable — it stays hard-gated to `SUPER_ADMIN` via `@Roles`, independent of
+the permission system. `GET /auth/me` includes the caller's `customRole`
+(id, name, permissions) so the frontend can grant admin-panel entry to a
+non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 ### Events
 
@@ -148,7 +193,7 @@ counting other `SUPER_ADMIN` rows before applying the change.
 | PATCH  | `/events/:id`         | Admin/Event Manager | Update event          |
 | PATCH  | `/events/:id/publish` | Admin/Event Manager | Publish/unpublish     |
 
-`GET /events` / `GET /events/:slug` only ever return `isPublished: true` events — there's no admin variant that also returns drafts; admins use the `id` returned from `POST /events` to `PATCH` an unpublished event directly. "Admin/Event Manager" maps to `UserRole.ADMIN` / `SUPER_ADMIN` — no distinct Event Manager role exists.
+`GET /events` / `GET /events/:slug` only ever return `isPublished: true` events — there's no admin variant that also returns drafts; admins use the `id` returned from `POST /events` to `PATCH` an unpublished event directly. "Admin/Event Manager" maps to `UserRole.ADMIN` / `SUPER_ADMIN`, or any user holding a `CustomRole` with `EVENTS` read/write — see "Admin Roles & Permissions" above.
 
 `GET /events/:slug` additionally includes `subOptions` (only the `isActive: true` rows) so the registration form can render Athletics-style discipline pickers without a second request. `GET /events` (the list) does not include `subOptions`.
 

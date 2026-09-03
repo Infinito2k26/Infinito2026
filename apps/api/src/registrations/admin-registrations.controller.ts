@@ -1,19 +1,19 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { UserRole } from '@prisma/client';
+import { AdminService } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermission } from '../common/decorators/require-permission.decorator';
 import { RegistrationsService } from './registrations.service';
 
 @Controller('admin/registrations')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @SkipThrottle()
 export class AdminRegistrationsController {
   constructor(private readonly registrationsService: RegistrationsService) {}
 
   @Get()
+  @RequirePermission(AdminService.REGISTRATIONS, 'read')
   async list(
     @Query('page') page?: string,
     @Query('limit') limit?: string,

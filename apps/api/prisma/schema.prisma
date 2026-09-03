@@ -18,6 +18,24 @@ enum UserRole {
   PARTICIPANT
 }
 
+enum AdminService {
+  EVENTS
+  REGISTRATIONS
+  PAYMENTS
+  MERCH
+  TEAMS
+  CONTENT
+  GALLERY
+  IDENTITY
+  SETTINGS
+  CA
+  SPONSORS
+  LEADS
+  LEADERBOARD
+  UPLOADS
+  ADMIN_USERS
+}
+
 enum BroadCategory {
   OUTDOOR
   INDOOR
@@ -184,6 +202,7 @@ model User {
   college         String?
   isIITP          Boolean   @default(false)
   brandId         String?   @db.Uuid // set only when role = BRAND; scopes login to one sponsor
+  customRoleId    String?   @db.Uuid // optional scoped admin-panel access on top of `role`; see CustomRole
   iitpEmail       String?   @unique // .iitp.ac.in email confirmed via Microsoft OAuth
   isIITPVerified  Boolean   @default(false)
   isEmailVerified Boolean   @default(false)
@@ -203,6 +222,7 @@ model User {
   taskVerifications  CATaskAssignment[]  @relation("TaskVerifier")
   participants       Participant[]       @relation("UserParticipant")
   brand              Brand?              @relation("BrandUsers", fields: [brandId], references: [id])
+  customRole         CustomRole?         @relation(fields: [customRoleId], references: [id])
   caApplications         CAApplication[] @relation("CAApplicant")
   caApplicationsReviewed CAApplication[] @relation("CAApplicationReviewer")
   passwordResetTokens    PasswordResetToken[]
@@ -214,6 +234,32 @@ model User {
 
   @@index([isIITP, role])
   @@index([brandId])
+  @@index([customRoleId])
+}
+
+model CustomRole {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  permissions RolePermission[]
+  users       User[]
+}
+
+model RolePermission {
+  id        String       @id @default(uuid()) @db.Uuid
+  roleId    String       @db.Uuid
+  service   AdminService
+  canRead   Boolean      @default(false)
+  canWrite  Boolean      @default(false)
+  canDelete Boolean      @default(false)
+
+  role CustomRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, service])
 }
 
 model PasswordResetToken {

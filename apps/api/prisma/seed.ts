@@ -34,7 +34,7 @@ const prisma = new PrismaClient({ adapter });
 
 // bcrypt hash of "Infinito@dev123" with 10 salt rounds — FAKE, dev only.
 const DEV_PASSWORD_HASH =
-  '$2b$10$Fakehashabcdefghijklmnopqrstuvwxyz012345678901234567890';
+  '$2b$10$5M4G6kgbCVhoTd0w11giru8VjshJd5WIFTpW5s1y/69t0XymAbFh2';
 
 // ---------------------------------------------------------------------------
 // Fixed seed IDs — prefixed with "seed-" for easy identification and stable

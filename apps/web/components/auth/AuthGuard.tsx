@@ -29,7 +29,18 @@ export default function AuthGuard({
         // The backend envelope wraps the payload as { success, data, meta } — see .claude/reference/api.md.
         const user = res.data;
 
-        if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        // A custom role grants scoped access to the admin panel even for a user
+        // whose base role (e.g. PARTICIPANT) wouldn't otherwise pass allowedRoles.
+        // Individual admin API calls remain enforced server-side by PermissionsGuard.
+        const hasCustomRoleAccess =
+          allowedRoles?.includes('ADMIN') && !!user.customRole;
+
+        if (
+          allowedRoles &&
+          allowedRoles.length > 0 &&
+          !allowedRoles.includes(user.role) &&
+          !hasCustomRoleAccess
+        ) {
           if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
             router.replace('/admin');
           } else if (user.role === 'CAMPUS_AMBASSADOR') {

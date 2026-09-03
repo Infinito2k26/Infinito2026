@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
-import { UserRole } from '@prisma/client';
+import { AdminService } from '@prisma/client';
 import { ContentService } from './content.service';
 import {
   CreateTeamMemberDto,
@@ -23,8 +23,8 @@ import {
   UpdateGalleryItemDto,
 } from './dto/content.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequirePermission } from '../common/decorators/require-permission.decorator';
 
 const IMAGE_FILE_OPTIONS = { limits: { fileSize: 5 * 1024 * 1024 } };
 
@@ -39,13 +39,13 @@ const optionalImageFilePipe = () =>
     });
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @SkipThrottle()
 export class AdminContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Post('team')
+  @RequirePermission(AdminService.CONTENT, 'write')
   @UseInterceptors(FileInterceptor('photo', IMAGE_FILE_OPTIONS))
   async createTeamMember(
     @Body() dto: CreateTeamMemberDto,
@@ -55,6 +55,7 @@ export class AdminContentController {
   }
 
   @Patch('team/:id')
+  @RequirePermission(AdminService.CONTENT, 'write')
   @UseInterceptors(FileInterceptor('photo', IMAGE_FILE_OPTIONS))
   async updateTeamMember(
     @Param('id', ParseUUIDPipe) id: string,
@@ -65,11 +66,13 @@ export class AdminContentController {
   }
 
   @Delete('team/:id')
+  @RequirePermission(AdminService.CONTENT, 'delete')
   async deleteTeamMember(@Param('id', ParseUUIDPipe) id: string) {
     return this.contentService.deleteTeamMember(id);
   }
 
   @Post('gallery')
+  @RequirePermission(AdminService.GALLERY, 'write')
   @UseInterceptors(FileInterceptor('image', IMAGE_FILE_OPTIONS))
   async createGalleryItem(
     @Body() dto: CreateGalleryItemDto,
@@ -89,6 +92,7 @@ export class AdminContentController {
   }
 
   @Patch('gallery/:id')
+  @RequirePermission(AdminService.GALLERY, 'write')
   async updateGalleryItem(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGalleryItemDto,
@@ -97,6 +101,7 @@ export class AdminContentController {
   }
 
   @Delete('gallery/:id')
+  @RequirePermission(AdminService.GALLERY, 'delete')
   async deleteGalleryItem(@Param('id', ParseUUIDPipe) id: string) {
     return this.contentService.deleteGalleryItem(id);
   }
