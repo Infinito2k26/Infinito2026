@@ -246,7 +246,8 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `GET /teams/mine`
 
-- Returns teams where the caller is `captainId` only — a teammate who joins by invite code often has no `User` link at all (`Participant.userId` is typically null for non-captains), so "my teams" is necessarily captain-scoped.
+- Returns teams the caller captains or has joined (`captainId` match, or a `Participant` row with `userId` matching the caller). Each team is tagged `role: "CAPTAIN" | "MEMBER"`; `inviteCode` is only populated for the captain (`null` for members) — showing it to everyone would leak a credential that lets anyone claim a roster slot.
+- Includes the full editable field set (`collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`) plus `event.teamSizeMin`/`teamSizeMax`, so a captain-facing UI can prefill a `PATCH /teams/:id` form without a second request.
 
 #### `POST /teams/:id/join`
 
