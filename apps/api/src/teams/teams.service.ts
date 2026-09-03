@@ -12,7 +12,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
-import { CreateTeamDto, JoinTeamDto } from './dto/teams.dto';
+import { CreateTeamDto, JoinTeamDto, UpdateTeamDto } from './dto/teams.dto';
 
 type UploadedFile = { buffer: Buffer; mimetype: string };
 
@@ -227,6 +227,109 @@ export class TeamsService {
     throw new ConflictException(
       'Could not generate a unique invite code, please retry',
     );
+  }
+
+  async updateTeam(teamId: string, callerId: string, dto: UpdateTeamDto) {
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        event: { select: { teamSizeMin: true, teamSizeMax: true } },
+        registration: { select: { id: true } },
+        _count: { select: { participants: true } },
+      },
+    });
+    if (!team || team.deletedAt) {
+      throw new NotFoundException('Team not found');
+    }
+    if (team.captainId !== callerId) {
+      throw new ForbiddenException('Only the team captain can edit the team');
+    }
+    if (team.registration) {
+      throw new ConflictException(
+        'Team details can no longer be edited — this team has already been registered',
+      );
+    }
+
+    if (dto.declaredSize !== undefined) {
+      if (
+        team.event.teamSizeMin != null &&
+        dto.declaredSize < team.event.teamSizeMin
+      ) {
+        throw new UnprocessableEntityException(
+          `declaredSize must be at least ${team.event.teamSizeMin} for this event`,
+        );
+      }
+      if (
+        team.event.teamSizeMax != null &&
+        dto.declaredSize > team.event.teamSizeMax
+      ) {
+        throw new UnprocessableEntityException(
+          `declaredSize cannot exceed ${team.event.teamSizeMax} for this event`,
+        );
+      }
+      if (dto.declaredSize < team._count.participants) {
+        throw new UnprocessableEntityException(
+          `declaredSize cannot be less than the ${team._count.participants} member(s) already on the roster`,
+        );
+      }
+    }
+
+    return this.prisma.team.update({
+      where: { id: teamId },
+      data: {
+        name: dto.name,
+        declaredSize: dto.declaredSize,
+        collegeName: dto.collegeName,
+        collegeAddress: dto.collegeAddress,
+        isIITP: dto.isIITP,
+        viceCaptainName: dto.viceCaptainName,
+        viceCaptainPhone: dto.viceCaptainPhone,
+        coachName: dto.coachName,
+        coachPhone: dto.coachPhone,
+      },
+    });
+  }
+
+  async removeParticipant(
+    teamId: string,
+    participantId: string,
+    callerId: string,
+  ) {
+    const team = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!team || team.deletedAt) {
+      throw new NotFoundException('Team not found');
+    }
+    if (team.captainId !== callerId) {
+      throw new ForbiddenException(
+        'Only the team captain can remove team members',
+      );
+    }
+
+    const participant = await this.prisma.participant.findUnique({
+      where: { id: participantId },
+    });
+    if (!participant || participant.teamId !== teamId) {
+      throw new NotFoundException('Participant not found on this team');
+    }
+    if (participant.role === ParticipantRole.CAPTAIN) {
+      throw new BadRequestException(
+        'The captain cannot be removed from the team',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // A credential may already have scan history (ScanLog rows) attached —
+      // those reference the credential via a plain FK with no cascade, so
+      // they're cleared first or the credential delete below would fail.
+      const credential = await tx.credential.findUnique({
+        where: { participantId },
+      });
+      if (credential) {
+        await tx.scanLog.deleteMany({ where: { credentialId: credential.id } });
+        await tx.credential.delete({ where: { id: credential.id } });
+      }
+      await tx.participant.delete({ where: { id: participantId } });
+    });
   }
 
   async rotateInviteCode(teamId: string, callerId: string) {
