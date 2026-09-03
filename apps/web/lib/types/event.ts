@@ -45,6 +45,8 @@ export interface EventSummary {
 
 export interface EventDetail extends EventSummary {
     description: string | null;
+    pointOfContactName: string | null;
+    pointOfContactPhone: string | null;
     genderCategory: GenderCategory;
     teamSizeMin: number | null;
     teamSizeMax: number | null;
