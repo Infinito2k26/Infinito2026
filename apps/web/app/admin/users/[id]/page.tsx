@@ -28,6 +28,11 @@ const ROLE_OPTIONS: UserRole[] = [
     "PARTICIPANT",
 ];
 
+interface CustomRoleSummary {
+    id: string;
+    name: string;
+}
+
 interface UserDetail {
     id: string;
     name: string;
@@ -40,6 +45,7 @@ interface UserDetail {
     isEmailVerified: boolean;
     bannedAt: string | null;
     brandId: string | null;
+    customRoleId: string | null;
     createdAt: string;
     registrations: {
         id: string;
@@ -75,6 +81,11 @@ export default function AdminUserDetailPage() {
     const [statusSubmitting, setStatusSubmitting] = useState(false);
     const [statusError, setStatusError] = useState<string | null>(null);
 
+    const [customRoles, setCustomRoles] = useState<CustomRoleSummary[]>([]);
+    const [selectedCustomRoleId, setSelectedCustomRoleId] = useState<string>("");
+    const [customRoleSubmitting, setCustomRoleSubmitting] = useState(false);
+    const [customRoleError, setCustomRoleError] = useState<string | null>(null);
+
     const fetchUser = async () => {
         setIsLoading(true);
         setError(null);
@@ -83,6 +94,7 @@ export default function AdminUserDetailPage() {
             const data: UserDetail = res.data;
             setUser(data);
             setSelectedRole(data.role);
+            setSelectedCustomRoleId(data.customRoleId ?? "");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load user.");
         } finally {
@@ -94,6 +106,18 @@ export default function AdminUserDetailPage() {
         fetchUser();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id]);
+
+    useEffect(() => {
+        const fetchCustomRoles = async () => {
+            try {
+                const res = await api.get("/admin/roles");
+                setCustomRoles((res?.data as CustomRoleSummary[]) ?? []);
+            } catch {
+                // SUPER_ADMIN-only endpoint — a non-SUPER_ADMIN admin simply won't see role options.
+            }
+        };
+        fetchCustomRoles();
+    }, []);
 
     const handleRoleSave = async () => {
         if (!user || !selectedRole || selectedRole === user.role) return;
@@ -108,6 +132,23 @@ export default function AdminUserDetailPage() {
             setRoleError(err instanceof ApiError ? err.message : "Failed to change role.");
         } finally {
             setRoleSubmitting(false);
+        }
+    };
+
+    const handleCustomRoleSave = async () => {
+        if (!user) return;
+        const newId = selectedCustomRoleId || null;
+        if (newId === (user.customRoleId ?? null)) return;
+
+        setCustomRoleSubmitting(true);
+        setCustomRoleError(null);
+        try {
+            await api.patch(`/admin/users/${user.id}/custom-role`, { customRoleId: newId });
+            await fetchUser();
+        } catch (err) {
+            setCustomRoleError(err instanceof ApiError ? err.message : "Failed to change custom role.");
+        } finally {
+            setCustomRoleSubmitting(false);
         }
     };
 
@@ -182,6 +223,31 @@ export default function AdminUserDetailPage() {
                             Save role
                         </Button>
                     </div>
+                    {customRoles.length > 0 && (
+                        <div className={styles.roleAction}>
+                            <label className={styles.label} htmlFor="custom-role-select">Custom role</label>
+                            <select
+                                id="custom-role-select"
+                                className={styles.roleSelect}
+                                value={selectedCustomRoleId}
+                                onChange={(e) => setSelectedCustomRoleId(e.target.value)}
+                            >
+                                <option value="">None</option>
+                                {customRoles.map((r) => (
+                                    <option key={r.id} value={r.id}>{r.name}</option>
+                                ))}
+                            </select>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                loading={customRoleSubmitting}
+                                disabled={selectedCustomRoleId === (user.customRoleId ?? "")}
+                                onClick={handleCustomRoleSave}
+                            >
+                                Save custom role
+                            </Button>
+                        </div>
+                    )}
                     <Button
                         variant={user.bannedAt ? "primary" : "secondary"}
                         size="sm"
@@ -192,6 +258,7 @@ export default function AdminUserDetailPage() {
                     </Button>
                 </div>
                 {roleError && <p className={styles.errorText}>{roleError}</p>}
+                {customRoleError && <p className={styles.errorText}>{customRoleError}</p>}
                 {statusError && <p className={styles.errorText}>{statusError}</p>}
             </Card>
 

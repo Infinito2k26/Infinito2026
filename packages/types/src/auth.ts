@@ -13,4 +13,14 @@ export interface UserProfileResponse {
     role: UserRole;
     isEmailVerified: boolean;
     college?: string;
+    customRole?: {
+        id: string;
+        name: string;
+        permissions: {
+            service: string;
+            canRead: boolean;
+            canWrite: boolean;
+            canDelete: boolean;
+        }[];
+    } | null;
 }
