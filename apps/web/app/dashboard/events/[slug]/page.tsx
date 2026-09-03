@@ -142,6 +142,20 @@ export default function EventDetailPage() {
                             </span>
                         </div>
                     )}
+                    {(event.pointOfContactName || event.pointOfContactPhone) && (
+                        <div className={styles.metaItem}>
+                            <Phone size={16} />
+                            <span>
+                                POC: {event.pointOfContactName}
+                                {event.pointOfContactName && event.pointOfContactPhone ? " · " : ""}
+                                {event.pointOfContactPhone && (
+                                    <a href={`tel:${event.pointOfContactPhone}`}>
+                                        {event.pointOfContactPhone}
+                                    </a>
+                                )}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {(event.pointOfContactName || event.pointOfContactPhone) && (
