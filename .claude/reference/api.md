@@ -215,9 +215,11 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 | Method | Path                     | Access              | Purpose              |
 | ------ | ------------------------ | ------------------- | -------------------- |
 | POST   | `/teams`                 | Authenticated       | Create team          |
-| GET    | `/teams/mine`            | Authenticated       | Teams I captain      |
+| GET    | `/teams/mine`            | Authenticated       | Teams I captain (or joined) |
+| PATCH  | `/teams/:id`             | Team Captain        | Edit team details (pre-registration only) |
 | POST   | `/teams/:id/invitations` | Team Captain        | Create invite        |
 | POST   | `/teams/:id/join`        | Authenticated       | Join team            |
+| DELETE | `/teams/:teamId/participants/:participantId` | Team Captain | Remove a team member |
 | POST   | `/registrations`         | Authenticated       | Start registration   |
 | GET    | `/registrations/mine`    | Authenticated       | My registrations     |
 | GET    | `/admin/registrations`   | Admin/Event Manager | Filter registrations |
@@ -229,6 +231,13 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 - `404` if `eventId` doesn't resolve to an event; `400` if that event isn't published.
 - Creates the `Team` (caller becomes `captainId`) and its first `Participant` row (`role: CAPTAIN`) in one transaction. The captain's `Participant.name`/`phone` are copied from their `User` record, not re-entered.
 - Invite code is a 6-character random hex string (same generator convention as `CAProfile.refCode`), retried once on the rare unique-constraint collision.
+
+#### `PATCH /teams/:id`
+
+- JSON body, all fields optional: `name`, `declaredSize`, `collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`.
+- Only the team's `captainId`, else `403`. `409` once the team has a `Registration` — details are locked as soon as the team registers; use this only to fix a mis-entered detail before then.
+- `declaredSize`, if given, is revalidated against `Event.teamSizeMin`/`teamSizeMax` (`422`) and cannot drop below the current live `Participant` count (`422`) — same rule as `POST /teams`, plus the new floor.
+- `eventId`, `captainId`, and `inviteCode` are not editable here (event/captain are fixed for the team's lifetime; use `POST /teams/:id/invitations` to rotate the code).
 
 #### `POST /teams/:id/invitations`
 
@@ -245,6 +254,13 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 - `:id` is the team's UUID. `inviteCode` in the body must match `Team.inviteCode` exactly, else `403` — this is what actually authorizes the join (a guessed team UUID alone isn't sufficient).
 - `409` once the roster (`Participant` count for the team) reaches `Event.teamSizeMax`. `teamSizeMin` is **not** checked here — that's a Registration-submission-time gate, not a join-time one.
 - Adds a `Participant` row with `role: PLAYER`. Role reassignment (`VICE_CAPTAIN`/`SUBSTITUTE`) is not exposed via API yet — fast-follow.
+
+#### `DELETE /teams/:teamId/participants/:participantId`
+
+- Only the team's `captainId`, else `403`. `400` if `participantId` is the `CAPTAIN` row — a captain cannot remove themselves (no captaincy-transfer path exists).
+- No status gate — allowed before or after the team registers/pays, unlike `PATCH /teams/:id`. A dropped-out member can be removed at any time.
+- Deletes the `Participant` row. If a `Credential` (QR) had already been issued to them, it's deleted too (its `ScanLog` rows are cleared first, since they reference the credential with no cascade) so the removed member's QR stops scanning as valid.
+- Does not change `Team.declaredSize` and does not enforce `Event.teamSizeMin` — removal just frees the roster slot; the captain re-shares the invite link to refill it.
 
 ### Payments
 
