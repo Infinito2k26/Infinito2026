@@ -112,6 +112,7 @@ export default function RegisterPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registration, setRegistration] = useState<RegistrationResult | null>(null);
     const [resumedTeam, setResumedTeam] = useState(false);
+    const [currentUserIsIITP, setCurrentUserIsIITP] = useState(false);
 
     const fetchEvent = async () => {
         setIsLoading(true);
@@ -135,6 +136,14 @@ export default function RegisterPage() {
         fetchEvent();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.slug]);
+
+    // For INDIVIDUAL events, IITP status comes from the user's own profile
+    // rather than a per-registration checkbox (that only exists for teams).
+    useEffect(() => {
+        api.get("/auth/me")
+            .then((res) => setCurrentUserIsIITP(Boolean(res?.data?.isIITP)))
+            .catch(() => {});
+    }, []);
 
     // A captain who already created a team for this event but never finished
     // registering would otherwise hit a 409 re-creating one — resume the
@@ -180,8 +189,9 @@ export default function RegisterPage() {
 
     const isTeamEvent = event.registrationType === "TEAM";
     const steps: Step[] = isTeamEvent ? ["team", "details", "payment"] : ["details", "payment"];
+    const isIITP = isTeamEvent ? (team?.isIITP ?? false) : currentUserIsIITP;
 
-    const handleSubmitRegistration = async () => {
+    const submitRegistration = async () => {
         setSubmitError(null);
         setIsSubmitting(true);
         try {
@@ -197,7 +207,7 @@ export default function RegisterPage() {
             };
             const res = await api.post("/registrations", payload);
             setRegistration(res.data as RegistrationResult);
-            setStep("payment");
+            return true;
         } catch (err) {
             if (err instanceof ApiError) {
                 setSubmitError(err.message);
@@ -205,9 +215,24 @@ export default function RegisterPage() {
                 setSubmitError("Failed to submit registration. Please try again.");
             }
             console.error("Registration submit failed", err);
+            return false;
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    // For IITP, there's no payment to make — but the registration is still
+    // only created once the participant explicitly confirms on the review
+    // step below, not the moment they leave the Details step, so it never
+    // reads as having registered them automatically.
+    const handleDetailsSubmit = async () => {
+        if (isIITP) {
+            setSubmitError(null);
+            setStep("payment");
+            return;
+        }
+        const ok = await submitRegistration();
+        if (ok) setStep("payment");
     };
 
     return (
@@ -263,7 +288,7 @@ export default function RegisterPage() {
                             </div>
                         )}
 
-                        {event.hasAccommodation && (
+                        {event.hasAccommodation && !isIITP && (
                             <AccommodationSection
                                 isTeamEvent={isTeamEvent}
                                 value={accommodation}
@@ -304,9 +329,28 @@ export default function RegisterPage() {
                             size="lg"
                             loading={isSubmitting}
                             disabled={!agreedToGuidelines}
-                            onClick={handleSubmitRegistration}
+                            onClick={handleDetailsSubmit}
                         >
-                            Submit Registration
+                            {isIITP ? "Continue to Review" : "Submit Registration"}
+                        </Button>
+                    </div>
+                )}
+
+                {step === "payment" && !registration && isIITP && (
+                    <div className={styles.detailsForm}>
+                        <p className={styles.hintText}>
+                            Since this is an IITP registration, no payment is required — but nothing is
+                            submitted yet. Review your details, then confirm below to submit your application.
+                            An organiser will verify your IITP status before it&apos;s confirmed.
+                        </p>
+                        {submitError && <p className={styles.errorText}>{submitError}</p>}
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            loading={isSubmitting}
+                            onClick={submitRegistration}
+                        >
+                            Submit Application
                         </Button>
                     </div>
                 )}
