@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarDays, FileText, MapPin, Trophy, Users } from "lucide-react";
+import { CalendarDays, FileText, MapPin, Phone, Trophy, Users } from "lucide-react";
 
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
@@ -143,6 +143,24 @@ export default function EventDetailPage() {
                         </div>
                     )}
                 </div>
+
+                {(event.pointOfContactName || event.pointOfContactPhone) && (
+                    <div className={styles.pocRow}>
+                        <Phone size={16} />
+                        <span>
+                            Point of contact: {event.pointOfContactName ?? "—"}
+                            {event.pointOfContactPhone && (
+                                <>
+                                    {" "}
+                                    (<a href={`tel:${event.pointOfContactPhone}`} className={styles.pocLink}>
+                                        {event.pointOfContactPhone}
+                                    </a>
+                                    )
+                                </>
+                            )}
+                        </span>
+                    </div>
+                )}
 
                 <div className={styles.feeBanner}>
                     <span className={styles.feeLabel}>Registration fee</span>

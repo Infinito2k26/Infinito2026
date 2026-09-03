@@ -111,6 +111,19 @@
     color: var(--char-800);
 }
 
+.pocRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-body);
+    color: var(--char-800);
+}
+
+.pocLink {
+    color: var(--crimson-700);
+    font-weight: 600;
+}
+
 .feeBanner {
     display: flex;
     justify-content: space-between;
