@@ -40,8 +40,15 @@ async function bootstrap() {
   );
   // Web app runs on a separate origin/port in dev; refresh-token cookies
   // require an explicit origin (not '*') plus credentials: true.
+  // The apex and www hosts are both live, independent origins (no redirect
+  // between them), so both must be allowed regardless of which one
+  // WEB_ORIGIN names.
+  const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3001';
+  const webOriginWwwVariant = webOrigin.includes('://www.')
+    ? webOrigin.replace('://www.', '://')
+    : webOrigin.replace('://', '://www.');
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? 'http://localhost:3001',
+    origin: [webOrigin, webOriginWwwVariant],
     credentials: true,
   });
   app.useGlobalPipes(
