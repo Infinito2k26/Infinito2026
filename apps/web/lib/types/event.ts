@@ -61,6 +61,4 @@ export interface EventDetail extends EventSummary {
     isPublished: boolean;
     customFieldsDef: CustomFieldDef[] | null;
     subOptions: EventSubOption[];
-    pointOfContactName: string | null;
-    pointOfContactPhone: string | null;
 }

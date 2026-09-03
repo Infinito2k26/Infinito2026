@@ -158,24 +158,6 @@ export default function EventDetailPage() {
                     )}
                 </div>
 
-                {(event.pointOfContactName || event.pointOfContactPhone) && (
-                    <div className={styles.pocRow}>
-                        <Phone size={16} />
-                        <span>
-                            Point of contact: {event.pointOfContactName ?? "—"}
-                            {event.pointOfContactPhone && (
-                                <>
-                                    {" "}
-                                    (<a href={`tel:${event.pointOfContactPhone}`} className={styles.pocLink}>
-                                        {event.pointOfContactPhone}
-                                    </a>
-                                    )
-                                </>
-                            )}
-                        </span>
-                    </div>
-                )}
-
                 <div className={styles.feeBanner}>
                     <span className={styles.feeLabel}>Registration fee</span>
                     <span className={styles.feeValue}>{formatFeeSummary(event)}</span>
