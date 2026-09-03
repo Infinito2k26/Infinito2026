@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Copy, Check } from "lucide-react";
 
 import Card from "@/components/ui/card";
@@ -76,6 +77,7 @@ function StepIndicator({ steps, current }: { steps: Step[]; current: Step }) {
 interface TeamRef {
     id: string;
     inviteCode: string;
+    isIITP: boolean;
 }
 
 function validateRosterFile(file: File | null): string | undefined {
@@ -109,6 +111,7 @@ export default function RegisterPage() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registration, setRegistration] = useState<RegistrationResult | null>(null);
+    const [resumedTeam, setResumedTeam] = useState(false);
 
     const fetchEvent = async () => {
         setIsLoading(true);
@@ -132,6 +135,40 @@ export default function RegisterPage() {
         fetchEvent();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.slug]);
+
+    // A captain who already created a team for this event but never finished
+    // registering would otherwise hit a 409 re-creating one — resume the
+    // existing unregistered team instead of showing the create/join form.
+    useEffect(() => {
+        if (!event || event.registrationType !== "TEAM") return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get("/teams/mine");
+                const teams = (res?.data ?? []) as Array<{
+                    id: string;
+                    inviteCode: string | null;
+                    isIITP: boolean;
+                    role: "CAPTAIN" | "MEMBER";
+                    event: { slug: string };
+                    registration: { id: string } | null;
+                }>;
+                const existing = teams.find(
+                    (t) => t.role === "CAPTAIN" && t.event.slug === event.slug && !t.registration,
+                );
+                if (existing && existing.inviteCode && !cancelled) {
+                    setTeam({ id: existing.id, inviteCode: existing.inviteCode, isIITP: existing.isIITP });
+                    setResumedTeam(true);
+                    setStep("details");
+                }
+            } catch {
+                // Non-fatal — the create/join flow still works if this lookup fails.
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [event]);
 
     if (isLoading) {
         return <SectionSpinner message="Loading..." />;
@@ -198,6 +235,14 @@ export default function RegisterPage() {
 
                 {step === "details" && (
                     <div className={styles.detailsForm}>
+                        {resumedTeam && (
+                            <p className={styles.hintText}>
+                                Continuing your existing team for this event. Need to change its name, roster
+                                size, or invite more members? Manage it from{" "}
+                                <Link href="/dashboard/teams">your Teams page</Link>.
+                            </p>
+                        )}
+
                         {event.feeStructure === "GENDER_BASED" && (
                             <div className={styles.field}>
                                 <label className={styles.label} htmlFor="genderDeclared">
@@ -465,7 +510,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
 
             const res = await api.post("/teams", formData);
             const data = res.data as { team: { id: string; inviteCode: string } };
-            onCreated({ id: data.team.id, inviteCode: data.team.inviteCode });
+            onCreated({ id: data.team.id, inviteCode: data.team.inviteCode, isIITP });
         } catch (err) {
             setApiError(err instanceof ApiError ? err.message : "Failed to create team.");
         } finally {
