@@ -205,7 +205,6 @@ function EditTeamForm({
     const [name, setName] = useState(team.name);
     const [collegeName, setCollegeName] = useState(team.collegeName);
     const [collegeAddress, setCollegeAddress] = useState(team.collegeAddress ?? "");
-    const [isIITP, setIsIITP] = useState(team.isIITP);
     const [declaredSize, setDeclaredSize] = useState(String(team.declaredSize));
     const [viceCaptainName, setViceCaptainName] = useState(team.viceCaptainName ?? "");
     const [viceCaptainPhone, setViceCaptainPhone] = useState(team.viceCaptainPhone ?? "");
@@ -247,7 +246,6 @@ function EditTeamForm({
                 name: name.trim(),
                 collegeName: collegeName.trim(),
                 collegeAddress: collegeAddress.trim() || undefined,
-                isIITP,
                 declaredSize: size,
                 viceCaptainName: viceCaptainName.trim() || undefined,
                 viceCaptainPhone: viceCaptainPhone.trim() || undefined,
@@ -284,10 +282,6 @@ function EditTeamForm({
                 value={collegeAddress}
                 onChange={(e) => setCollegeAddress(e.target.value)}
             />
-            <label className={styles.checkboxRow}>
-                <input type="checkbox" checked={isIITP} onChange={(e) => setIsIITP(e.target.checked)} />
-                IITP team (fee-waived)
-            </label>
             <Input
                 id={`declaredSize-${team.id}`}
                 label="Declared team size *"

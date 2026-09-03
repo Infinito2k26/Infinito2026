@@ -148,6 +148,41 @@ describe('TeamsService', () => {
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
     });
+
+    // No self-declared IITP waiver — every team pays, regardless of what a
+    // stale/spoofed dto might carry (the DTO itself no longer accepts this
+    // field, but the service must not trust it even if one snuck through).
+    it('always creates the team with isIITP: false', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        isPublished: true,
+        teamSizeMin: 1,
+        teamSizeMax: 10,
+      });
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        name: 'Captain One',
+        phone: '9999999999',
+      });
+
+      let capturedData: { isIITP: boolean } | undefined;
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          team: {
+            create: (args: { data: { isIITP: boolean } }) => {
+              capturedData = args.data;
+              return { id: 'team-1', ...args.data };
+            },
+          },
+          participant: { create: jest.fn().mockResolvedValue({ id: 'p-1' }) },
+        }),
+      );
+
+      const spoofedDto = { ...(dto as object), isIITP: true } as never;
+      await service.createTeam('user-1', spoofedDto, file, file);
+
+      expect(capturedData?.isIITP).toBe(false);
+    });
   });
 
   describe('rotateInviteCode', () => {
@@ -409,6 +444,30 @@ describe('TeamsService', () => {
       expect(prisma.team.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'team-1' } }),
       );
+    });
+
+    // No self-declared IITP waiver on edit either — UpdateTeamDto no longer
+    // accepts the field, but the service must not write one even if a
+    // stale/spoofed dto carries it.
+    it('never writes isIITP, even if a spoofed dto carries it', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+        event: { teamSizeMin: 1, teamSizeMax: 10 },
+        registration: null,
+        _count: { participants: 1 },
+      });
+      let capturedData: object | undefined;
+      prisma.team.update.mockImplementation((args: { data: object }) => {
+        capturedData = args.data;
+        return Promise.resolve({ id: 'team-1', name: 'New Name' });
+      });
+
+      const spoofedDto = { ...(dto as object), isIITP: true } as never;
+      await service.updateTeam('team-1', 'user-1', spoofedDto);
+
+      expect(capturedData).not.toHaveProperty('isIITP');
     });
   });
 
