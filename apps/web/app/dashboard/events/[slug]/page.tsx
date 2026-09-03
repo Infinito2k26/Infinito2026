@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarDays, FileText, MapPin, Trophy, Users } from "lucide-react";
+import { CalendarDays, FileText, MapPin, Phone, Trophy, Users } from "lucide-react";
 
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
@@ -138,6 +138,20 @@ export default function EventDetailPage() {
                                     currency: "INR",
                                     maximumFractionDigits: 0,
                                 }).format(Number(event.prizePool))}
+                            </span>
+                        </div>
+                    )}
+                    {(event.pointOfContactName || event.pointOfContactPhone) && (
+                        <div className={styles.metaItem}>
+                            <Phone size={16} />
+                            <span>
+                                POC: {event.pointOfContactName}
+                                {event.pointOfContactName && event.pointOfContactPhone ? " · " : ""}
+                                {event.pointOfContactPhone && (
+                                    <a href={`tel:${event.pointOfContactPhone}`}>
+                                        {event.pointOfContactPhone}
+                                    </a>
+                                )}
                             </span>
                         </div>
                     )}
