@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -87,9 +88,21 @@ export class EventsService {
   }
 
   async create(dto: CreateEventDto) {
-    return this.prisma.event.create({
-      data: dto as unknown as Prisma.EventCreateInput,
-    });
+    try {
+      return await this.prisma.event.create({
+        data: dto as unknown as Prisma.EventCreateInput,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `An event with the slug "${dto.slug}" already exists — choose a different slug`,
+        );
+      }
+      throw error;
+    }
   }
 
   async update(id: string, dto: UpdateEventDto) {
@@ -117,10 +130,22 @@ export class EventsService {
       }
     }
 
-    return this.prisma.event.update({
-      where: { id },
-      data: dto as unknown as Prisma.EventUpdateInput,
-    });
+    try {
+      return await this.prisma.event.update({
+        where: { id },
+        data: dto as unknown as Prisma.EventUpdateInput,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `An event with the slug "${dto.slug}" already exists — choose a different slug`,
+        );
+      }
+      throw error;
+    }
   }
 
   async setPublished(id: string, isPublished: boolean) {

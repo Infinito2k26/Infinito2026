@@ -30,8 +30,8 @@ const LEGAL_LINKS = [
 ];
 
 const CONTACTS = [
-  { role: "RSP Sub Coordinator", name: "Banshidhar", phone: "8521323680" },
-  { role: "RSP Sub Coordinator", name: "Rajendra", phone: "8955513963" },
+  { name: "Ankit Rajput", phone: "9508830291" },
+  { name: "Ayush", phone: "7979844511" },
 ];
 
 const Footer = () => {
@@ -82,9 +82,8 @@ const Footer = () => {
 
         <div className={styles.footer_column}>
           <h3 className={styles.footer_title}>Need assistance?</h3>
-          {CONTACTS.map(({ role, name, phone }) => (
+          {CONTACTS.map(({ name, phone }) => (
             <a key={name} href={`tel:+91${phone}`} className={styles.footerContact}>
-              <span className={styles.footerContactRole}>{role}</span>
               <span className={styles.footerContactName}>{name}</span>
               <span className={styles.footerContactPhone}>
                 {phone.slice(0, 5)} {phone.slice(5)}

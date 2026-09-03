@@ -8,6 +8,7 @@ import { CalendarDays, FileText, MapPin, Phone, Trophy, Users } from "lucide-rea
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
 import Button from "@/components/ui/button";
+import buttonStyles from "@/components/ui/button.module.css";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { NotFound } from "@/components/ui/not-found";
@@ -176,9 +177,9 @@ export default function EventDetailPage() {
                                 href={rb.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={styles.rulebookLink}
+                                className={`${buttonStyles.button} ${buttonStyles.outline} ${buttonStyles.lg} ${styles.rulebookBtn}`}
                             >
-                                <FileText size={14} />
+                                <FileText size={18} />
                                 View Rulebook{rb.version ? ` (${rb.version})` : ""}
                             </a>
                         ))}

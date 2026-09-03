@@ -1,9 +1,22 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { EventsService } from './events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadsService } from '../uploads/uploads.service';
+
+function uniqueConstraintError(target: string[]) {
+  return new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+    code: 'P2002',
+    clientVersion: 'test',
+    meta: { target },
+  });
+}
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -12,6 +25,7 @@ describe('EventsService', () => {
     event: {
       findUnique: jest.Mock;
       findFirst: jest.Mock;
+      create: jest.Mock;
       update: jest.Mock;
     };
     registration: {
@@ -31,6 +45,7 @@ describe('EventsService', () => {
       event: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        create: jest.fn(),
         update: jest.fn(),
       },
       registration: {
@@ -117,6 +132,27 @@ describe('EventsService', () => {
     });
   });
 
+  describe('create', () => {
+    const dto = { name: 'Chess', slug: 'chess-2k26' };
+
+    it('creates the event', async () => {
+      prisma.event.create.mockResolvedValue({ id: 'evt-1', ...dto });
+
+      await expect(service.create(dto as never)).resolves.toEqual({
+        id: 'evt-1',
+        ...dto,
+      });
+    });
+
+    it('rejects a duplicate slug with a clear ConflictException instead of a raw 500', async () => {
+      prisma.event.create.mockRejectedValue(uniqueConstraintError(['slug']));
+
+      await expect(service.create(dto as never)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+  });
+
   describe('update', () => {
     it('throws NotFoundException when the event does not exist', async () => {
       prisma.event.findUnique.mockResolvedValue(null);
@@ -182,6 +218,19 @@ describe('EventsService', () => {
         { id: 'evt-1', capacity: 100 },
       );
       expect(prisma.registration.count).not.toHaveBeenCalled();
+    });
+
+    it('rejects a duplicate slug with a clear ConflictException instead of a raw 500', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        capacity: null,
+      });
+      prisma.event.update.mockRejectedValue(uniqueConstraintError(['slug']));
+
+      await expect(
+        service.update('evt-1', { slug: 'taken-slug' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 

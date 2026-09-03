@@ -69,6 +69,48 @@ export class CreateTeamDto {
   idNumber!: string;
 }
 
+export class UpdateTeamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  declaredSize?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  collegeName?: string;
+
+  @IsString()
+  @IsOptional()
+  collegeAddress?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isIITP?: boolean;
+
+  @IsString()
+  @IsOptional()
+  viceCaptainName?: string;
+
+  @IsString()
+  @IsOptional()
+  viceCaptainPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  coachName?: string;
+
+  @IsString()
+  @IsOptional()
+  coachPhone?: string;
+}
+
 export class JoinTeamDto {
   @IsString()
   @IsNotEmpty()

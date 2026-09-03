@@ -24,6 +24,7 @@ describe('TeamsService', () => {
       update: jest.Mock;
       findMany: jest.Mock;
     };
+    participant: { findUnique: jest.Mock };
     $transaction: jest.Mock;
   };
 
@@ -42,6 +43,7 @@ describe('TeamsService', () => {
         update: jest.fn(),
         findMany: jest.fn(),
       },
+      participant: { findUnique: jest.fn() },
       $transaction: jest.fn(),
     };
 
@@ -328,6 +330,209 @@ describe('TeamsService', () => {
       const [result] = await service.listMine('user-1');
 
       expect(result).toMatchObject({ role: 'MEMBER', inviteCode: null });
+    });
+  });
+
+  describe('updateTeam', () => {
+    const dto = { name: 'New Name' } as never;
+
+    it('throws NotFoundException when the team does not exist', async () => {
+      prisma.team.findUnique.mockResolvedValue(null);
+
+      await expect(service.updateTeam('team-1', 'user-1', dto)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('rejects edits from a caller who is not the captain', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'captain-1',
+        event: { teamSizeMin: 1, teamSizeMax: 10 },
+        registration: null,
+        _count: { participants: 1 },
+      });
+
+      await expect(
+        service.updateTeam('team-1', 'someone-else', dto),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.team.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects edits once the team has a registration', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+        event: { teamSizeMin: 1, teamSizeMax: 10 },
+        registration: { id: 'reg-1' },
+        _count: { participants: 1 },
+      });
+
+      await expect(service.updateTeam('team-1', 'user-1', dto)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(prisma.team.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a declaredSize below the current roster count', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+        event: { teamSizeMin: 1, teamSizeMax: 10 },
+        registration: null,
+        _count: { participants: 4 },
+      });
+
+      await expect(
+        service.updateTeam('team-1', 'user-1', { declaredSize: 3 }),
+      ).rejects.toThrow(UnprocessableEntityException);
+      expect(prisma.team.update).not.toHaveBeenCalled();
+    });
+
+    it('updates the team when the caller is the captain and it is unregistered', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+        event: { teamSizeMin: 1, teamSizeMax: 10 },
+        registration: null,
+        _count: { participants: 1 },
+      });
+      prisma.team.update.mockResolvedValue({ id: 'team-1', name: 'New Name' });
+
+      const result = await service.updateTeam('team-1', 'user-1', dto);
+
+      expect(result).toEqual({ id: 'team-1', name: 'New Name' });
+      expect(prisma.team.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'team-1' } }),
+      );
+    });
+  });
+
+  describe('removeParticipant', () => {
+    it('throws NotFoundException when the team does not exist', async () => {
+      prisma.team.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.removeParticipant('team-1', 'p-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('rejects removal from a caller who is not the captain', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'captain-1',
+      });
+
+      await expect(
+        service.removeParticipant('team-1', 'p-1', 'someone-else'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('throws NotFoundException when the participant is not on this team', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+      });
+      prisma.participant.findUnique.mockResolvedValue({
+        id: 'p-1',
+        teamId: 'other-team',
+        role: 'PLAYER',
+      });
+
+      await expect(
+        service.removeParticipant('team-1', 'p-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('rejects removing the captain', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+      });
+      prisma.participant.findUnique.mockResolvedValue({
+        id: 'p-1',
+        teamId: 'team-1',
+        role: 'CAPTAIN',
+      });
+
+      await expect(
+        service.removeParticipant('team-1', 'p-1', 'user-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deletes the participant and their credential/scan logs when present', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+      });
+      prisma.participant.findUnique.mockResolvedValue({
+        id: 'p-1',
+        teamId: 'team-1',
+        role: 'PLAYER',
+      });
+
+      const credential = {
+        findUnique: jest.fn().mockResolvedValue({ id: 'cred-1' }),
+      };
+      const scanLog = { deleteMany: jest.fn() };
+      const credentialDelete = jest.fn();
+      const participantDelete = jest.fn();
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          credential: { ...credential, delete: credentialDelete },
+          scanLog,
+          participant: { delete: participantDelete },
+        }),
+      );
+
+      await service.removeParticipant('team-1', 'p-1', 'user-1');
+
+      expect(scanLog.deleteMany).toHaveBeenCalledWith({
+        where: { credentialId: 'cred-1' },
+      });
+      expect(credentialDelete).toHaveBeenCalledWith({
+        where: { id: 'cred-1' },
+      });
+      expect(participantDelete).toHaveBeenCalledWith({ where: { id: 'p-1' } });
+    });
+
+    it('skips credential cleanup when the participant has no credential', async () => {
+      prisma.team.findUnique.mockResolvedValue({
+        id: 'team-1',
+        deletedAt: null,
+        captainId: 'user-1',
+      });
+      prisma.participant.findUnique.mockResolvedValue({
+        id: 'p-1',
+        teamId: 'team-1',
+        role: 'PLAYER',
+      });
+
+      const credentialDelete = jest.fn();
+      const participantDelete = jest.fn();
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          credential: {
+            findUnique: jest.fn().mockResolvedValue(null),
+            delete: credentialDelete,
+          },
+          scanLog: { deleteMany: jest.fn() },
+          participant: { delete: participantDelete },
+        }),
+      );
+
+      await service.removeParticipant('team-1', 'p-1', 'user-1');
+
+      expect(credentialDelete).not.toHaveBeenCalled();
+      expect(participantDelete).toHaveBeenCalledWith({ where: { id: 'p-1' } });
     });
   });
 });
