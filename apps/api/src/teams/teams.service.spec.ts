@@ -76,15 +76,16 @@ describe('TeamsService', () => {
       declaredSize: 4,
       name: 'Team A',
       collegeName: 'IIT Patna',
-      idType: 'COLLEGE_ID',
       idNumber: '12345',
+      secondaryIdType: 'AADHAR',
+      secondaryIdNumber: '54321',
     } as never;
 
     it('throws NotFoundException when the event does not exist', async () => {
       prisma.event.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -96,7 +97,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(BadRequestException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
@@ -112,7 +113,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
@@ -127,7 +128,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
@@ -143,7 +144,7 @@ describe('TeamsService', () => {
       prisma.team.findFirst.mockResolvedValue({ id: 'existing-team' });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(ConflictException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
@@ -179,7 +180,7 @@ describe('TeamsService', () => {
       );
 
       const spoofedDto = { ...(dto as object), isIITP: true } as never;
-      await service.createTeam('user-1', spoofedDto, file, file);
+      await service.createTeam('user-1', spoofedDto, file, file, file);
 
       expect(capturedData?.isIITP).toBe(false);
     });
@@ -211,16 +212,17 @@ describe('TeamsService', () => {
   describe('join', () => {
     const dto = {
       inviteCode: 'ABC123',
-      idType: 'COLLEGE_ID',
       idNumber: '999',
+      secondaryIdType: 'AADHAR',
+      secondaryIdNumber: '888',
     } as never;
 
     it('throws NotFoundException when no team matches the invite code', async () => {
       prisma.team.findUnique.mockResolvedValue(null);
 
-      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.join(dto, 'user-1', file, file, file),
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.team.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({ where: { inviteCode: 'ABC123' } }),
       );
@@ -248,9 +250,9 @@ describe('TeamsService', () => {
         }),
       );
 
-      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.join(dto, 'user-1', file, file, file),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('adds a PLAYER participant when the roster has room', async () => {
@@ -280,7 +282,7 @@ describe('TeamsService', () => {
         }),
       );
 
-      const result = await service.join(dto, 'user-1', file, file);
+      const result = await service.join(dto, 'user-1', file, file, file);
 
       expect(result).toEqual(createdParticipant);
       expect(capturedData).toMatchObject({ teamId: 'team-1', role: 'PLAYER' });
@@ -308,7 +310,7 @@ describe('TeamsService', () => {
         }),
       );
 
-      await service.join(dto, 'user-1', file, file);
+      await service.join(dto, 'user-1', file, file, file);
 
       expect(paymentConfirmedQueue.add).toHaveBeenCalledWith(
         'payment-confirmed',

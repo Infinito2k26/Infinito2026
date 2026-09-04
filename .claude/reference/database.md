@@ -517,16 +517,19 @@ One row per player in a team. Replaces the old `TeamMember`. Players do **not** 
 | `isRequired` | Boolean | True for starters, false for substitutes |
 | `userId` | UUID FK → User? | Optional. Only captain typically links to a User. |
 | `photoUrl` | String | Mandatory upload. Shown on volunteer dashboard after QR scan for visual identity check. |
-| `idType` | IdentityType | COLLEGE\_ID for institute teams; govt ID for clubs / external participants |
-| `idNumber` | String | Document number |
-| `idFileUrl` | String | Uploaded scan of the identity document |
+| `idType` | IdentityType | Always `COLLEGE_ID` for participants registered since 2026-09-04 (server-set, not client-supplied). Rows created before that date may hold any `IdentityType` — the single-document flow let the client choose freely, and those rows were left as-is when the second-document requirement was added. |
+| `idNumber` | String | College ID number |
+| `idFileUrl` | String | Uploaded scan of the College ID |
+| `secondaryIdType` | IdentityType? | The participant's second, distinct document type (any value except `COLLEGE_ID`). Added 2026-09-04; `null` on every row created before then — no backfill was performed. |
+| `secondaryIdNumber` | String? | Second document's number. Added 2026-09-04, nullable for the same reason. |
+| `secondaryIdFileUrl` | String? | Uploaded scan of the second document. Added 2026-09-04, nullable for the same reason. |
 | `customData` | Json? | Responses to PARTICIPANT-scoped fields from Event.customFieldsDef. e.g. `{ "In-Game Name": "ProSniper99", "BGMI ID": "512345678" }` |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
 
 **Identity rules:**
-- Institute-affiliated teams: COLLEGE\_ID required.
-- Club / external / individual participants: one government-issued ID (AADHAR / PAN / DRIVING\_LICENSE / PASSPORT / VOTER\_ID).
+- Every participant registered since 2026-09-04 must upload two distinct documents: a College ID (`idType`/`idNumber`/`idFileUrl`, always `COLLEGE_ID`) and one other document of the participant's choice (`secondaryIdType`/`secondaryIdNumber`/`secondaryIdFileUrl`, any `IdentityType` except `COLLEGE_ID`).
+- Participants registered before that date have only the single original document in `idType`/`idNumber`/`idFileUrl` (which may be any `IdentityType`, not necessarily `COLLEGE_ID`) and `null` `secondaryId*` fields — this is intentional and permanent, not pending backfill.
 
 **Multi-event participants:** A person playing Cricket AND Football registers as a Participant in two separate Teams. Each Team is for exactly one event. Each Participant record has its own photo, ID proof, and QR credential. Accommodation is allocated per team (see Registration), so if both teams opted for accommodation, admin resolves the duplication — the participant sleeps with one team only.
 

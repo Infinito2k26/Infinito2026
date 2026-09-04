@@ -23,6 +23,7 @@ const ROSTER_FILE_FIELDS = FileFieldsInterceptor(
   [
     { name: 'photo', maxCount: 1 },
     { name: 'idFile', maxCount: 1 },
+    { name: 'secondaryIdFile', maxCount: 1 },
   ],
   { limits: { fileSize: 5 * 1024 * 1024 } },
 );
@@ -32,6 +33,7 @@ const ALLOWED_ROSTER_FILE_TYPES = /^(image\/jpeg|image\/png|image\/webp)$/;
 type RosterFiles = {
   photo?: Express.Multer.File[];
   idFile?: Express.Multer.File[];
+  secondaryIdFile?: Express.Multer.File[];
 };
 
 // ponytail: NestJS's ParseFilePipeBuilder validators only understand a flat
@@ -43,14 +45,16 @@ type RosterFiles = {
 export function requireRosterFiles(files: RosterFiles) {
   const photo = files.photo?.[0];
   const idFile = files.idFile?.[0];
-  if (!photo || !idFile) {
+  const secondaryIdFile = files.secondaryIdFile?.[0];
+  if (!photo || !idFile || !secondaryIdFile) {
     throw new BadRequestException(
-      'Both "photo" and "idFile" files are required',
+      'The "photo", "idFile", and "secondaryIdFile" files are all required',
     );
   }
   for (const [field, file] of [
     ['photo', photo],
     ['idFile', idFile],
+    ['secondaryIdFile', secondaryIdFile],
   ] as const) {
     if (!ALLOWED_ROSTER_FILE_TYPES.test(file.mimetype)) {
       throw new BadRequestException(
@@ -58,7 +62,7 @@ export function requireRosterFiles(files: RosterFiles) {
       );
     }
   }
-  return { photo, idFile };
+  return { photo, idFile, secondaryIdFile };
 }
 
 @Controller('teams')
@@ -78,8 +82,14 @@ export class TeamsController {
     @Body() body: CreateTeamDto,
     @UploadedFiles() uploaded: RosterFiles,
   ) {
-    const { photo, idFile } = requireRosterFiles(uploaded);
-    return this.teamsService.createTeam(req.user.id, body, photo, idFile);
+    const { photo, idFile, secondaryIdFile } = requireRosterFiles(uploaded);
+    return this.teamsService.createTeam(
+      req.user.id,
+      body,
+      photo,
+      idFile,
+      secondaryIdFile,
+    );
   }
 
   @Patch(':id')
@@ -120,7 +130,13 @@ export class TeamsController {
     @Body() body: JoinTeamDto,
     @UploadedFiles() uploaded: RosterFiles,
   ) {
-    const { photo, idFile } = requireRosterFiles(uploaded);
-    return this.teamsService.join(body, req.user.id, photo, idFile);
+    const { photo, idFile, secondaryIdFile } = requireRosterFiles(uploaded);
+    return this.teamsService.join(
+      body,
+      req.user.id,
+      photo,
+      idFile,
+      secondaryIdFile,
+    );
   }
 }

@@ -2,13 +2,18 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
+  IsIn,
   IsUUID,
   IsInt,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IdentityType } from '@prisma/client';
+
+// The second document must be a distinct type from the College ID slot, which is always COLLEGE_ID.
+export const SECONDARY_IDENTITY_TYPES = Object.values(IdentityType).filter(
+  (type) => type !== IdentityType.COLLEGE_ID,
+);
 
 export class CreateTeamDto {
   @IsUUID()
@@ -50,12 +55,17 @@ export class CreateTeamDto {
   coachPhone?: string;
 
   // Captain's own roster entry — name/phone come from their User record.
-  @IsEnum(IdentityType)
-  idType!: IdentityType;
-
+  // College ID is always required and always this type; no client choice.
   @IsString()
   @IsNotEmpty()
   idNumber!: string;
+
+  @IsIn(SECONDARY_IDENTITY_TYPES)
+  secondaryIdType!: IdentityType;
+
+  @IsString()
+  @IsNotEmpty()
+  secondaryIdNumber!: string;
 }
 
 export class UpdateTeamDto {
@@ -101,10 +111,15 @@ export class JoinTeamDto {
   @IsNotEmpty()
   inviteCode!: string;
 
-  @IsEnum(IdentityType)
-  idType!: IdentityType;
-
+  // College ID is always required and always this type; no client choice.
   @IsString()
   @IsNotEmpty()
   idNumber!: string;
+
+  @IsIn(SECONDARY_IDENTITY_TYPES)
+  secondaryIdType!: IdentityType;
+
+  @IsString()
+  @IsNotEmpty()
+  secondaryIdNumber!: string;
 }

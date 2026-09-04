@@ -226,7 +226,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `POST /teams`
 
-- `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
+- `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idNumber` (College ID number), `secondaryIdType` (`IdentityType`, any value except `COLLEGE_ID`), `secondaryIdNumber`, plus files `photo`, `idFile` (College ID), and `secondaryIdFile` (all three required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/`, `participant-id/`, and `participant-secondary-id/` via `UploadsService`). `idType` is not client-supplied — the captain's first document is always persisted as `COLLEGE_ID`.
 - `Team.isIITP` is not accepted here — it's no longer self-declarable, so every team is created with it hardcoded `false` regardless of what's in the request body.
 - `declaredSize` is the roster size the captain commits to now, not the number of `Participant` rows created by this call (that's always 1, the captain) — teammates join later via `POST /teams/:id/join`. `422` if it falls outside `Event.teamSizeMin`/`teamSizeMax`. This declared number, not the live roster count, is what `POST /registrations` checks against `teamSizeMin`/`teamSizeMax` and uses for `PER_HEAD` fee calculation and accommodation/mess-only headcount caps — the actual roster is allowed to still be incomplete when the team registers and pays.
 - `404` if `eventId` doesn't resolve to an event; `400` if that event isn't published.
@@ -253,7 +253,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `POST /teams/:id/join`
 
-- `multipart/form-data`: `inviteCode`, `idType`, `idNumber`, plus `photo` and `idFile` (same rules as `POST /teams`).
+- `multipart/form-data`: `inviteCode`, `idNumber`, `secondaryIdType`, `secondaryIdNumber`, plus `photo`, `idFile`, and `secondaryIdFile` (same rules as `POST /teams`).
 - `:id` is the team's UUID. `inviteCode` in the body must match `Team.inviteCode` exactly, else `403` — this is what actually authorizes the join (a guessed team UUID alone isn't sufficient).
 - `409` once the roster (`Participant` count for the team) reaches `Event.teamSizeMax`. `teamSizeMin` is **not** checked here — that's a Registration-submission-time gate, not a join-time one.
 - Adds a `Participant` row with `role: PLAYER`. Role reassignment (`VICE_CAPTAIN`/`SUBSTITUTE`) is not exposed via API yet — fast-follow.

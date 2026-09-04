@@ -35,6 +35,10 @@ const IDENTITY_TYPES: { value: IdentityType; label: string }[] = [
     { value: "VOTER_ID", label: "Voter ID" },
 ];
 
+// College ID is always the first document — the second document must be a
+// different type, picked from everything else.
+const SECONDARY_IDENTITY_TYPES = IDENTITY_TYPES.filter((t) => t.value !== "COLLEGE_ID");
+
 type Step = "team" | "details" | "payment";
 
 const STEP_LABELS: Record<Step, string> = {
@@ -531,10 +535,12 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
     const [coachName, setCoachName] = useState("");
     const [coachPhone, setCoachPhone] = useState("");
     const [declaredSize, setDeclaredSize] = useState("");
-    const [idType, setIdType] = useState<IdentityType>("COLLEGE_ID");
     const [idNumber, setIdNumber] = useState("");
     const [photo, setPhoto] = useState<File | null>(null);
     const [idFile, setIdFile] = useState<File | null>(null);
+    const [secondaryIdType, setSecondaryIdType] = useState<IdentityType>(SECONDARY_IDENTITY_TYPES[0]!.value);
+    const [secondaryIdNumber, setSecondaryIdNumber] = useState("");
+    const [secondaryIdFile, setSecondaryIdFile] = useState<File | null>(null);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
@@ -559,10 +565,13 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
         if (!name.trim()) nextErrors.name = "Required";
         if (!collegeName.trim()) nextErrors.collegeName = "Required";
         if (!idNumber.trim()) nextErrors.idNumber = "Required";
+        if (!secondaryIdNumber.trim()) nextErrors.secondaryIdNumber = "Required";
         const photoError = validateRosterFile(photo);
         if (photoError) nextErrors.photo = photoError;
         const idFileError = validateRosterFile(idFile);
         if (idFileError) nextErrors.idFile = idFileError;
+        const secondaryIdFileError = validateRosterFile(secondaryIdFile);
+        if (secondaryIdFileError) nextErrors.secondaryIdFile = secondaryIdFileError;
 
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
@@ -580,10 +589,12 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
             if (viceCaptainPhone.trim()) formData.append("viceCaptainPhone", viceCaptainPhone.trim());
             if (coachName.trim()) formData.append("coachName", coachName.trim());
             if (coachPhone.trim()) formData.append("coachPhone", coachPhone.trim());
-            formData.append("idType", idType);
             formData.append("idNumber", idNumber.trim());
             formData.append("photo", photo as File);
             formData.append("idFile", idFile as File);
+            formData.append("secondaryIdType", secondaryIdType);
+            formData.append("secondaryIdNumber", secondaryIdNumber.trim());
+            formData.append("secondaryIdFile", secondaryIdFile as File);
 
             const res = await api.post("/teams", formData);
             const data = res.data as { team: { id: string; inviteCode: string; isIITP: boolean } };
@@ -666,16 +677,33 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
             )}
 
             <div className={styles.field}>
-                <label className={styles.label} htmlFor="idType">
-                    Your ID type *
+                <span className={styles.label}>Document 1 — College ID *</span>
+            </div>
+            <Input
+                id="idNumber"
+                label="College ID number *"
+                value={idNumber}
+                onChange={(e) => setIdNumber(e.target.value)}
+                error={errors.idNumber}
+            />
+            <RosterFileInput
+                label="Upload College ID *"
+                file={idFile}
+                onChange={setIdFile}
+                error={errors.idFile}
+            />
+
+            <div className={styles.field}>
+                <label className={styles.label} htmlFor="secondaryIdType">
+                    Document 2 — type *
                 </label>
                 <select
-                    id="idType"
+                    id="secondaryIdType"
                     className={styles.select}
-                    value={idType}
-                    onChange={(e) => setIdType(e.target.value as IdentityType)}
+                    value={secondaryIdType}
+                    onChange={(e) => setSecondaryIdType(e.target.value as IdentityType)}
                 >
-                    {IDENTITY_TYPES.map((t) => (
+                    {SECONDARY_IDENTITY_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>
                             {t.label}
                         </option>
@@ -683,11 +711,17 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
                 </select>
             </div>
             <Input
-                id="idNumber"
-                label="Your ID number *"
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
-                error={errors.idNumber}
+                id="secondaryIdNumber"
+                label="Document 2 number *"
+                value={secondaryIdNumber}
+                onChange={(e) => setSecondaryIdNumber(e.target.value)}
+                error={errors.secondaryIdNumber}
+            />
+            <RosterFileInput
+                label="Upload document 2 *"
+                file={secondaryIdFile}
+                onChange={setSecondaryIdFile}
+                error={errors.secondaryIdFile}
             />
 
             <RosterFileInput
@@ -695,12 +729,6 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
                 file={photo}
                 onChange={setPhoto}
                 error={errors.photo}
-            />
-            <RosterFileInput
-                label="Your ID document *"
-                file={idFile}
-                onChange={setIdFile}
-                error={errors.idFile}
             />
 
             {apiError && <p className={styles.errorText}>{apiError}</p>}
@@ -720,10 +748,12 @@ function JoinTeamForm({
     onJoined: () => void;
 }) {
     const [inviteCode, setInviteCode] = useState(initialInviteCode);
-    const [idType, setIdType] = useState<IdentityType>("COLLEGE_ID");
     const [idNumber, setIdNumber] = useState("");
     const [photo, setPhoto] = useState<File | null>(null);
     const [idFile, setIdFile] = useState<File | null>(null);
+    const [secondaryIdType, setSecondaryIdType] = useState<IdentityType>(SECONDARY_IDENTITY_TYPES[0]!.value);
+    const [secondaryIdNumber, setSecondaryIdNumber] = useState("");
+    const [secondaryIdFile, setSecondaryIdFile] = useState<File | null>(null);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
@@ -734,10 +764,13 @@ function JoinTeamForm({
         const nextErrors: Record<string, string> = {};
         if (!inviteCode.trim()) nextErrors.inviteCode = "Required";
         if (!idNumber.trim()) nextErrors.idNumber = "Required";
+        if (!secondaryIdNumber.trim()) nextErrors.secondaryIdNumber = "Required";
         const photoError = validateRosterFile(photo);
         if (photoError) nextErrors.photo = photoError;
         const idFileError = validateRosterFile(idFile);
         if (idFileError) nextErrors.idFile = idFileError;
+        const secondaryIdFileError = validateRosterFile(secondaryIdFile);
+        if (secondaryIdFileError) nextErrors.secondaryIdFile = secondaryIdFileError;
 
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
@@ -747,10 +780,12 @@ function JoinTeamForm({
         try {
             const formData = new FormData();
             formData.append("inviteCode", inviteCode.trim());
-            formData.append("idType", idType);
             formData.append("idNumber", idNumber.trim());
             formData.append("photo", photo as File);
             formData.append("idFile", idFile as File);
+            formData.append("secondaryIdType", secondaryIdType);
+            formData.append("secondaryIdNumber", secondaryIdNumber.trim());
+            formData.append("secondaryIdFile", secondaryIdFile as File);
 
             await api.post(`/teams/join`, formData);
             onJoined();
@@ -773,16 +808,33 @@ function JoinTeamForm({
             />
 
             <div className={styles.field}>
-                <label className={styles.label} htmlFor="join-idType">
-                    Your ID type *
+                <span className={styles.label}>Document 1 — College ID *</span>
+            </div>
+            <Input
+                id="join-idNumber"
+                label="College ID number *"
+                value={idNumber}
+                onChange={(e) => setIdNumber(e.target.value)}
+                error={errors.idNumber}
+            />
+            <RosterFileInput
+                label="Upload College ID *"
+                file={idFile}
+                onChange={setIdFile}
+                error={errors.idFile}
+            />
+
+            <div className={styles.field}>
+                <label className={styles.label} htmlFor="join-secondaryIdType">
+                    Document 2 — type *
                 </label>
                 <select
-                    id="join-idType"
+                    id="join-secondaryIdType"
                     className={styles.select}
-                    value={idType}
-                    onChange={(e) => setIdType(e.target.value as IdentityType)}
+                    value={secondaryIdType}
+                    onChange={(e) => setSecondaryIdType(e.target.value as IdentityType)}
                 >
-                    {IDENTITY_TYPES.map((t) => (
+                    {SECONDARY_IDENTITY_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>
                             {t.label}
                         </option>
@@ -790,20 +842,20 @@ function JoinTeamForm({
                 </select>
             </div>
             <Input
-                id="join-idNumber"
-                label="Your ID number *"
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
-                error={errors.idNumber}
+                id="join-secondaryIdNumber"
+                label="Document 2 number *"
+                value={secondaryIdNumber}
+                onChange={(e) => setSecondaryIdNumber(e.target.value)}
+                error={errors.secondaryIdNumber}
+            />
+            <RosterFileInput
+                label="Upload document 2 *"
+                file={secondaryIdFile}
+                onChange={setSecondaryIdFile}
+                error={errors.secondaryIdFile}
             />
 
             <RosterFileInput label="Your photo *" file={photo} onChange={setPhoto} error={errors.photo} />
-            <RosterFileInput
-                label="Your ID document *"
-                file={idFile}
-                onChange={setIdFile}
-                error={errors.idFile}
-            />
 
             {apiError && <p className={styles.errorText}>{apiError}</p>}
 
