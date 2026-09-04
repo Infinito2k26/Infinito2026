@@ -530,6 +530,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
     const [name, setName] = useState("");
     const [collegeName, setCollegeName] = useState("");
     const [collegeAddress, setCollegeAddress] = useState("");
+    const [isIITP, setIsIITP] = useState(false);
     const [viceCaptainName, setViceCaptainName] = useState("");
     const [viceCaptainPhone, setViceCaptainPhone] = useState("");
     const [coachName, setCoachName] = useState("");
@@ -585,6 +586,7 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
             formData.append("name", name.trim());
             formData.append("collegeName", collegeName.trim());
             if (collegeAddress.trim()) formData.append("collegeAddress", collegeAddress.trim());
+            formData.append("isIITP", String(isIITP));
             if (viceCaptainName.trim()) formData.append("viceCaptainName", viceCaptainName.trim());
             if (viceCaptainPhone.trim()) formData.append("viceCaptainPhone", viceCaptainPhone.trim());
             if (coachName.trim()) formData.append("coachName", coachName.trim());
@@ -628,6 +630,11 @@ function CreateTeamForm({ event, onCreated }: { event: EventDetail; onCreated: (
                 value={collegeAddress}
                 onChange={(e) => setCollegeAddress(e.target.value)}
             />
+            <label className={styles.checkboxRow}>
+                <input type="checkbox" checked={isIITP} onChange={(e) => setIsIITP(e.target.checked)} />
+                All players are IIT Patna students (B.Tech/M.Tech/PhD)
+            </label>
+
             {event.teamSizeMin != null && (
                 <Input
                     id="declaredSize"

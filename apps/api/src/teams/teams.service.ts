@@ -220,8 +220,7 @@ export class TeamsService {
               captainId: userId,
               collegeName: dto.collegeName,
               collegeAddress: dto.collegeAddress,
-              // No self-declared IITP waiver — every team registration pays.
-              isIITP: false,
+              isIITP: dto.isIITP ?? false,
               viceCaptainName: dto.viceCaptainName,
               viceCaptainPhone: dto.viceCaptainPhone,
               coachName: dto.coachName,
@@ -321,6 +320,7 @@ export class TeamsService {
         declaredSize: dto.declaredSize,
         collegeName: dto.collegeName,
         collegeAddress: dto.collegeAddress,
+        isIITP: dto.isIITP,
         viceCaptainName: dto.viceCaptainName,
         viceCaptainPhone: dto.viceCaptainPhone,
         coachName: dto.coachName,
