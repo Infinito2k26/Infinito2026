@@ -10,11 +10,24 @@ import {
   Prisma,
   EventRegistrationType,
   FeeStructure,
+  IdentityType,
   SubOptionType,
 } from '@prisma/client';
 
 import { RegistrationsService } from './registrations.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
+
+const identityFiles = {
+  photoFile: { buffer: Buffer.from('photo'), mimetype: 'image/png' },
+  idFile: { buffer: Buffer.from('id'), mimetype: 'image/png' },
+  secondaryIdFile: { buffer: Buffer.from('secondary'), mimetype: 'image/png' },
+};
+const individualIdentityDto = {
+  idNumber: 'ID-1',
+  secondaryIdType: IdentityType.AADHAR,
+  secondaryIdNumber: 'AADHAR-1',
+};
 
 const flatTeamEvent = {
   id: 'event-1',
@@ -124,6 +137,17 @@ describe('RegistrationsService.create', () => {
       providers: [
         RegistrationsService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: UploadsService,
+          useValue: {
+            uploadProof: jest
+              .fn()
+              .mockImplementation(
+                (_buf: Buffer, _mime: string, folder: string) =>
+                  Promise.resolve({ key: `${folder}/mock-key` }),
+              ),
+          },
+        },
       ],
     }).compile();
 
@@ -162,7 +186,13 @@ describe('RegistrationsService.create', () => {
     });
     prisma.user.findUniqueOrThrow.mockResolvedValue({ isIITP: false });
 
-    await service.create('user-1', { eventId: 'event-2' });
+    await service.create(
+      'user-1',
+      { eventId: 'event-2', ...individualIdentityDto },
+      identityFiles.photoFile,
+      identityFiles.idFile,
+      identityFiles.secondaryIdFile,
+    );
 
     expect(tx.registration.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -170,6 +200,18 @@ describe('RegistrationsService.create', () => {
         data: expect.objectContaining({ userId: 'user-1', teamId: null }),
       }),
     );
+  });
+
+  it('throws 400 when an INDIVIDUAL registration is missing identity fields/files', async () => {
+    prisma.event.findUnique.mockResolvedValue({
+      ...individualEvent,
+      subOptions: [],
+    });
+    prisma.user.findUniqueOrThrow.mockResolvedValue({ isIITP: false });
+
+    await expect(
+      service.create('user-1', { eventId: 'event-2' }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('throws 404 when the event does not exist', async () => {
@@ -258,13 +300,20 @@ describe('RegistrationsService.create', () => {
     prisma.event.findUnique.mockResolvedValue(individualEvent);
     prisma.user.findUniqueOrThrow.mockResolvedValue({ isIITP: false });
 
-    await service.create('user-1', {
-      eventId: 'event-2',
-      subOptionSelections: [
-        { subOptionId: 'sub-100m' },
-        { subOptionId: 'sub-relay', relayMembers: ['A', 'B', 'C'] },
-      ],
-    });
+    await service.create(
+      'user-1',
+      {
+        eventId: 'event-2',
+        ...individualIdentityDto,
+        subOptionSelections: [
+          { subOptionId: 'sub-100m' },
+          { subOptionId: 'sub-relay', relayMembers: ['A', 'B', 'C'] },
+        ],
+      },
+      identityFiles.photoFile,
+      identityFiles.idFile,
+      identityFiles.secondaryIdFile,
+    );
 
     expect(tx.registrationSubOption.createMany).toHaveBeenCalled();
   });
@@ -295,14 +344,21 @@ describe('RegistrationsService.create', () => {
     prisma.user.findUniqueOrThrow.mockResolvedValue({ isIITP: false });
 
     await expect(
-      service.create('user-1', {
-        eventId: 'event-2',
-        subOptionSelections: [
-          { subOptionId: 'sub-relay', relayMembers: ['A'] },
-          { subOptionId: 'sub-relay-2', relayMembers: ['A'] },
-          { subOptionId: 'sub-relay-3', relayMembers: ['A'] },
-        ],
-      }),
+      service.create(
+        'user-1',
+        {
+          eventId: 'event-2',
+          ...individualIdentityDto,
+          subOptionSelections: [
+            { subOptionId: 'sub-relay', relayMembers: ['A'] },
+            { subOptionId: 'sub-relay-2', relayMembers: ['A'] },
+            { subOptionId: 'sub-relay-3', relayMembers: ['A'] },
+          ],
+        },
+        identityFiles.photoFile,
+        identityFiles.idFile,
+        identityFiles.secondaryIdFile,
+      ),
     ).rejects.toThrow(UnprocessableEntityException);
   });
 

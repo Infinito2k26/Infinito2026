@@ -53,7 +53,8 @@ export default function EventsPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await api.get("/events");
+            // ponytail: limit=100 covers a full fest catalogue with no pagination UI; add real paging if event count ever exceeds that.
+            const res = await api.get("/events?limit=100");
             const data = res.data as EventsListResponse;
             setEvents(data.events ?? []);
         } catch (err) {

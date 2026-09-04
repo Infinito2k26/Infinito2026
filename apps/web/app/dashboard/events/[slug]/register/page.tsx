@@ -112,6 +112,16 @@ export default function RegisterPage() {
     const [subOptionSelections, setSubOptionSelections] = useState<SubOptionSelection[]>([]);
     const [accommodation, setAccommodation] = useState<AccommodationValue>({});
     const [agreedToGuidelines, setAgreedToGuidelines] = useState(false);
+    // Individual-event identity — mirrors the team captain's College ID +
+    // one other document requirement (CreateTeamForm below), since
+    // individual registrations have no Participant row to carry it on.
+    const [idNumber, setIdNumber] = useState("");
+    const [photo, setPhoto] = useState<File | null>(null);
+    const [idFile, setIdFile] = useState<File | null>(null);
+    const [secondaryIdType, setSecondaryIdType] = useState<IdentityType>(SECONDARY_IDENTITY_TYPES[0]!.value);
+    const [secondaryIdNumber, setSecondaryIdNumber] = useState("");
+    const [secondaryIdFile, setSecondaryIdFile] = useState<File | null>(null);
+    const [identityErrors, setIdentityErrors] = useState<Record<string, string>>({});
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registration, setRegistration] = useState<RegistrationResult | null>(null);
@@ -235,7 +245,32 @@ export default function RegisterPage() {
                 ...accommodation,
                 agreedToGuidelines,
             };
-            const res = await api.post("/registrations", payload);
+
+            let body: CreateRegistrationPayload | FormData = payload;
+            if (!isTeamEvent) {
+                const formData = new FormData();
+                formData.append("eventId", payload.eventId);
+                formData.append("agreedToGuidelines", String(agreedToGuidelines));
+                if (payload.genderDeclared) formData.append("genderDeclared", payload.genderDeclared);
+                if (payload.customData) formData.append("customData", JSON.stringify(payload.customData));
+                if (payload.subOptionSelections) {
+                    formData.append("subOptionSelections", JSON.stringify(payload.subOptionSelections));
+                }
+                if (payload.accommodationOpted) formData.append("accommodationOpted", "true");
+                if (payload.accommodationDays != null) formData.append("accommodationDays", String(payload.accommodationDays));
+                if (payload.accommodationHeadcount != null) formData.append("accommodationHeadcount", String(payload.accommodationHeadcount));
+                if (payload.messOnlyOpted) formData.append("messOnlyOpted", "true");
+                if (payload.messOnlyHeadcount != null) formData.append("messOnlyHeadcount", String(payload.messOnlyHeadcount));
+                formData.append("idNumber", idNumber.trim());
+                formData.append("secondaryIdType", secondaryIdType);
+                formData.append("secondaryIdNumber", secondaryIdNumber.trim());
+                formData.append("photo", photo as File);
+                formData.append("idFile", idFile as File);
+                formData.append("secondaryIdFile", secondaryIdFile as File);
+                body = formData;
+            }
+
+            const res = await api.post("/registrations", body);
             setRegistration(res.data as RegistrationResult);
             return true;
         } catch (err) {
@@ -256,6 +291,19 @@ export default function RegisterPage() {
     // step below, not the moment they leave the Details step, so it never
     // reads as having registered them automatically.
     const handleDetailsSubmit = async () => {
+        if (!isTeamEvent) {
+            const nextErrors: Record<string, string> = {};
+            if (!idNumber.trim()) nextErrors.idNumber = "Required";
+            if (!secondaryIdNumber.trim()) nextErrors.secondaryIdNumber = "Required";
+            const photoError = validateRosterFile(photo);
+            if (photoError) nextErrors.photo = photoError;
+            const idFileError = validateRosterFile(idFile);
+            if (idFileError) nextErrors.idFile = idFileError;
+            const secondaryIdFileError = validateRosterFile(secondaryIdFile);
+            if (secondaryIdFileError) nextErrors.secondaryIdFile = secondaryIdFileError;
+            setIdentityErrors(nextErrors);
+            if (Object.keys(nextErrors).length > 0) return;
+        }
         if (isIITP) {
             setSubmitError(null);
             setStep("payment");
@@ -339,6 +387,65 @@ export default function RegisterPage() {
                                 setCustomData((prev) => ({ ...prev, [label]: value }))
                             }
                         />
+
+                        {!isTeamEvent && (
+                            <>
+                                <div className={styles.field}>
+                                    <span className={styles.label}>Document 1 — College ID *</span>
+                                </div>
+                                <Input
+                                    id="idNumber"
+                                    label="College ID number *"
+                                    value={idNumber}
+                                    onChange={(e) => setIdNumber(e.target.value)}
+                                    error={identityErrors.idNumber}
+                                />
+                                <RosterFileInput
+                                    label="Upload College ID *"
+                                    file={idFile}
+                                    onChange={setIdFile}
+                                    error={identityErrors.idFile}
+                                />
+
+                                <div className={styles.field}>
+                                    <label className={styles.label} htmlFor="secondaryIdType">
+                                        Document 2 — type *
+                                    </label>
+                                    <select
+                                        id="secondaryIdType"
+                                        className={styles.select}
+                                        value={secondaryIdType}
+                                        onChange={(e) => setSecondaryIdType(e.target.value as IdentityType)}
+                                    >
+                                        {SECONDARY_IDENTITY_TYPES.map((t) => (
+                                            <option key={t.value} value={t.value}>
+                                                {t.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <Input
+                                    id="secondaryIdNumber"
+                                    label="Document 2 number *"
+                                    value={secondaryIdNumber}
+                                    onChange={(e) => setSecondaryIdNumber(e.target.value)}
+                                    error={identityErrors.secondaryIdNumber}
+                                />
+                                <RosterFileInput
+                                    label="Upload document 2 *"
+                                    file={secondaryIdFile}
+                                    onChange={setSecondaryIdFile}
+                                    error={identityErrors.secondaryIdFile}
+                                />
+
+                                <RosterFileInput
+                                    label="Your photo *"
+                                    file={photo}
+                                    onChange={setPhoto}
+                                    error={identityErrors.photo}
+                                />
+                            </>
+                        )}
 
                         <label className={styles.checkboxRow}>
                             <input

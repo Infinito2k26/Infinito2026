@@ -11,6 +11,7 @@ import {
   Prisma,
   EventRegistrationType,
   FeeStructure,
+  IdentityType,
   RegistrationStatus,
   PaymentMode,
   PaymentStatus,
@@ -19,6 +20,7 @@ import {
   type EventSubOption,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import {
   CreateRegistrationDto,
   SubOptionSelectionDto,
@@ -28,6 +30,8 @@ import { calculateRegistrationFee } from './lib/fee-calculator.util';
 type EventWithSubOptions = Prisma.EventGetPayload<{
   include: { subOptions: true };
 }>;
+
+type UploadedFile = { buffer: Buffer; mimetype: string };
 
 interface CustomFieldDef {
   label: string;
@@ -39,7 +43,10 @@ interface CustomFieldDef {
 
 @Injectable()
 export class RegistrationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async listRegistrations(page = 1, limit = 20, status?: string) {
     page = Math.max(1, page);
@@ -95,7 +102,13 @@ export class RegistrationsService {
     };
   }
 
-  async create(userId: string, dto: CreateRegistrationDto) {
+  async create(
+    userId: string,
+    dto: CreateRegistrationDto,
+    photoFile?: UploadedFile,
+    idFile?: UploadedFile,
+    secondaryIdFile?: UploadedFile,
+  ) {
     const event = await this.prisma.event.findUnique({
       where: { id: dto.eventId },
       include: { subOptions: true },
@@ -183,6 +196,23 @@ export class RegistrationsService {
         select: { isIITP: true },
       });
       isIITP = user.isIITP;
+
+      // TEAM registrations get this from the captain's Participant row
+      // (collected at team-creation time, College ID + one other document —
+      // see teams.dto.ts); INDIVIDUAL registrations have no such row, so
+      // it's collected here instead, mirroring the same requirement.
+      if (
+        !dto.idNumber ||
+        !dto.secondaryIdType ||
+        !dto.secondaryIdNumber ||
+        !photoFile ||
+        !idFile ||
+        !secondaryIdFile
+      ) {
+        throw new BadRequestException(
+          'photo, College ID (idNumber + idFile), and a second document (secondaryIdType + secondaryIdNumber + secondaryIdFile) are all required for an individual event',
+        );
+      }
     }
 
     if (
@@ -223,6 +253,36 @@ export class RegistrationsService {
       messOnlyHeadcount: dto.messOnlyHeadcount ?? null,
     });
 
+    let identity: {
+      photoUrl: string;
+      idFileUrl: string;
+      secondaryIdFileUrl: string;
+    } | null = null;
+    if (!isTeamEvent) {
+      const [photoUpload, idUpload, secondaryIdUpload] = await Promise.all([
+        this.uploadsService.uploadProof(
+          photoFile!.buffer,
+          photoFile!.mimetype,
+          'participant-photo',
+        ),
+        this.uploadsService.uploadProof(
+          idFile!.buffer,
+          idFile!.mimetype,
+          'participant-id',
+        ),
+        this.uploadsService.uploadProof(
+          secondaryIdFile!.buffer,
+          secondaryIdFile!.mimetype,
+          'participant-secondary-id',
+        ),
+      ]);
+      identity = {
+        photoUrl: photoUpload.key,
+        idFileUrl: idUpload.key,
+        secondaryIdFileUrl: secondaryIdUpload.key,
+      };
+    }
+
     try {
       return await this.prisma.$transaction(async (tx) => {
         const registration = await tx.registration.create({
@@ -240,6 +300,13 @@ export class RegistrationsService {
             customData: dto.customData
               ? (dto.customData as Prisma.InputJsonValue)
               : undefined,
+            photoUrl: identity?.photoUrl,
+            idType: isTeamEvent ? undefined : IdentityType.COLLEGE_ID,
+            idNumber: isTeamEvent ? undefined : dto.idNumber,
+            idFileUrl: identity?.idFileUrl,
+            secondaryIdType: isTeamEvent ? undefined : dto.secondaryIdType,
+            secondaryIdNumber: isTeamEvent ? undefined : dto.secondaryIdNumber,
+            secondaryIdFileUrl: identity?.secondaryIdFileUrl,
           },
         });
 

@@ -719,6 +719,17 @@ model Registration {
   referredById          String?            @db.Uuid
   // Responses to TEAM-scoped Event.customFieldsDef fields
   customData            Json?
+  // Identity for INDIVIDUAL registrations only — mirrors Participant's
+  // College-ID-plus-one-other-document requirement (see
+  // dual-document-upload.md). TEAM registrations carry this on the
+  // captain's Participant row instead, so these are all nullable.
+  photoUrl              String?
+  idType                IdentityType?
+  idNumber              String?
+  idFileUrl             String?
+  secondaryIdType       IdentityType?
+  secondaryIdNumber     String?
+  secondaryIdFileUrl    String?
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   deletedAt             DateTime?
