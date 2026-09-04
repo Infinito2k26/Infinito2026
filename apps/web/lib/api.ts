@@ -13,7 +13,36 @@ export class ApiError extends Error {
     }
 }
 
-async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, ...customConfig }: RequestConfig = {}) {
+// ponytail: module-level so concurrent 401s share one refresh call instead of a stampede.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+    if (!refreshPromise) {
+        refreshPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+        })
+            .then(async (res) => {
+                if (!res.ok) return null;
+                const body = await res.json().catch(() => null);
+                return body?.data?.accessToken ?? null;
+            })
+            .catch(() => null)
+            .finally(() => {
+                refreshPromise = null;
+            });
+    }
+    return refreshPromise;
+}
+
+function logout() {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('infinito_token');
+        window.location.href = '/login';
+    }
+}
+
+async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, ...customConfig }: RequestConfig = {}, isRetry = false) {
     const token = typeof window !== 'undefined' ? localStorage.getItem('infinito_token') : null;
 
     const config: RequestInit = {
@@ -43,11 +72,15 @@ async function fetchWrapper(endpoint: string, { method = 'GET', body, headers, .
     const data = await response.json().catch(() => null);
 
     if (response.status === 401) {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('infinito_token');
-            // Force redirect
-            window.location.href = '/login';
+        // Access token expired — try the refresh cookie once before giving up.
+        if (!isRetry && endpoint !== '/auth/refresh' && typeof window !== 'undefined') {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                localStorage.setItem('infinito_token', newToken);
+                return fetchWrapper(endpoint, { method, body, headers, ...customConfig }, true);
+            }
         }
+        logout();
         throw new ApiError(401, data, 'Session expired. Please log in again.');
     }
 
