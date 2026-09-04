@@ -178,13 +178,17 @@ export class IdentityService {
       : {
           name: credential.user!.name,
           phone: credential.user!.phone,
-          photoUrl: null,
+          photoUrl: credential.registration.photoUrl
+            ? this.uploadsService.getSignedGetUrl(
+                credential.registration.photoUrl,
+              )
+            : null,
           college: credential.user!.college,
           isIITP: credential.user!.isIITP,
           teamName: null,
           role: null,
-          idType: null,
-          idNumber: null,
+          idType: credential.registration.idType,
+          idNumber: credential.registration.idNumber,
         };
 
     return {

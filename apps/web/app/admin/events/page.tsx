@@ -30,7 +30,8 @@ export default function AdminEventsPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await api.get("/admin/events");
+            // ponytail: limit=100 covers a full fest catalogue with no pagination UI; add real paging if event count ever exceeds that.
+            const res = await api.get("/admin/events?limit=100");
             setEvents(res?.data?.events ?? []);
         } catch (err) {
             console.error("Failed to load events", err);

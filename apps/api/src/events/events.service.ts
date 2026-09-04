@@ -88,6 +88,18 @@ export class EventsService {
   }
 
   async create(dto: CreateEventDto) {
+    const existing = await this.prisma.event.findFirst({
+      where: {
+        deletedAt: null,
+        name: { equals: dto.name, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      throw new ConflictException(
+        `An event named "${dto.name}" already exists (slug: ${existing.slug}) — edit that one instead of creating a duplicate`,
+      );
+    }
+
     try {
       return await this.prisma.event.create({
         data: dto as unknown as Prisma.EventCreateInput,
