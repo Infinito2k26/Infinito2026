@@ -412,6 +412,11 @@ model Participant {
   idType      IdentityType
   idNumber    String
   idFileUrl   String
+  // Second, distinct document (any IdentityType other than COLLEGE_ID). Nullable so existing
+  // participants registered before this requirement are left untouched.
+  secondaryIdType     IdentityType?
+  secondaryIdNumber   String?
+  secondaryIdFileUrl  String?
   // Responses to PARTICIPANT-scoped custom fields from Event.customFieldsDef
   // e.g. { "In-Game Name": "ProSniper99", "BGMI ID": "512345678" }
   customData  Json?

@@ -1,4 +1,9 @@
-import { Prisma, ParticipantRole, RegistrationStatus } from '@prisma/client';
+import {
+  Prisma,
+  ParticipantRole,
+  RegistrationStatus,
+  IdentityType,
+} from '@prisma/client';
 import {
   Injectable,
   NotFoundException,
@@ -124,6 +129,7 @@ export class TeamsService {
     dto: CreateTeamDto,
     photoFile: UploadedFile,
     idFile: UploadedFile,
+    secondaryIdFile: UploadedFile,
   ) {
     const event = await this.prisma.event.findUnique({
       where: { id: dto.eventId },
@@ -183,7 +189,7 @@ export class TeamsService {
       select: { name: true, phone: true },
     });
 
-    const [photoUpload, idUpload] = await Promise.all([
+    const [photoUpload, idUpload, secondaryIdUpload] = await Promise.all([
       this.uploadsService.uploadProof(
         photoFile.buffer,
         photoFile.mimetype,
@@ -193,6 +199,11 @@ export class TeamsService {
         idFile.buffer,
         idFile.mimetype,
         'participant-id',
+      ),
+      this.uploadsService.uploadProof(
+        secondaryIdFile.buffer,
+        secondaryIdFile.mimetype,
+        'participant-secondary-id',
       ),
     ]);
 
@@ -209,8 +220,7 @@ export class TeamsService {
               captainId: userId,
               collegeName: dto.collegeName,
               collegeAddress: dto.collegeAddress,
-              // No self-declared IITP waiver — every team registration pays.
-              isIITP: false,
+              isIITP: dto.isIITP ?? false,
               viceCaptainName: dto.viceCaptainName,
               viceCaptainPhone: dto.viceCaptainPhone,
               coachName: dto.coachName,
@@ -228,9 +238,12 @@ export class TeamsService {
               isRequired: true,
               userId,
               photoUrl: photoUpload.key,
-              idType: dto.idType,
+              idType: IdentityType.COLLEGE_ID,
               idNumber: dto.idNumber,
               idFileUrl: idUpload.key,
+              secondaryIdType: dto.secondaryIdType,
+              secondaryIdNumber: dto.secondaryIdNumber,
+              secondaryIdFileUrl: secondaryIdUpload.key,
             },
           });
 
@@ -307,6 +320,7 @@ export class TeamsService {
         declaredSize: dto.declaredSize,
         collegeName: dto.collegeName,
         collegeAddress: dto.collegeAddress,
+        isIITP: dto.isIITP,
         viceCaptainName: dto.viceCaptainName,
         viceCaptainPhone: dto.viceCaptainPhone,
         coachName: dto.coachName,
@@ -398,6 +412,7 @@ export class TeamsService {
     userId: string,
     photoFile: UploadedFile,
     idFile: UploadedFile,
+    secondaryIdFile: UploadedFile,
   ) {
     // Invite code is already a unique, unguessable credential — asking for
     // the raw team ID as well just makes the join form harder to fill in
@@ -419,7 +434,7 @@ export class TeamsService {
       select: { name: true, phone: true },
     });
 
-    const [photoUpload, idUpload] = await Promise.all([
+    const [photoUpload, idUpload, secondaryIdUpload] = await Promise.all([
       this.uploadsService.uploadProof(
         photoFile.buffer,
         photoFile.mimetype,
@@ -429,6 +444,11 @@ export class TeamsService {
         idFile.buffer,
         idFile.mimetype,
         'participant-id',
+      ),
+      this.uploadsService.uploadProof(
+        secondaryIdFile.buffer,
+        secondaryIdFile.mimetype,
+        'participant-secondary-id',
       ),
     ]);
 
@@ -449,9 +469,12 @@ export class TeamsService {
           isRequired: true,
           userId,
           photoUrl: photoUpload.key,
-          idType: dto.idType,
+          idType: IdentityType.COLLEGE_ID,
           idNumber: dto.idNumber,
           idFileUrl: idUpload.key,
+          secondaryIdType: dto.secondaryIdType,
+          secondaryIdNumber: dto.secondaryIdNumber,
+          secondaryIdFileUrl: secondaryIdUpload.key,
         },
       });
     });

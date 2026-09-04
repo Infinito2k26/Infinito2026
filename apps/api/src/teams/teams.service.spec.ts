@@ -76,15 +76,16 @@ describe('TeamsService', () => {
       declaredSize: 4,
       name: 'Team A',
       collegeName: 'IIT Patna',
-      idType: 'COLLEGE_ID',
       idNumber: '12345',
+      secondaryIdType: 'AADHAR',
+      secondaryIdNumber: '54321',
     } as never;
 
     it('throws NotFoundException when the event does not exist', async () => {
       prisma.event.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -96,7 +97,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(BadRequestException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
@@ -112,7 +113,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
@@ -127,7 +128,7 @@ describe('TeamsService', () => {
       });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(UnprocessableEntityException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
     });
@@ -143,16 +144,13 @@ describe('TeamsService', () => {
       prisma.team.findFirst.mockResolvedValue({ id: 'existing-team' });
 
       await expect(
-        service.createTeam('user-1', dto, file, file),
+        service.createTeam('user-1', dto, file, file, file),
       ).rejects.toThrow(ConflictException);
       expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
       expect(uploadsService.uploadProof).not.toHaveBeenCalled();
     });
 
-    // No self-declared IITP waiver — every team pays, regardless of what a
-    // stale/spoofed dto might carry (the DTO itself no longer accepts this
-    // field, but the service must not trust it even if one snuck through).
-    it('always creates the team with isIITP: false', async () => {
+    it('defaults isIITP to false when the dto omits it', async () => {
       prisma.event.findUnique.mockResolvedValue({
         id: 'evt-1',
         deletedAt: null,
@@ -178,10 +176,41 @@ describe('TeamsService', () => {
         }),
       );
 
-      const spoofedDto = { ...(dto as object), isIITP: true } as never;
-      await service.createTeam('user-1', spoofedDto, file, file);
+      await service.createTeam('user-1', dto, file, file, file);
 
       expect(capturedData?.isIITP).toBe(false);
+    });
+
+    it('honors a self-declared isIITP: true from the dto', async () => {
+      prisma.event.findUnique.mockResolvedValue({
+        id: 'evt-1',
+        deletedAt: null,
+        isPublished: true,
+        teamSizeMin: 1,
+        teamSizeMax: 10,
+      });
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        name: 'Captain One',
+        phone: '9999999999',
+      });
+
+      let capturedData: { isIITP: boolean } | undefined;
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          team: {
+            create: (args: { data: { isIITP: boolean } }) => {
+              capturedData = args.data;
+              return { id: 'team-1', ...args.data };
+            },
+          },
+          participant: { create: jest.fn().mockResolvedValue({ id: 'p-1' }) },
+        }),
+      );
+
+      const iitpDto = { ...(dto as object), isIITP: true } as never;
+      await service.createTeam('user-1', iitpDto, file, file, file);
+
+      expect(capturedData?.isIITP).toBe(true);
     });
   });
 
@@ -211,16 +240,17 @@ describe('TeamsService', () => {
   describe('join', () => {
     const dto = {
       inviteCode: 'ABC123',
-      idType: 'COLLEGE_ID',
       idNumber: '999',
+      secondaryIdType: 'AADHAR',
+      secondaryIdNumber: '888',
     } as never;
 
     it('throws NotFoundException when no team matches the invite code', async () => {
       prisma.team.findUnique.mockResolvedValue(null);
 
-      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.join(dto, 'user-1', file, file, file),
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.team.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({ where: { inviteCode: 'ABC123' } }),
       );
@@ -248,9 +278,9 @@ describe('TeamsService', () => {
         }),
       );
 
-      await expect(service.join(dto, 'user-1', file, file)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.join(dto, 'user-1', file, file, file),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('adds a PLAYER participant when the roster has room', async () => {
@@ -280,7 +310,7 @@ describe('TeamsService', () => {
         }),
       );
 
-      const result = await service.join(dto, 'user-1', file, file);
+      const result = await service.join(dto, 'user-1', file, file, file);
 
       expect(result).toEqual(createdParticipant);
       expect(capturedData).toMatchObject({ teamId: 'team-1', role: 'PLAYER' });
@@ -308,7 +338,7 @@ describe('TeamsService', () => {
         }),
       );
 
-      await service.join(dto, 'user-1', file, file);
+      await service.join(dto, 'user-1', file, file, file);
 
       expect(paymentConfirmedQueue.add).toHaveBeenCalledWith(
         'payment-confirmed',
@@ -446,10 +476,7 @@ describe('TeamsService', () => {
       );
     });
 
-    // No self-declared IITP waiver on edit either — UpdateTeamDto no longer
-    // accepts the field, but the service must not write one even if a
-    // stale/spoofed dto carries it.
-    it('never writes isIITP, even if a spoofed dto carries it', async () => {
+    it('writes isIITP through to the update when the dto carries it', async () => {
       prisma.team.findUnique.mockResolvedValue({
         id: 'team-1',
         deletedAt: null,
@@ -458,16 +485,16 @@ describe('TeamsService', () => {
         registration: null,
         _count: { participants: 1 },
       });
-      let capturedData: object | undefined;
+      let capturedData: { isIITP?: boolean } | undefined;
       prisma.team.update.mockImplementation((args: { data: object }) => {
         capturedData = args.data;
         return Promise.resolve({ id: 'team-1', name: 'New Name' });
       });
 
-      const spoofedDto = { ...(dto as object), isIITP: true } as never;
-      await service.updateTeam('team-1', 'user-1', spoofedDto);
+      const iitpDto = { ...(dto as object), isIITP: true } as never;
+      await service.updateTeam('team-1', 'user-1', iitpDto);
 
-      expect(capturedData).not.toHaveProperty('isIITP');
+      expect(capturedData?.isIITP).toBe(true);
     });
   });
 

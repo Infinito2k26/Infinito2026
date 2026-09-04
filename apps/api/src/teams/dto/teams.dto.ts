@@ -2,13 +2,19 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
+  IsIn,
+  IsBoolean,
   IsUUID,
   IsInt,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IdentityType } from '@prisma/client';
+
+// The second document must be a distinct type from the College ID slot, which is always COLLEGE_ID.
+export const SECONDARY_IDENTITY_TYPES = Object.values(IdentityType).filter(
+  (type) => type !== IdentityType.COLLEGE_ID,
+);
 
 export class CreateTeamDto {
   @IsUUID()
@@ -33,6 +39,16 @@ export class CreateTeamDto {
   @IsOptional()
   collegeAddress?: string;
 
+  // Multipart fields arrive as strings ("true"/"false") — Type(() => Boolean)
+  // would be wrong here (Boolean("false") is true in JS); an explicit string
+  // comparison is required to convert correctly before @IsBoolean() runs.
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value === 'true' : value,
+  )
+  @IsBoolean()
+  @IsOptional()
+  isIITP?: boolean;
+
   @IsString()
   @IsOptional()
   viceCaptainName?: string;
@@ -50,12 +66,17 @@ export class CreateTeamDto {
   coachPhone?: string;
 
   // Captain's own roster entry — name/phone come from their User record.
-  @IsEnum(IdentityType)
-  idType!: IdentityType;
-
+  // College ID is always required and always this type; no client choice.
   @IsString()
   @IsNotEmpty()
   idNumber!: string;
+
+  @IsIn(SECONDARY_IDENTITY_TYPES)
+  secondaryIdType!: IdentityType;
+
+  @IsString()
+  @IsNotEmpty()
+  secondaryIdNumber!: string;
 }
 
 export class UpdateTeamDto {
@@ -79,6 +100,10 @@ export class UpdateTeamDto {
   @IsOptional()
   collegeAddress?: string;
 
+  @IsBoolean()
+  @IsOptional()
+  isIITP?: boolean;
+
   @IsString()
   @IsOptional()
   viceCaptainName?: string;
@@ -101,10 +126,15 @@ export class JoinTeamDto {
   @IsNotEmpty()
   inviteCode!: string;
 
-  @IsEnum(IdentityType)
-  idType!: IdentityType;
-
+  // College ID is always required and always this type; no client choice.
   @IsString()
   @IsNotEmpty()
   idNumber!: string;
+
+  @IsIn(SECONDARY_IDENTITY_TYPES)
+  secondaryIdType!: IdentityType;
+
+  @IsString()
+  @IsNotEmpty()
+  secondaryIdNumber!: string;
 }
