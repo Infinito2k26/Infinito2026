@@ -226,8 +226,8 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `POST /teams`
 
-- `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
-- `Team.isIITP` is not accepted here — it's no longer self-declarable, so every team is created with it hardcoded `false` regardless of what's in the request body.
+- `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `isIITP?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idType` (`IdentityType`), `idNumber`, plus files `photo` and `idFile` (both required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/` and `participant-id/` via `UploadsService`).
+- `isIITP` is a self-declared, unverified captain checkbox ("all players are IIT Patna students") — when `true`, `POST /registrations` charges this team ₹0. There is no proof requirement or admin gate on it by design.
 - `declaredSize` is the roster size the captain commits to now, not the number of `Participant` rows created by this call (that's always 1, the captain) — teammates join later via `POST /teams/:id/join`. `422` if it falls outside `Event.teamSizeMin`/`teamSizeMax`. This declared number, not the live roster count, is what `POST /registrations` checks against `teamSizeMin`/`teamSizeMax` and uses for `PER_HEAD` fee calculation and accommodation/mess-only headcount caps — the actual roster is allowed to still be incomplete when the team registers and pays.
 - `404` if `eventId` doesn't resolve to an event; `400` if that event isn't published.
 - Creates the `Team` (caller becomes `captainId`) and its first `Participant` row (`role: CAPTAIN`) in one transaction. The captain's `Participant.name`/`phone` are copied from their `User` record, not re-entered.
@@ -235,7 +235,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `PATCH /teams/:id`
 
-- JSON body, all fields optional: `name`, `declaredSize`, `collegeName`, `collegeAddress`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`. `isIITP` is not editable here either (see `POST /teams`).
+- JSON body, all fields optional: `name`, `declaredSize`, `collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`.
 - Only the team's `captainId`, else `403`. `409` once the team has a `Registration` — details are locked as soon as the team registers; use this only to fix a mis-entered detail before then.
 - `declaredSize`, if given, is revalidated against `Event.teamSizeMin`/`teamSizeMax` (`422`) and cannot drop below the current live `Participant` count (`422`) — same rule as `POST /teams`, plus the new floor.
 - `eventId`, `captainId`, and `inviteCode` are not editable here (event/captain are fixed for the team's lifetime; use `POST /teams/:id/invitations` to rotate the code).
@@ -248,7 +248,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 #### `GET /teams/mine`
 
 - Returns teams the caller captains or has joined (`captainId` match, or a `Participant` row with `userId` matching the caller). Each team is tagged `role: "CAPTAIN" | "MEMBER"`; `inviteCode` is only populated for the captain (`null` for members) — showing it to everyone would leak a credential that lets anyone claim a roster slot.
-- Includes the full editable field set (`collegeName`, `collegeAddress`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`) plus `event.teamSizeMin`/`teamSizeMax`, so a captain-facing UI can prefill a `PATCH /teams/:id` form without a second request. `isIITP` is also present (read-only, always `false` for a team created via `POST /teams`).
+- Includes the full editable field set (`collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`) plus `event.teamSizeMin`/`teamSizeMax`, so a captain-facing UI can prefill a `PATCH /teams/:id` form without a second request.
 - `registration`, when present, also includes its most recent `payments` entry (`id`, `amount`, `mode`, `status`) — enough for a client to resume straight to the payment/review step for a team that already has a `PENDING_PAYMENT`/`CONFIRMED`/`WAITLISTED` registration, instead of re-showing the create-team form (which would 409). Only `CANCELLED`/`REFUNDED` registrations don't block a fresh team, matching `POST /teams`'s own duplicate-team guard.
 
 #### `POST /teams/:id/join`
