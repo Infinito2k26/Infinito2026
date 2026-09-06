@@ -14,13 +14,15 @@ import { api } from '@/lib/api';
 
 import styles from './ca-tasks.module.css';
 
+const TASK_CATEGORIES = ['REFERRAL', 'SOCIAL_MEDIA', 'PHYSICAL', 'CONTENT', 'COMMUNITY'] as const;
+
 // Removed static mock data
 // Schema enforcing the cross-validation rule from the hardening plan
 const taskSchema = z.object({
   title: z.string().min(3, 'Title is required'),
   description: z.string().min(10, 'Description is required'),
   points: z.coerce.number().min(1, 'Points must be greater than 0'),
-  type: z.enum(['URL', 'FILE']),
+  category: z.enum(TASK_CATEGORIES),
   isBrandSourced: z.boolean().default(false),
   brandId: z.string().optional(),
 }).refine((data) => {
@@ -43,10 +45,10 @@ interface AdminTask {
   id: string;
   title: string;
   points: number;
-  type: 'URL' | 'FILE';
+  category: typeof TASK_CATEGORIES[number];
   status: 'ACTIVE' | 'ARCHIVED';
-  isBrandSourced: boolean;
-  brandName?: string;
+  source: 'MODERATOR' | 'BRAND';
+  brandId: string | null;
 }
 
 export default function AdminTasksPage() {
@@ -84,7 +86,7 @@ export default function AdminTasksPage() {
   } = useForm({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      type: 'URL',
+      category: 'REFERRAL',
       isBrandSourced: false,
     }
   });
@@ -93,7 +95,12 @@ export default function AdminTasksPage() {
 
   const onSubmit: SubmitHandler<TaskFormValues> = async (data: TaskFormValues) => {
     try {
-        await api.post('/admin/ca-tasks', data);
+        const { isBrandSourced: brandSourced, brandId, ...rest } = data;
+        await api.post('/admin/ca-tasks', {
+          ...rest,
+          source: brandSourced ? 'BRAND' : 'MODERATOR',
+          ...(brandSourced ? { brandId } : {}),
+        });
         await fetchData(); // Refresh list
         reset();
         setIsCreating(false);
@@ -164,10 +171,13 @@ export default function AdminTasksPage() {
               </div>
 
               <div className={styles.inputGroup}>
-                <label className={styles.label}>Proof Type</label>
-                <select className={styles.select} disabled={isSubmitting} {...register('type')}>
-                  <option value="URL">URL Link</option>
-                  <option value="FILE">File Upload (Screenshot)</option>
+                <label className={styles.label}>Category</label>
+                <select className={styles.select} disabled={isSubmitting} {...register('category')}>
+                  {TASK_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category.replace('_', ' ')}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -229,9 +239,11 @@ export default function AdminTasksPage() {
               </div>
               <div className={styles.taskDetails}>
                 <span className={styles.detailTag}>{task.points} Pts</span>
-                <span className={styles.detailTag}>{task.type}</span>
-                {task.isBrandSourced ? (
-                  <span className={styles.brandTag}>Brand: {task.brandName}</span>
+                <span className={styles.detailTag}>{task.category.replace('_', ' ')}</span>
+                {task.source === 'BRAND' ? (
+                  <span className={styles.brandTag}>
+                    Brand: {brands.find((b) => b.id === task.brandId)?.name ?? 'Unknown'}
+                  </span>
                 ) : (
                   <span className={styles.teamTag}>Infinito Team</span>
                 )}
