@@ -1,8 +1,13 @@
 # Campus Ambassador Program — Technical Reference
 
-> **Status:** Planning (pre-implementation)
-> **Last updated:** 2026-06-12
+> **Status:** Implemented (core system) — see §9 for what shipped vs. what's still future work
+> **Last updated:** 2026-09-06
 > **Owner:** Lead / Architect (mdminhaj-2106)
+
+The core CA system described in §§1–3 and §§5.4, 6, 7, 8 below is built and merged
+into `develop` (PRs #27, #28, #30). The social-platform OAuth/API-verification
+pieces in §4 and the brand-scoped login in §5.3 are **not** built — see §9 for the
+precise split and how the shipped schema diverged from the original design here.
 
 ---
 
@@ -91,88 +96,62 @@ This is the highest-priority item and the backbone of the whole system.
 | Person registers directly (no ref) | `refCode = null`, not attributed to any CA |
 | Same person registers twice (duplicate check) | Dedup on email/phone at registration — second attempt returns existing record, no double-count |
 
-### 3.3 Prisma Schema (additions needed)
+### 3.3 Prisma Schema — as shipped
 
-```prisma
-model CampusAmbassador {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id])
-  refCode         String   @unique  // e.g. "CA0042"
-  collegeId       String
-  college         College  @relation(fields: [collegeId], references: [id])
-  referralCount   Int      @default(0)  // periodically synced from Redis
-  totalPoints     Int      @default(0)
-  rank            Int?
-  socialAccounts  CASocialAccount[]
-  tasks           CATaskAssignment[]
-  createdAt       DateTime @default(now())
-}
-
-model CASocialAccount {
-  id           String   @id @default(cuid())
-  caId         String
-  ca           CampusAmbassador @relation(fields: [caId], references: [id])
-  platform     SocialPlatform  // INSTAGRAM | TWITTER | YOUTUBE | LINKEDIN
-  accountId    String          // platform's internal user/channel ID
-  handle       String          // @username or channel name
-  accessToken  String?         // encrypted; null if no OAuth needed (YouTube, Twitter app-level)
-  tokenExpiry  DateTime?
-  connectedAt  DateTime @default(now())
-
-  @@unique([caId, platform])
-}
-
-model CaTask {
-  id           String      @id @default(cuid())
-  title        String
-  description  String
-  category     TaskCategory  // REFERRAL | SOCIAL_MEDIA | PHYSICAL | CONTENT | COMMUNITY
-  source       TaskSource    // MODERATOR | BRAND
-  brandId      String?
-  brand        Brand?       @relation(fields: [brandId], references: [id])
-  points       Int
-  deadline     DateTime?
-  proofType    ProofType    // AUTO | URL_SUBMISSION | SCREENSHOT | PHOTO
-  assignments  CATaskAssignment[]
-  createdAt    DateTime @default(now())
-}
-
-model CATaskAssignment {
-  id           String           @id @default(cuid())
-  caId         String
-  ca           CampusAmbassador @relation(fields: [caId], references: [id])
-  taskId       String
-  task         CaTask           @relation(fields: [taskId], references: [id])
-  status       TaskStatus       // PENDING | SUBMITTED | VERIFIED | REJECTED
-  proofUrl     String?          // submitted URL or file path
-  proofNote    String?
-  fetchedStats Json?            // API-fetched metrics at time of verification
-  pointsAwarded Int?
-  submittedAt  DateTime?
-  verifiedAt   DateTime?
-  verifiedBy   String?          // admin userId
-}
-
-model ReferralConversion {
-  id           String   @id @default(cuid())
-  caId         String
-  ca           CampusAmbassador @relation(fields: [caId], references: [id])
-  registrationId String @unique
-  registration Registration @relation(fields: [registrationId], references: [id])
-  createdAt    DateTime @default(now())
-}
-
-enum SocialPlatform { INSTAGRAM TWITTER YOUTUBE LINKEDIN TIKTOK }
-enum TaskSource     { MODERATOR BRAND }
-enum TaskCategory   { REFERRAL SOCIAL_MEDIA PHYSICAL CONTENT COMMUNITY }
-enum ProofType      { AUTO URL_SUBMISSION SCREENSHOT PHOTO }
-enum TaskStatus     { PENDING SUBMITTED VERIFIED REJECTED }
-```
+> The original design below this note has been superseded by what's actually in
+> `apps/api/prisma/schema.prisma`. The shipped schema keeps the same intent
+> (CA profile, dual-source tasks, referral attribution) but generalizes the
+> social-platform model instead of hardcoding an enum, and adds an explicit
+> application/approval flow (`CAApplication`) and a pre-registration lead
+> capture table (`CaReferralLead`) that weren't in the original plan. Model
+> names also differ: `CampusAmbassador` → `CAProfile`, and `SocialPlatform`
+> (a fixed enum) → `SocialPlatformConfig` (a data-driven table so new
+> platforms can be added without a migration).
+>
+> Current models (see `schema.prisma` for the authoritative, up-to-date
+> definitions — summarized here, not copied in full to avoid drift):
+>
+> - `CAProfile` — refCode, assignedCollegeName, referralCount, clickCount,
+>   totalPoints, rank, isActive.
+> - `CAApplication` — targetCollege, status (`ApplicationStatus`:
+>   PENDING/APPROVED/REJECTED), rejectionReason, reviewedById/reviewedAt.
+>   Approval promotes the applicant's `User.role` to `CAMPUS_AMBASSADOR`.
+> - `SocialPlatformConfig` — admin-configurable platform definitions (slug,
+>   oauthEnabled, canVerifyAction, metricsDef/constraintsDef/attributesDef as
+>   JSON) instead of a hardcoded `SocialPlatform` enum. **Rows exist in the
+>   schema but no platform is wired to real OAuth yet** — see §9.
+> - `CASocialAccount` — per-CA connected account per platform; unused until a
+>   platform actually implements OAuth connect.
+> - `Brand` — sponsor entity; only appears on the public `/sponsors` page when
+>   `tier` is set and `isPubliclyListed` is true, so a CA-task-only brand can
+>   stay unlisted.
+> - `CaTask` / `CATaskAssignment` — same PENDING/SUBMITTED/VERIFIED/REJECTED
+>   flow as originally designed, plus `targetMetric`/`targetCount`/
+>   `targetContentUrl` for goal-based social tasks and an optional `eventId`
+>   link.
+> - `SocialReferral` — a verification-level system for social-driven referral
+>   attribution (`VerificationLevel`: BEHAVIORAL | API_CONFIRMED) that doesn't
+>   appear in the original design; keyed uniquely on
+>   `(platformId, verifiedUserId)` as its core anti-cheat rule ("one real
+>   account per platform = one attribution, ever").
+> - `ReferralConversion` — unchanged in spirit: links a `Registration` to the
+>   `CAProfile` that drove it.
+> - `CaReferralLead` (`ca_referral_leads`) — captures name/email/phone/college
+>   plus `referralCode` for pre-registration leads, with `consentedAt` and
+>   `convertedAt` tracking; not in the original design.
 
 ---
 
 ## 4. Social Media API Integrations
+
+> **Not yet implemented.** `SocialPlatformConfig` and `CASocialAccount` exist
+> in the schema (§3.3) as scaffolding, but `apps/api/src/ca/ca.service.ts` has
+> no OAuth flow, no YouTube/Twitter API calls, and no token handling today.
+> All CA tasks currently ship as manual proof submission
+> (`ProofType.SCREENSHOT` / `PHOTO` / `URL_SUBMISSION` reviewed by an admin),
+> with `AUTO` and the API integrations below left for a future phase. Treat
+> this section as a design reference for that future work, not a status
+> report on what exists now.
 
 ### 4.1 YouTube Data API v3 — FREE, no CA OAuth
 
@@ -255,6 +234,12 @@ Admin can override points before approving (useful if a task partially met the b
 
 ### 5.3 Brand Task Management
 
+> **Not yet implemented.** The `Brand` model and `CaTask.brandId`/
+> `TaskSource.BRAND` exist in the schema, and admins can create brand-sourced
+> tasks through the existing `/admin/ca-tasks` endpoints, but there is no
+> brand-scoped login — today the lead/admin team manages brand tasks on the
+> brand's behalf, as the fallback described below already anticipated.
+
 Brands/sponsors get a scoped login (or the lead manages it) to:
 - Create brand tasks (title, description, points, deadline, proof type)
 - See completion rates for their tasks
@@ -324,23 +309,26 @@ job worker → write Registration + ReferralConversion in prisma.$transaction
 
 ## 7. Implementation Priority
 
-| Phase | What | Effort |
+| Phase | What | Status |
 |-------|------|--------|
-| 1 | Prisma schema additions (CA, tasks, referral tables) | 1 day |
-| 2 | Referral link generation at CA onboarding | 0.5 day |
-| 3 | UTM capture on frontend + submission in registration payload | 0.5 day |
-| 4 | Redis referral counter + BullMQ flush job | 1 day |
-| 5 | Task CRUD (moderator + brand task creation in admin) | 1.5 days |
-| 6 | Task submission flow (CA side) + manual proof upload | 1 day |
-| 7 | YouTube + Twitter/X API verification (auto-fetch on submission) | 1 day |
-| 8 | Instagram OAuth connect + Graph API fetch job | 2 days |
-| 9 | Leaderboard calculation job + Redis cache + public page | 1 day |
-| 10 | Admin verification panel (approve/reject tasks, override points) | 1.5 days |
-| 11 | Brand scoped login / brand task management | 1 day |
-| 12 | LinkedIn OAuth + fetch job | 1 day |
+| 1 | Prisma schema additions (CA, tasks, referral tables) | **Done** |
+| 2 | Referral link generation at CA onboarding | **Done** |
+| 3 | UTM capture on frontend + submission in registration payload | **Done** |
+| 4 | Redis referral counter + BullMQ flush job | **Done** |
+| 5 | Task CRUD (moderator + brand task creation in admin) | **Done** |
+| 6 | Task submission flow (CA side) + manual proof upload | **Done** |
+| 7 | YouTube + Twitter/X API verification (auto-fetch on submission) | Not started |
+| 8 | Instagram OAuth connect + Graph API fetch job | Not started |
+| 9 | Leaderboard calculation job + Redis cache + public page | **Done** |
+| 10 | Admin verification panel (approve/reject tasks, override points) | **Done** |
+| 11 | Brand scoped login / brand task management | Partial — admin can create/manage brand tasks; no dedicated brand login |
+| 12 | LinkedIn OAuth + fetch job | Not started |
 
-**Total estimated effort:** ~13 developer-days.
-Phase 1–4 are the critical path — implement these before CA onboarding begins.
+Phases 1–6, 9, and 10 shipped across PRs #27 (frontend wiring), #28 (backend
+hardening), and #30 (application intake), plus a `CAApplication`
+approve/reject flow that wasn't in the original phase list. Phases 7, 8, 11,
+and 12 remain future work — see §4 and §5.3 for what's actually scaffolded
+versus built.
 
 ---
 
@@ -351,3 +339,36 @@ Phase 1–4 are the critical path — implement these before CA onboarding begin
 - Brand task creation must be gated behind a `BRAND` role — brands should not see other brands' task performance.
 - Admin task verification panel must be gated behind `ADMIN` or `MODERATOR` role.
 - Rate-limit the referral link endpoint at the CDN/nginx layer to prevent artificial click inflation (e.g., max 10 requests/second per IP).
+
+---
+
+## 9. Current Status Summary (2026-09-06)
+
+**Implemented and merged to `develop`:**
+- Backend: `apps/api/src/ca/` (onboarding, `/ca/apply`, referral clicks, task
+  listing/submission with signed-URL proof uploads) and the CA-related
+  endpoints in `apps/api/src/admin/admin.controller.ts` (task CRUD,
+  assignment verification, application review with atomic role promotion).
+- Frontend: `apps/web/app/dashboard/ca/*` (onboard, apply, tasks), the admin
+  pages under `apps/web/app/admin/ca-applications` and `ca-tasks`, and the
+  public leaderboard at `apps/web/app/leaderboard/page.tsx`.
+- Data layer: see §3.3 for the as-shipped schema and how it diverged from
+  this document's original design.
+- Exposure: not linked from the main navbar; linked from the site footer
+  ("Campus Ambassador" → `/dashboard/ca`, auth-gated; "Leaderboard" →
+  `/leaderboard`, public).
+
+**Not yet implemented (tracked here as future work, not forgotten):**
+- Social platform OAuth/API verification (§4) — YouTube/Twitter auto-fetch,
+  Instagram/LinkedIn connect flows. `SocialPlatformConfig`/`CASocialAccount`
+  exist as schema scaffolding only.
+- Brand-scoped login (§5.3) — brand tasks are managed by admins today.
+- Deployment/CD for the CA portal specifically (no dedicated Dockerfile or
+  CD workflow beyond whatever covers the rest of the API/web apps).
+
+**Known issue fixed 2026-09-06:** `apps/web/app/dashboard/ca/layout.tsx` had
+gated the CA dashboard with the literal role string `'CA'` instead of the
+actual `UserRole` value `'CAMPUS_AMBASSADOR'`, causing a real Campus
+Ambassador to be redirected back to the same page in a loop after login. Fixed
+on branch `fix/ca-dashboard-role-guard`, with a Vitest regression test added
+for `AuthGuard` (`apps/web` previously had no frontend test runner at all).

@@ -44,8 +44,10 @@ type MockUser = typeof baseUser;
 interface MockPrisma {
   user: {
     findUnique: jest.Mock<Promise<MockUser | null>, [unknown]>;
+    findFirst: jest.Mock<Promise<MockUser | null>, [unknown]>;
     create: jest.Mock<Promise<MockUser>, [{ data: Partial<MockUser> }]>;
     update: jest.Mock<Promise<MockUser>, [{ data: Partial<MockUser> }]>;
+    delete: jest.Mock<Promise<MockUser>, [unknown]>;
   };
   passwordResetToken: {
     create: jest.Mock<Promise<MockResetToken>, [unknown]>;
@@ -58,6 +60,7 @@ interface MockPrisma {
     findUnique: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
     findFirst: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
     update: jest.Mock<Promise<MockResetToken>, [unknown]>;
+    deleteMany: jest.Mock<Promise<{ count: number }>, [unknown]>;
   };
   $transaction: jest.Mock<Promise<unknown[]>, [Promise<unknown>[]]>;
 }
@@ -85,8 +88,10 @@ describe('AuthService', () => {
     prisma = {
       user: {
         findUnique: jest.fn<Promise<MockUser | null>, [unknown]>(),
+        findFirst: jest.fn<Promise<MockUser | null>, [unknown]>(),
         create: jest.fn<Promise<MockUser>, [{ data: Partial<MockUser> }]>(),
         update: jest.fn<Promise<MockUser>, [{ data: Partial<MockUser> }]>(),
+        delete: jest.fn<Promise<MockUser>, [unknown]>(),
       },
       passwordResetToken: {
         create: jest.fn<Promise<MockResetToken>, [unknown]>(),
@@ -99,6 +104,7 @@ describe('AuthService', () => {
         findUnique: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
         findFirst: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
         update: jest.fn<Promise<MockResetToken>, [unknown]>(),
+        deleteMany: jest.fn<Promise<{ count: number }>, [unknown]>(),
       },
       $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
     };
@@ -164,6 +170,55 @@ describe('AuthService', () => {
           name: 'Dup User',
         }),
       ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('deletes and recreates a genuinely empty unverified account', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: false,
+      });
+      prisma.user.findFirst.mockResolvedValue(null);
+      prisma.user.create.mockImplementation(({ data }) =>
+        Promise.resolve({ ...baseUser, ...data }),
+      );
+
+      await service.register({
+        consent: true,
+        email: baseUser.email,
+        password: 'plaintext-password',
+        name: 'Re-registering User',
+      });
+
+      expect(prisma.emailVerificationToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: baseUser.id },
+      });
+      expect(prisma.user.delete).toHaveBeenCalledWith({
+        where: { id: baseUser.id },
+      });
+      expect(prisma.user.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects re-registration against an unverified account that already has activity, without deleting it', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: false,
+      });
+      prisma.user.findFirst.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: false,
+      });
+
+      await expect(
+        service.register({
+          consent: true,
+          email: baseUser.email,
+          password: 'plaintext-password',
+          name: 'Re-registering User',
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(prisma.emailVerificationToken.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.user.delete).not.toHaveBeenCalled();
     });
   });
 
