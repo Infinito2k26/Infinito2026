@@ -501,11 +501,6 @@ export class RegistrationsService {
       seen.add(s.subOptionId);
 
       if (subOption.type === SubOptionType.RELAY) {
-        if (!s.relayMembers || s.relayMembers.length === 0) {
-          throw new BadRequestException(
-            `relayMembers is required for relay sub-option: ${subOption.name}`,
-          );
-        }
         relayCount += 1;
       } else {
         individualCount += 1;
