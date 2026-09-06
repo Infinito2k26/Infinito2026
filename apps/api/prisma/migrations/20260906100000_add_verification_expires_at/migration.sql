@@ -1,0 +1,2 @@
+-- Column already exists in databases where the schema was synced
+-- before this migration was created.

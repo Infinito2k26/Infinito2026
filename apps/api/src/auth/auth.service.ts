@@ -42,7 +42,7 @@ import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
 import type { RefreshTokenStore } from './refresh-token-store.interface';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
-const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 5 * 60 * 1000;
 const MAX_RESET_ATTEMPTS = 5;
 
 export interface UserProfile {
@@ -105,7 +105,19 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('Email is already registered');
+      if (existing.isEmailVerified) {
+        throw new ConflictException('Email is already registered');
+      }
+
+      await this.prisma.emailVerificationToken.deleteMany({
+        where: {
+          userId: existing.id,
+        },
+      });
+
+      await this.prisma.user.delete({
+        where: { id: existing.id },
+      });
     }
 
     if (dto.consent !== true) {
@@ -122,6 +134,7 @@ export class AuthService {
         phone: dto.phone,
         college: dto.college,
         consentedAt: new Date(),
+        verificationExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });
 
@@ -135,8 +148,16 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    if (!user) {
+      throw new UnauthorizedException('Email not found');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Email not found');
+    }
+
     if (
-      !user?.passwordHash ||
+      !user.passwordHash ||
       !(await bcrypt.compare(dto.password, user.passwordHash))
     ) {
       throw new UnauthorizedException('Invalid email or password');
@@ -257,32 +278,54 @@ export class AuthService {
   }
 
   async verifyEmail(dto: VerifyEmailDto): Promise<void> {
-    const tokenHash = hashToken(dto.token);
     const verificationToken =
-      await this.prisma.emailVerificationToken.findUnique({
-        where: { tokenHash },
+      await this.prisma.emailVerificationToken.findFirst({
+        where: {
+          user: {
+            email: dto.email,
+          },
+          usedAt: null,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
 
-    if (
-      !verificationToken ||
-      verificationToken.usedAt ||
-      verificationToken.expiresAt < new Date()
-    ) {
-      throw new BadRequestException('Invalid or expired verification token');
+    if (!verificationToken) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    // OTP expired → delete user
+    if (verificationToken.expiresAt < new Date()) {
+      await this.prisma.user.delete({
+        where: { id: verificationToken.userId },
+      });
+
+      throw new BadRequestException('OTP expired. Please register again.');
+    }
+
+    // Wrong OTP
+    if (verificationToken.tokenHash !== hashToken(dto.code)) {
+      throw new BadRequestException('Invalid or expired OTP');
     }
 
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: verificationToken.userId },
-        data: { isEmailVerified: true },
+        data: {
+          isEmailVerified: true,
+          verificationExpiresAt: null,
+        },
       }),
+
       this.prisma.emailVerificationToken.update({
         where: { id: verificationToken.id },
-        data: { usedAt: new Date() },
+        data: {
+          usedAt: new Date(),
+        },
       }),
     ]);
   }
-
   async resendVerification(dto: ForgotPasswordDto): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -304,21 +347,18 @@ export class AuthService {
       return;
     }
 
-    const rawToken = randomUUID();
+    const rawCode = randomInt(100000, 999999).toString();
     await this.prisma.emailVerificationToken.create({
       data: {
         userId: user.id,
-        tokenHash: hashToken(rawToken),
+        tokenHash: hashToken(rawCode),
         expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
       },
     });
 
-    const webOrigin = this.config.get('WEB_ORIGIN', { infer: true });
-    const verifyLink = `${webOrigin}/verify-email?token=${rawToken}`;
-
     await this.emailVerificationQueue.add('send', {
       email: user.email,
-      verifyLink,
+      code: rawCode,
     });
   }
 

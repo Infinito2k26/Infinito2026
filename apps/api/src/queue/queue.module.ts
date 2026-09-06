@@ -10,6 +10,7 @@ import { CredentialIssueProcessor } from '../identity/jobs/credential-issue.proc
 import { IdentityModule } from '../identity/identity.module';
 import { PasswordResetEmailProcessor } from '../auth/jobs/password-reset-email.processor';
 import { EmailVerificationProcessor } from '../auth/jobs/email-verification.processor';
+import { EmailVerificationCleanupProcessor } from './jobs/email-verification-cleanup.processor';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { EmailVerificationProcessor } from '../auth/jobs/email-verification.proc
       { name: 'payment-confirmed' },
       { name: 'password-reset-email' },
       { name: 'email-verification' },
+      { name: 'email-verification-cleanup' },
     ),
     LeaderboardModule,
     IdentityModule,
@@ -45,6 +47,7 @@ import { EmailVerificationProcessor } from '../auth/jobs/email-verification.proc
     CredentialIssueProcessor,
     PasswordResetEmailProcessor,
     EmailVerificationProcessor,
+    EmailVerificationCleanupProcessor,
   ],
   exports: [BullModule],
 })
@@ -52,6 +55,8 @@ export class QueueModule implements OnModuleInit {
   constructor(
     @InjectQueue('referral-flush') private readonly flushQueue: Queue,
     @InjectQueue('leaderboard-recalc') private readonly leaderboardQueue: Queue,
+    @InjectQueue('email-verification-cleanup')
+    private readonly emailVerificationCleanupQueue: Queue,
   ) {}
 
   async onModuleInit() {
@@ -71,6 +76,16 @@ export class QueueModule implements OnModuleInit {
       {
         repeat: {
           pattern: '*/15 * * * *',
+        },
+      },
+    );
+
+    await this.emailVerificationCleanupQueue.add(
+      'cleanup',
+      {},
+      {
+        repeat: {
+          pattern: '*/1 * * * *',
         },
       },
     );

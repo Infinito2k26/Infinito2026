@@ -7,7 +7,7 @@ import { Env } from '../../config/env.schema';
 
 interface EmailVerificationJobData {
   email: string;
-  verifyLink: string;
+  code: string;
 }
 
 @Processor('email-verification')
@@ -18,18 +18,17 @@ export class EmailVerificationProcessor extends WorkerHost {
 
   constructor(private readonly config: ConfigService<Env, true>) {
     super();
+
     const apiKey = this.config.get('RESEND_API_KEY', { infer: true });
     this.resend = apiKey ? new Resend(apiKey) : null;
   }
 
   async process(job: Job<EmailVerificationJobData>): Promise<void> {
-    const { email, verifyLink } = job.data;
+    const { email, code } = job.data;
 
     if (!this.resend) {
-      // ponytail: no RESEND_API_KEY configured (local/dev) — log the link
-      // instead of failing the job, so the verify flow stays testable.
       this.logger.warn(
-        `RESEND_API_KEY not set; would have emailed ${email}: ${verifyLink}`,
+        `RESEND_API_KEY not set; would have emailed ${email}: OTP ${code}`,
       );
       return;
     }
@@ -38,7 +37,17 @@ export class EmailVerificationProcessor extends WorkerHost {
       from: this.config.get('EMAIL_FROM', { infer: true }),
       to: email,
       subject: 'Verify your Infinito 2K26 email',
-      html: `<p>Welcome to Infinito 2K26! Please confirm this is your email address.</p><p><a href="${verifyLink}">Click here to verify your email</a>. This link expires in 24 hours.</p><p>If you didn't create this account, you can safely ignore this email.</p>`,
+      html: `
+        <p>Welcome to Infinito 2K26!</p>
+
+        <p>Your email verification OTP is:</p>
+
+        <h2>${code}</h2>
+
+        <p>This OTP expires in 5 minutes.</p>
+
+        <p>If you didn't create this account, you can safely ignore this email.</p>
+      `,
     });
   }
 }

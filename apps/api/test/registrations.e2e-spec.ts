@@ -4,6 +4,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import { PrismaService } from './../src/prisma/prisma.service';
 import {
   BroadCategory,
   EventRegistrationType,
@@ -15,7 +16,6 @@ import {
   Prisma,
 } from '@prisma/client';
 import { AppModule } from './../src/app.module';
-import { PrismaService } from './../src/prisma/prisma.service';
 import type { SuccessResponse } from './../src/common/envelope/envelope.types';
 import type { UserProfile } from './../src/auth/auth.service';
 
@@ -64,6 +64,16 @@ async function registerAndLogin(app: INestApplication<App>, name: string) {
     .expect(201);
 
   const userId = (registerRes.body as SuccessResponse<UserProfile>).data.id;
+
+  const prisma = app.get(PrismaService);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      isEmailVerified: true,
+      verificationExpiresAt: null,
+    },
+  });
 
   const login = await request(app.getHttpServer())
     .post('/api/auth/login')
@@ -138,6 +148,36 @@ async function createTeamWithRoster(
   return team;
 }
 
+function individualRegistrationRequest(
+  app: INestApplication<App>,
+  token: string,
+  eventId: string,
+  fields: Record<string, string> = {},
+) {
+  return request(app.getHttpServer())
+    .post('/api/registrations')
+    .set('Authorization', `Bearer ${token}`)
+    .field('eventId', eventId)
+    .field('agreedToGuidelines', 'true')
+    .field('idNumber', fields.idNumber ?? 'E2E-COLLEGE-ID')
+    .field('secondaryIdType', fields.secondaryIdType ?? 'AADHAR')
+    .field('secondaryIdNumber', fields.secondaryIdNumber ?? 'E2E-SECONDARY-ID')
+    .field('customData', fields.customData ?? '{}')
+    .field('subOptionSelections', fields.subOptionSelections ?? '[]')
+    .attach('photo', Buffer.from('e2e-photo'), {
+      filename: 'photo.jpg',
+      contentType: 'image/jpeg',
+    })
+    .attach('idFile', Buffer.from('e2e-college-id'), {
+      filename: 'college-id.jpg',
+      contentType: 'image/jpeg',
+    })
+    .attach('secondaryIdFile', Buffer.from('e2e-secondary-id'), {
+      filename: 'secondary-id.jpg',
+      contentType: 'image/jpeg',
+    });
+}
+
 describe('Registrations: validation and errors (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -152,7 +192,10 @@ describe('Registrations: validation and errors (e2e)', () => {
   it('rejects unauthenticated requests with 401', async () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
-      .send({ eventId: randomUUID() })
+      .send({
+        eventId: randomUUID(),
+        agreedToGuidelines: true,
+      })
       .expect(401);
   });
 
@@ -172,7 +215,10 @@ describe('Registrations: validation and errors (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: randomUUID() })
+      .send({
+        eventId: randomUUID(),
+        agreedToGuidelines: true,
+      })
       .expect(404);
   });
 
@@ -224,11 +270,10 @@ describe('Registrations: individual flow (e2e)', () => {
       }),
     });
 
-    const res = await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id })
-      .expect(201);
+    const res = await individualRegistrationRequest(app, user.token, event.id);
+    console.log('REGISTRATION RESPONSE:', res.status, res.body);
+
+    expect(res.status).toBe(201);
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
     expect(body.eventId).toBe(event.id);
@@ -257,17 +302,9 @@ describe('Registrations: individual flow (e2e)', () => {
       }),
     });
 
-    await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id })
-      .expect(201);
+    await individualRegistrationRequest(app, user.token, event.id).expect(201);
 
-    await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id })
-      .expect(409);
+    await individualRegistrationRequest(app, user.token, event.id).expect(409);
   });
 
   it('rejects registration when the event is not open (422)', async () => {
@@ -287,7 +324,10 @@ describe('Registrations: individual flow (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id })
+      .send({
+        eventId: event.id,
+        agreedToGuidelines: true,
+      })
       .expect(422);
   });
 });
@@ -320,16 +360,15 @@ describe('Registrations: capacity and gender-based fees (e2e)', () => {
       }),
     });
 
-    await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${first.token}`)
-      .send({ eventId: event.id })
-      .expect(201);
+    await individualRegistrationRequest(app, first.token, event.id).expect(201);
 
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${second.token}`)
-      .send({ eventId: event.id })
+      .send({
+        eventId: event.id,
+        agreedToGuidelines: true,
+      })
       .expect(422);
   });
 
@@ -355,13 +394,22 @@ describe('Registrations: capacity and gender-based fees (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id, teamId: team.id })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        agreedToGuidelines: true,
+      })
       .expect(422);
 
     const res = await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id, teamId: team.id, genderDeclared: 'WOMEN' })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        genderDeclared: 'WOMEN',
+        agreedToGuidelines: true,
+      })
       .expect(201);
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
@@ -402,7 +450,10 @@ describe('Registrations: team flow (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
-      .send({ eventId: event.id })
+      .send({
+        eventId: event.id,
+        agreedToGuidelines: true,
+      })
       .expect(400);
 
     // Declared size below teamSizeMin -> 422.
@@ -415,7 +466,11 @@ describe('Registrations: team flow (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
-      .send({ eventId: event.id, teamId: smallTeam.id })
+      .send({
+        eventId: event.id,
+        teamId: smallTeam.id,
+        agreedToGuidelines: true,
+      })
       .expect(422);
 
     const team = await createTeamWithRoster(
@@ -429,14 +484,22 @@ describe('Registrations: team flow (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${notCaptain.token}`)
-      .send({ eventId: event.id, teamId: team.id })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        agreedToGuidelines: true,
+      })
       .expect(403);
 
     // Captain -> 201, PER_HEAD fee = 249 x 4.
     const res = await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
-      .send({ eventId: event.id, teamId: team.id })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        agreedToGuidelines: true,
+      })
       .expect(201);
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
@@ -446,7 +509,11 @@ describe('Registrations: team flow (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
-      .send({ eventId: event.id, teamId: team.id })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        agreedToGuidelines: true,
+      })
       .expect(409);
   });
 
@@ -476,7 +543,11 @@ describe('Registrations: team flow (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${captain.token}`)
-      .send({ eventId: event.id, teamId: team.id })
+      .send({
+        eventId: event.id,
+        teamId: team.id,
+        agreedToGuidelines: true,
+      })
       .expect(201);
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
@@ -528,7 +599,11 @@ describe('Registrations: custom fields and sub-options (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/registrations')
       .set('Authorization', `Bearer ${user.token}`)
-      .send({ eventId: event.id, customData: { 'Roll No.': 'A1' } })
+      .send({
+        eventId: event.id,
+        agreedToGuidelines: true,
+        customData: { 'Roll No.': 'A1' },
+      })
       .expect(400);
 
     // Unknown field -> 400.
@@ -537,19 +612,22 @@ describe('Registrations: custom fields and sub-options (e2e)', () => {
       .set('Authorization', `Bearer ${user.token}`)
       .send({
         eventId: event.id,
-        customData: { 'Roll No.': 'A1', 'College ID': 'C1', extra: 'x' },
+        agreedToGuidelines: true,
+        customData: {
+          'Roll No.': 'A1',
+          'College ID': 'C1',
+          extra: 'x',
+        },
       })
       .expect(400);
 
     // Valid -> 201.
-    const res = await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({
-        eventId: event.id,
-        customData: { 'Roll No.': 'A1', 'College ID': 'C1' },
-      })
-      .expect(201);
+    const res = await individualRegistrationRequest(app, user.token, event.id, {
+      customData: JSON.stringify({
+        'Roll No.': 'A1',
+        'College ID': 'C1',
+      }),
+    });
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
     const stored = await prisma.registration.findUniqueOrThrow({
@@ -634,35 +712,39 @@ describe('Registrations: custom fields and sub-options (e2e)', () => {
       .set('Authorization', `Bearer ${user.token}`)
       .send({
         eventId: event.id,
-        subOptionSelections: [{ subOptionId: relay.id }],
+        agreedToGuidelines: true,
+        subOptionSelections: [{ subOptionId: otherEventSubOption.id }],
       })
       .expect(400);
 
     // Exceeds the individual-type cap (3) -> 422.
-    await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({
-        eventId: event.id,
-        subOptionSelections: individualSubOptions.map((s) => ({
-          subOptionId: s.id,
-        })),
-      })
-      .expect(422);
+    const capResponse = await individualRegistrationRequest(
+      app,
+      user.token,
+      event.id,
+      {
+        subOptionSelections: JSON.stringify(
+          individualSubOptions.map((s) => ({
+            subOptionId: s.id,
+          })),
+        ),
+      },
+    );
+
+    console.log('CAP RESPONSE:', capResponse.status, capResponse.body);
+    expect(capResponse.status).toBe(422);
 
     // Within caps -> 201, and RegistrationSubOption rows are persisted.
-    const res = await request(app.getHttpServer())
-      .post('/api/registrations')
-      .set('Authorization', `Bearer ${user.token}`)
-      .send({
-        eventId: event.id,
-        subOptionSelections: [
-          { subOptionId: individualSubOptions[0].id },
-          { subOptionId: individualSubOptions[1].id },
-          { subOptionId: relay.id, relayMembers: ['Runner A', 'Runner B'] },
-        ],
-      })
-      .expect(201);
+    const res = await individualRegistrationRequest(app, user.token, event.id, {
+      subOptionSelections: JSON.stringify([
+        { subOptionId: individualSubOptions[0].id },
+        { subOptionId: individualSubOptions[1].id },
+        {
+          subOptionId: relay.id,
+          relayMembers: ['Runner A', 'Runner B'],
+        },
+      ]),
+    }).expect(201);
 
     const body = (res.body as SuccessResponse<RegistrationResponseData>).data;
     const subOptionRows = await prisma.registrationSubOption.findMany({

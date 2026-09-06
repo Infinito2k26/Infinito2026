@@ -54,7 +54,6 @@ async function createApp(): Promise<INestApplication<App>> {
   await app.init();
   return app;
 }
-
 // Same throttle-bucket reasoning as registrations.e2e-spec.ts: each describe
 // block gets its own app instance, so its own ThrottlerGuard bucket.
 async function registerAndLogin(app: INestApplication<App>, name: string) {
@@ -65,6 +64,16 @@ async function registerAndLogin(app: INestApplication<App>, name: string) {
     .post('/api/auth/register')
     .send({ email, password, name, consent: true })
     .expect(201);
+
+  const prisma = app.get(PrismaService);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      isEmailVerified: true,
+      verificationExpiresAt: null,
+    },
+  });
 
   const userId = (registerRes.body as SuccessResponse<UserProfile>).data.id;
 
@@ -96,7 +105,14 @@ async function registerLoginWithRole(
     .send({ email, password, name, consent: true })
     .expect(201);
 
-  await prisma.user.update({ where: { email }, data: { role } });
+  await prisma.user.update({
+    where: { email },
+    data: {
+      isEmailVerified: true,
+      verificationExpiresAt: null,
+      role,
+    },
+  });
 
   const login = await request(app.getHttpServer())
     .post('/api/auth/login')

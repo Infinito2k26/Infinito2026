@@ -31,8 +31,9 @@ export class UploadsService {
     const cloudName = this.config.get('CLOUDINARY_CLOUD_NAME', {
       infer: true,
     });
-    this.useLocalDisk = !cloudName;
+    const nodeEnv = this.config.get('NODE_ENV', { infer: true });
 
+    this.useLocalDisk = !cloudName || nodeEnv === 'test';
     if (!this.useLocalDisk) {
       cloudinary.config({
         cloud_name: cloudName,
