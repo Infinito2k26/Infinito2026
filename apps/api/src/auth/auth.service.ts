@@ -109,6 +109,32 @@ export class AuthService {
         throw new ConflictException('Email is already registered');
       }
 
+      const hasActivity = await this.prisma.user.findFirst({
+        where: {
+          id: existing.id,
+          OR: [
+            { captainedTeams: { some: {} } },
+            { caProfile: { isNot: null } },
+            { registrations: { some: {} } },
+            { credentials: { some: {} } },
+            { scansDone: { some: {} } },
+            { rulebooksUploaded: { some: {} } },
+            { taskVerifications: { some: {} } },
+            { participants: { some: {} } },
+            { caApplications: { some: {} } },
+            { caApplicationsReviewed: { some: {} } },
+            { merchOrders: { some: {} } },
+            { auditLogsAsActor: { some: {} } },
+            { auditLogsAsTarget: { some: {} } },
+            { siteSettingsUpdates: { some: {} } },
+          ],
+        },
+      });
+
+      if (hasActivity) {
+        throw new ConflictException('Email is already registered');
+      }
+
       await this.prisma.emailVerificationToken.deleteMany({
         where: {
           userId: existing.id,

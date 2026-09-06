@@ -6,7 +6,7 @@ export default function CALayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthGuard allowedRoles={['CA', 'ADMIN']}>
+    <AuthGuard allowedRoles={['CAMPUS_AMBASSADOR', 'ADMIN']}>
       {children}
     </AuthGuard>
   );
