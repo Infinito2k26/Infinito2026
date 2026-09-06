@@ -78,6 +78,15 @@ describe('Auth (e2e)', () => {
       .expect(201);
 
     const registerBody = registerRes.body as SuccessResponse<UserProfile>;
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
+
     expect(registerBody.data.email).toBe(email);
 
     const agent = request.agent(app.getHttpServer());
@@ -117,6 +126,14 @@ describe('Auth (e2e)', () => {
         consent: true,
       })
       .expect(201);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     const res = await request(app.getHttpServer())
       .post('/api/auth/register')
@@ -171,6 +188,14 @@ describe('Auth (e2e)', () => {
         consent: true,
       })
       .expect(201);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/auth/login')
@@ -254,7 +279,19 @@ describe('Auth (e2e)', () => {
     // Promote admin candidate directly in the test DB.
     await prisma.user.update({
       where: { email: adminEmail },
-      data: { role: UserRole.ADMIN },
+      data: {
+        role: UserRole.ADMIN,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
+
+    await prisma.user.update({
+      where: { email: targetEmail },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
 
     // Participant login.
@@ -347,6 +384,13 @@ describe('CA onboarding RBAC (e2e)', () => {
       })
       .expect(201);
 
+    await prisma.user.update({
+      where: { email: participantEmail },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
     // Login as participant.
     const participantLogin = await request(app.getHttpServer())
       .post('/api/auth/login')
@@ -384,9 +428,12 @@ describe('CA onboarding RBAC (e2e)', () => {
     // Promote directly in test DB.
     await prisma.user.update({
       where: { email: caEmail },
-      data: { role: UserRole.CAMPUS_AMBASSADOR },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
-
     // Login as CA.
     const caLogin = await request(app.getHttpServer())
       .post('/api/auth/login')
@@ -427,9 +474,12 @@ describe('CA onboarding RBAC (e2e)', () => {
 
     await prisma.user.update({
       where: { email: unonboardedEmail },
-      data: { role: UserRole.CAMPUS_AMBASSADOR },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
-
     const unonboardedLogin = await request(app.getHttpServer())
       .post('/api/auth/login')
       .send({ email: unonboardedEmail, password })
@@ -479,7 +529,11 @@ describe('CA onboarding RBAC (e2e)', () => {
 
     await prisma.user.update({
       where: { email: caEmail },
-      data: { role: UserRole.CAMPUS_AMBASSADOR },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
 
     const login = await request(app.getHttpServer())
@@ -543,7 +597,11 @@ describe('CA onboarding RBAC (e2e)', () => {
 
     await prisma.user.update({
       where: { email: caEmail },
-      data: { role: UserRole.CAMPUS_AMBASSADOR },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
 
     // Login.
@@ -568,6 +626,15 @@ describe('CA onboarding RBAC (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ college: 'IIT Patna' })
       .expect(201);
+
+    await prisma.user.update({
+      where: { email: caEmail },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     // Create a task directly in the test DB.
     const task = await prisma.caTask.create({
@@ -628,7 +695,11 @@ describe('CA onboarding RBAC (e2e)', () => {
 
     await prisma.user.update({
       where: { email: caEmail },
-      data: { role: UserRole.CAMPUS_AMBASSADOR },
+      data: {
+        role: UserRole.CAMPUS_AMBASSADOR,
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
     });
 
     const login = await request(app.getHttpServer())
@@ -727,7 +798,17 @@ describe('Admin CA assignment listing (e2e)', () => {
         })
         .expect(201);
     }
-
+    await prisma.user.updateMany({
+      where: {
+        email: {
+          in: [adminEmail, caEmail, participantEmail],
+        },
+      },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
     // Promote admin and CA.
     await prisma.user.update({
       where: { email: adminEmail },
@@ -991,6 +1072,14 @@ describe('CA application intake (e2e)', () => {
       .post('/api/auth/register')
       .send({ email, password, name, consent: true })
       .expect(201);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     const login = await request(app.getHttpServer())
       .post('/api/auth/login')

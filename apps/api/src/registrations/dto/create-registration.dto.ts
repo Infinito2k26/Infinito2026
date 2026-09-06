@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsUUID,
   IsOptional,
@@ -22,10 +22,19 @@ import { GenderCategory, IdentityType } from '@prisma/client';
 // Team registrations still submit plain JSON. These two transforms make the
 // same DTO accept either shape correctly.
 const toBoolean = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? value === 'true' : value;
+  typeof value === 'string' ? value.toLowerCase() === 'true' : value;
 
-const parseIfString = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? (JSON.parse(value) as unknown) : value;
+const parseIfString = ({ value }: { value: unknown }): unknown => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+};
 
 // Mirrors teams/dto/teams.dto.ts: the second document must be a distinct
 // type from the College ID slot, which is always COLLEGE_ID.
@@ -34,6 +43,7 @@ export const SECONDARY_IDENTITY_TYPES = Object.values(IdentityType).filter(
 );
 
 export class SubOptionSelectionDto {
+  @IsString()
   @IsUUID()
   subOptionId!: string;
 
@@ -96,7 +106,21 @@ export class CreateRegistrationDto {
   customData?: Record<string, unknown>;
 
   // Athletics-shaped events only: picks from Event.subOptions.
-  @Transform(parseIfString)
+  // Athletics-shaped events only: picks from Event.subOptions.
+  @Transform(
+    ({ value }): unknown => {
+      if (typeof value !== 'string') {
+        return value;
+      }
+
+      const parsed: unknown = JSON.parse(value);
+
+      return Array.isArray(parsed)
+        ? plainToInstance(SubOptionSelectionDto, parsed)
+        : parsed;
+    },
+    { toClassOnly: true },
+  )
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -108,6 +132,7 @@ export class CreateRegistrationDto {
   // TS-optional so RegistrationsService callers/tests that build this DTO
   // directly (bypassing the ValidationPipe) don't need to set it; the real
   // HTTP path still rejects a missing/false value via @Equals(true).
+  @Transform(toBoolean)
   @Equals(true, { message: 'You must agree to the Registration Guidelines' })
   agreedToGuidelines?: boolean;
 

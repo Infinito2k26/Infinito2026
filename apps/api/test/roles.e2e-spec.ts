@@ -61,8 +61,19 @@ describe('Roles & permissions (e2e)', () => {
       .expect(201);
 
     if (role) {
-      await prisma.user.update({ where: { email }, data: { role } });
+      await prisma.user.update({
+        where: { email },
+        data: { role },
+      });
     }
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     const login = await request(app.getHttpServer())
       .post('/api/auth/login')
@@ -337,15 +348,25 @@ describe('Roles & permissions: service granularity (e2e)', () => {
   async function registerAndLogin(name: string, role?: UserRole) {
     const email = `${randomUUID()}@infinito.dev`;
     const prisma = app.get(PrismaService);
-
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({ email, password: PASSWORD, name, consent: true })
       .expect(201);
 
     if (role) {
-      await prisma.user.update({ where: { email }, data: { role } });
+      await prisma.user.update({
+        where: { email },
+        data: { role },
+      });
     }
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isEmailVerified: true,
+        verificationExpiresAt: null,
+      },
+    });
 
     const login = await request(app.getHttpServer())
       .post('/api/auth/login')

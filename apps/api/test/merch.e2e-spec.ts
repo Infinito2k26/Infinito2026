@@ -54,7 +54,11 @@ async function createApp(): Promise<INestApplication<App>> {
   return app;
 }
 
-async function registerAndLogin(app: INestApplication<App>, name: string) {
+async function registerAndLogin(
+  app: INestApplication<App>,
+  prisma: PrismaService,
+  name: string,
+) {
   const email = `${randomUUID()}@infinito.dev`;
   const password = 'a-strong-password';
 
@@ -62,6 +66,14 @@ async function registerAndLogin(app: INestApplication<App>, name: string) {
     .post('/api/auth/register')
     .send({ email, password, name, consent: true })
     .expect(201);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      isEmailVerified: true,
+      verificationExpiresAt: null,
+    },
+  });
 
   const login = await request(app.getHttpServer())
     .post('/api/auth/login')
@@ -89,7 +101,14 @@ async function registerLoginWithRole(
     .send({ email, password, name, consent: true })
     .expect(201);
 
-  await prisma.user.update({ where: { email }, data: { role } });
+  await prisma.user.update({
+    where: { email },
+    data: {
+      role,
+      isEmailVerified: true,
+      verificationExpiresAt: null,
+    },
+  });
 
   const login = await request(app.getHttpServer())
     .post('/api/auth/login')
@@ -130,7 +149,7 @@ describe('Merch: full happy path (e2e)', () => {
       'Merch Admin',
       UserRole.SUPER_ADMIN,
     );
-    const buyer = await registerAndLogin(app, 'Merch Buyer');
+    const buyer = await registerAndLogin(app, prisma, 'Merch Buyer');
 
     const createProductRes = await request(app.getHttpServer())
       .post('/api/admin/merch/products')
@@ -219,7 +238,7 @@ describe('Merch: full happy path (e2e)', () => {
       'Merch Admin 2',
       UserRole.SUPER_ADMIN,
     );
-    const buyer = await registerAndLogin(app, 'Merch Buyer 2');
+    const buyer = await registerAndLogin(app, prisma, 'Merch Buyer 2');
 
     const createProductRes = await request(app.getHttpServer())
       .post('/api/admin/merch/products')
@@ -255,7 +274,7 @@ describe('Merch: full happy path (e2e)', () => {
       'Merch Admin 3',
       UserRole.SUPER_ADMIN,
     );
-    const buyer = await registerAndLogin(app, 'Merch Buyer 3');
+    const buyer = await registerAndLogin(app, prisma, 'Merch Buyer 3');
 
     const createProductRes = await request(app.getHttpServer())
       .post('/api/admin/merch/products')

@@ -33,6 +33,7 @@ const baseUser = {
   role: 'PARTICIPANT' as const,
   isEmailVerified: false,
   isIITPVerified: false,
+  verificationExpiresAt: null as Date | null,
   bannedAt: null as Date | null,
   college: null as string | null,
   phone: null as string | null,
@@ -55,6 +56,7 @@ interface MockPrisma {
   emailVerificationToken: {
     create: jest.Mock<Promise<MockResetToken>, [unknown]>;
     findUnique: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
+    findFirst: jest.Mock<Promise<MockResetToken | null>, [unknown]>;
     update: jest.Mock<Promise<MockResetToken>, [unknown]>;
   };
   $transaction: jest.Mock<Promise<unknown[]>, [Promise<unknown>[]]>;
@@ -73,10 +75,7 @@ describe('AuthService', () => {
     add: jest.Mock<Promise<void>, [string, { email: string; code: string }]>;
   };
   let emailVerificationQueue: {
-    add: jest.Mock<
-      Promise<void>,
-      [string, { email: string; verifyLink: string }]
-    >;
+    add: jest.Mock<Promise<void>, [string, { email: string; code: string }]>;
   };
   let service: AuthService;
 
@@ -98,6 +97,7 @@ describe('AuthService', () => {
       emailVerificationToken: {
         create: jest.fn<Promise<MockResetToken>, [unknown]>(),
         findUnique: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
+        findFirst: jest.fn<Promise<MockResetToken | null>, [unknown]>(),
         update: jest.fn<Promise<MockResetToken>, [unknown]>(),
       },
       $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
@@ -116,10 +116,7 @@ describe('AuthService', () => {
     };
 
     emailVerificationQueue = {
-      add: jest.fn<
-        Promise<void>,
-        [string, { email: string; verifyLink: string }]
-      >(),
+      add: jest.fn<Promise<void>, [string, { email: string; code: string }]>(),
     };
 
     service = new AuthService(
@@ -154,7 +151,10 @@ describe('AuthService', () => {
     });
 
     it('rejects a duplicate email with 409 Conflict', async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
 
       await expect(
         service.register({
@@ -177,7 +177,10 @@ describe('AuthService', () => {
     });
 
     it('issues an access token carrying sub and role, and stores the refresh token', async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
 
       const result = await service.login({
         email: baseUser.email,
@@ -200,6 +203,7 @@ describe('AuthService', () => {
     it('rejects a banned user with 403', async () => {
       prisma.user.findUnique.mockResolvedValue({
         ...baseUser,
+        isEmailVerified: true,
         bannedAt: new Date(),
       });
 
@@ -215,7 +219,10 @@ describe('AuthService', () => {
 
   describe('refresh', () => {
     it('rotates the refresh token and revokes the old one', async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
       const { refreshToken } = await service.login({
         email: baseUser.email,
         password: 'correct-password',
@@ -230,7 +237,10 @@ describe('AuthService', () => {
     });
 
     it('rejects and revokes the session when the user was banned after login', async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
       const { refreshToken } = await service.login({
         email: baseUser.email,
         password: 'correct-password',
@@ -239,6 +249,7 @@ describe('AuthService', () => {
       refreshStore.verify.mockResolvedValue(true);
       prisma.user.findUnique.mockResolvedValue({
         ...baseUser,
+        isEmailVerified: true,
         bannedAt: new Date(),
       });
 
@@ -249,7 +260,10 @@ describe('AuthService', () => {
     });
 
     it('rejects a refresh token the store no longer recognizes (already rotated)', async () => {
-      prisma.user.findUnique.mockResolvedValue(baseUser);
+      prisma.user.findUnique.mockResolvedValue({
+        ...baseUser,
+        isEmailVerified: true,
+      });
       const { refreshToken } = await service.login({
         email: baseUser.email,
         password: 'correct-password',
@@ -395,20 +409,26 @@ describe('AuthService', () => {
     const validVerificationToken: MockResetToken = {
       id: 'verify-1',
       userId: baseUser.id,
-      tokenHash: 'irrelevant-because-findUnique-is-mocked',
+      tokenHash: createHash('sha256').update('123456').digest('hex'),
       expiresAt: new Date(Date.now() + 1000 * 60),
       usedAt: null,
     };
 
     it('marks the user verified and consumes the token', async () => {
-      prisma.emailVerificationToken.findUnique.mockResolvedValue(
+      prisma.emailVerificationToken.findFirst.mockResolvedValue(
         validVerificationToken,
       );
 
-      await service.verifyEmail({ token: 'raw-token' });
+      await service.verifyEmail({
+        email: baseUser.email,
+        code: '123456',
+      });
 
       const updateData = prisma.user.update.mock.calls[0][0].data;
+
       expect(updateData.isEmailVerified).toBe(true);
+      expect(updateData.verificationExpiresAt).toBeNull();
+
       expect(prisma.emailVerificationToken.update).toHaveBeenCalledWith({
         where: { id: validVerificationToken.id },
         data: { usedAt: expect.any(Date) as Date },
@@ -416,11 +436,15 @@ describe('AuthService', () => {
     });
 
     it('rejects an expired or unknown token', async () => {
-      prisma.emailVerificationToken.findUnique.mockResolvedValue(null);
+      prisma.emailVerificationToken.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.verifyEmail({ token: 'raw-token' }),
+        service.verifyEmail({
+          email: baseUser.email,
+          code: '123456',
+        }),
       ).rejects.toBeInstanceOf(BadRequestException);
+
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });

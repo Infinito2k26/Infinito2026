@@ -45,8 +45,8 @@ export default function SignupPage() {
     const onSubmit = async (data: SignupFormValues) => {
         try {
             setApiError('');
-            await api.post('/auth/register', data);
-            router.push('/login?registered=1');
+                await api.post('/auth/register', data);
+                router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Failed to create account';
             setApiError(message);

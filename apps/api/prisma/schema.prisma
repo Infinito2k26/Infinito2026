@@ -206,6 +206,7 @@ model User {
   iitpEmail       String?   @unique // .iitp.ac.in email confirmed via Microsoft OAuth
   isIITPVerified  Boolean   @default(false)
   isEmailVerified Boolean   @default(false)
+  verificationExpiresAt DateTime?
   bannedAt        DateTime? // set/cleared via PATCH /admin/users/:id/status — distinct from deletedAt, see database.md
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

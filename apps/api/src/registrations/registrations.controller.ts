@@ -67,6 +67,7 @@ export class RegistrationsController {
     const { photo, idFile, secondaryIdFile } = extractIdentityFiles(
       uploaded ?? {},
     );
+
     return await this.registrationsService.create(
       req.user.id,
       body,
