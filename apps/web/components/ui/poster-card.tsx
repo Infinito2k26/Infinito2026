@@ -1,7 +1,9 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import SportIcon from "./sport-icon";
 import styles from "./poster-card.module.css";
+import { useState, useEffect } from "react";
 
 /**
  * The event poster card.
@@ -44,21 +46,36 @@ export default function PosterCard({
   image,
   priority = false,
 }: PosterCardProps) {
-  const src = image ?? `/event-${slug}.jpg`;
+   const isGirls = category?.toLowerCase() === "girls";
+
+    const defaultSrc = image ?? (isGirls ? `/event-${slug}-girls.jpg` : `/event-${slug}.jpg`);
+    const fallbackSrc = `/event-${slug}.jpg`;
+
+    // Reset the fallback state whenever the computed default source changes
+    // (e.g. different event rendered via the same mounted component/key changes)
+    const [src, setSrc] = useState(defaultSrc);
+
+    // Keep src in sync if props change (covers list re-renders with new slug/category)
+    useEffect(() => {
+    setSrc(defaultSrc);
+}, [defaultSrc]);
 
   return (
     <Link href={href} className={styles.card}>
       <div className={styles.art}>
         <Image
-          src={src}
-          alt={`${name} at Infinito 2026 — Ruins of Ragnarok`}
-          width={1600}
-          height={2000}
-          sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 23vw"
-          quality={78}
-          priority={priority}
-          className={styles.image}
-        />
+  src={src}
+  alt={`${name} at Infinito 2026 — Ruins of Ragnarok`}
+  width={1600}
+  height={2000}
+  sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 23vw"
+  quality={78}
+  priority={priority}
+  className={styles.image}
+  onError={() => {
+    if (src !== fallbackSrc) setSrc(fallbackSrc);
+  }}
+/>
       </div>
 
       <div className={styles.strip}>

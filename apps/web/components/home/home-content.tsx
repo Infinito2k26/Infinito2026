@@ -81,7 +81,7 @@ export default function HomeContent({ festDates }: { festDates: FestDates }) {
                 name={sport.name}
                 category={sport.category}
                 format={sport.format}
-                href={`/sports?sport=${sport.id}`}
+                href={`/events?sport=${sport.id}`}
                 priority={i < 2}
               />
             </Reveal>
