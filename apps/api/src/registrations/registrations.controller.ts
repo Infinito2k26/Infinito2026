@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Get,
   Post,
   Body,
   Req,
@@ -54,6 +55,14 @@ function extractIdentityFiles(files: IdentityFiles) {
 @Controller('registrations')
 export class RegistrationsController {
   constructor(private readonly registrationsService: RegistrationsService) {}
+
+  // Static 'mine' segment declared before any future ':id' route so it can
+  // never be shadowed by a param route matching the literal string "mine".
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  async listMine(@Req() req: AuthenticatedRequest) {
+    return await this.registrationsService.listMine(req.user.id);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
