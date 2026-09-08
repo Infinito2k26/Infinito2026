@@ -224,6 +224,11 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 | GET    | `/registrations/mine`    | Authenticated       | My registrations     |
 | GET    | `/admin/registrations`   | Admin/Event Manager | Filter registrations |
 
+#### `GET /registrations/mine`
+
+- Returns the caller's own INDIVIDUAL (`userId`-linked) registrations, newest first — `{ id, status, event: { id, slug, name }, payments: [latest] }` (`payments` is at most one row: the most recently created `Payment` for that registration). TEAM registrations aren't included here; they travel with `GET /teams/mine` instead (each team row already carries its own `registration` + latest payment).
+- Used by the web registration page to resume a registrant who created a `PENDING_PAYMENT` registration and left before paying straight to the Payment step, instead of them hitting the `(eventId, userId)` unique-constraint `409` trying to register again.
+
 #### `POST /teams`
 
 - `multipart/form-data`: `eventId` (UUID), `declaredSize` (int, ≥1), `name`, `collegeName`, `collegeAddress?`, `isIITP?`, `viceCaptainName?`, `viceCaptainPhone?`, `coachName?`, `coachPhone?`, `idNumber` (College ID number), `secondaryIdType` (`IdentityType`, any value except `COLLEGE_ID`), `secondaryIdNumber`, plus files `photo`, `idFile` (College ID), and `secondaryIdFile` (all three required, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `participant-photo/`, `participant-id/`, and `participant-secondary-id/` via `UploadsService`). `idType` is not client-supplied — the captain's first document is always persisted as `COLLEGE_ID`.

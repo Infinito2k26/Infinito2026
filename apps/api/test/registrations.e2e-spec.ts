@@ -332,6 +332,109 @@ describe('Registrations: individual flow (e2e)', () => {
   });
 });
 
+describe('Registrations: GET /registrations/mine — resume-to-payment (e2e)', () => {
+  let app: INestApplication<App>;
+  let prisma: PrismaService;
+
+  beforeAll(async () => {
+    app = await createApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('lists the caller PENDING_PAYMENT registration with its stub payment, so an abandoned registration can resume to Payment instead of hitting 409 on re-registration', async () => {
+    const user = await registerAndLogin(app, 'E2E Resume To Payment');
+
+    const event = await prisma.event.create({
+      data: baseEventData({
+        name: 'E2E Resume Event',
+        slug: `e2e-resume-${randomUUID()}`,
+        registrationType: EventRegistrationType.INDIVIDUAL,
+        feeStructure: FeeStructure.FLAT,
+        feeFlat: 250,
+      }),
+    });
+
+    const created = await individualRegistrationRequest(
+      app,
+      user.token,
+      event.id,
+    ).expect(201);
+    const createdBody = (
+      created.body as SuccessResponse<RegistrationResponseData>
+    ).data;
+
+    // Re-registering without checking /registrations/mine first still 409s —
+    // this endpoint doesn't change POST /registrations' own duplicate guard.
+    await individualRegistrationRequest(app, user.token, event.id).expect(409);
+
+    const mine = await request(app.getHttpServer())
+      .get('/api/registrations/mine')
+      .set('Authorization', `Bearer ${user.token}`)
+      .expect(200);
+
+    const mineBody = (
+      mine.body as SuccessResponse<
+        Array<{
+          id: string;
+          status: string;
+          event: { id: string; slug: string; name: string };
+          payments: {
+            id: string;
+            amount: string | number;
+            mode: string;
+            status: string;
+          }[];
+        }>
+      >
+    ).data;
+
+    const resumable = mineBody.find((r) => r.event.id === event.id);
+    expect(resumable).toBeDefined();
+    expect(resumable!.id).toBe(createdBody.id);
+    expect(resumable!.status).toBe('PENDING_PAYMENT');
+    expect(resumable!.payments).toHaveLength(1);
+    expect(resumable!.payments[0].id).toBe(createdBody.payment.id);
+    expect(resumable!.payments[0].status).toBe('INITIATED');
+  });
+
+  it('rejects unauthenticated requests with 401', async () => {
+    await request(app.getHttpServer())
+      .get('/api/registrations/mine')
+      .expect(401);
+  });
+
+  it("does not include another user's registrations", async () => {
+    const owner = await registerAndLogin(app, 'E2E Mine Owner');
+    const stranger = await registerAndLogin(app, 'E2E Mine Stranger');
+
+    const event = await prisma.event.create({
+      data: baseEventData({
+        name: 'E2E Mine Isolation Event',
+        slug: `e2e-mine-isolation-${randomUUID()}`,
+        registrationType: EventRegistrationType.INDIVIDUAL,
+        feeStructure: FeeStructure.FLAT,
+        feeFlat: 100,
+      }),
+    });
+
+    await individualRegistrationRequest(app, owner.token, event.id).expect(201);
+
+    const mine = await request(app.getHttpServer())
+      .get('/api/registrations/mine')
+      .set('Authorization', `Bearer ${stranger.token}`)
+      .expect(200);
+
+    const mineBody = (
+      mine.body as SuccessResponse<Array<{ event: { id: string } }>>
+    ).data;
+    expect(mineBody.find((r) => r.event.id === event.id)).toBeUndefined();
+  });
+});
+
 describe('Registrations: capacity and gender-based fees (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
