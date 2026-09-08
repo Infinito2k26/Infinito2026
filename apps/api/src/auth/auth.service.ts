@@ -345,7 +345,6 @@ export class AuthService {
           verificationExpiresAt: null,
         },
       }),
-
       this.prisma.emailVerificationToken.update({
         where: { id: verificationToken.id },
         data: {
@@ -368,45 +367,45 @@ export class AuthService {
     await this.queueVerificationEmail(user);
   }
 
-    private async queueVerificationEmail(user: User): Promise<void> {
-      if (user.isEmailVerified || user.isIITPVerified) {
-        return;
-      }
-
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        const rawCode = randomInt(100000, 999999).toString();
-
-        try {
-          await this.prisma.emailVerificationToken.create({
-            data: {
-              userId: user.id,
-              tokenHash: hashToken(rawCode),
-              expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
-            },
-          });
-
-          await this.emailVerificationQueue.add('send', {
-            email: user.email,
-            code: rawCode,
-          });
-
-          return;
-        } catch (error: unknown) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2002'
-          ) {
-            continue;
-          }
-
-          throw error;
-        }
-      }
-
-      throw new BadRequestException(
-        'Unable to generate a unique verification OTP. Please try again.',
-      );
+  private async queueVerificationEmail(user: User): Promise<void> {
+    if (user.isEmailVerified || user.isIITPVerified) {
+      return;
     }
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const rawCode = randomInt(100000, 999999).toString();
+
+      try {
+        await this.prisma.emailVerificationToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: hashToken(rawCode),
+            expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
+          },
+        });
+
+        await this.emailVerificationQueue.add('send', {
+          email: user.email,
+          code: rawCode,
+        });
+
+        return;
+      } catch (error: unknown) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new BadRequestException(
+      'Unable to generate a unique verification OTP. Please try again.',
+    );
+  }
 
   async me(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({
