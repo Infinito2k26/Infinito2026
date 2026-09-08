@@ -219,6 +219,46 @@ export default function RegisterPage() {
         };
     }, [event]);
 
+    // Mirrors the TEAM resume effect above, for INDIVIDUAL events: a
+    // registrant who already created a PENDING_PAYMENT registration (with
+    // its stub Payment) and left before paying would otherwise hit a 409
+    // re-submitting the Details step (unique (eventId, userId) constraint)
+    // with no way back to the payment they still owe. Jump straight to
+    // Payment with the existing registration instead.
+    useEffect(() => {
+        if (!event || event.registrationType !== "INDIVIDUAL") return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get("/registrations/mine");
+                const registrations = (res?.data ?? []) as Array<{
+                    id: string;
+                    status: string;
+                    event: { id: string };
+                    payments: { id: string; amount: string | number; mode: string; status: string }[];
+                }>;
+                const existing = registrations.find(
+                    (r) => r.event.id === event.id && !["CANCELLED", "REFUNDED"].includes(r.status),
+                );
+                const latestPayment = existing?.payments[0];
+                if (!existing || !latestPayment || cancelled) return;
+
+                setRegistration({
+                    id: existing.id,
+                    eventId: event.id,
+                    status: existing.status,
+                    payment: latestPayment,
+                });
+                setStep("payment");
+            } catch {
+                // Non-fatal — the normal registration flow still works if this lookup fails.
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [event]);
+
     if (isLoading) {
         return <SectionSpinner message="Loading..." />;
     }
