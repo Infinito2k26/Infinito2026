@@ -102,6 +102,29 @@ export class RegistrationsService {
     };
   }
 
+  // TEAM registrations are resumed via GET /teams/mine (a team's
+  // registration + latest payment travel with it there). INDIVIDUAL
+  // registrations have no team to hang off, so a registrant who created one
+  // and left before paying needs this instead: without it, coming back and
+  // registering again just hits the (eventId, userId) unique constraint
+  // with no way to reach the payment they still owe.
+  async listMine(userId: string) {
+    return this.prisma.registration.findMany({
+      where: { userId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        status: true,
+        event: { select: { id: true, slug: true, name: true } },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { id: true, amount: true, mode: true, status: true },
+        },
+      },
+    });
+  }
+
   async create(
     userId: string,
     dto: CreateRegistrationDto,
@@ -501,11 +524,6 @@ export class RegistrationsService {
       seen.add(s.subOptionId);
 
       if (subOption.type === SubOptionType.RELAY) {
-        if (!s.relayMembers || s.relayMembers.length === 0) {
-          throw new BadRequestException(
-            `relayMembers is required for relay sub-option: ${subOption.name}`,
-          );
-        }
         relayCount += 1;
       } else {
         individualCount += 1;

@@ -531,3 +531,53 @@ describe('RegistrationsService.create', () => {
     });
   });
 });
+
+describe('RegistrationsService.listMine', () => {
+  let service: RegistrationsService;
+  let prisma: { registration: { findMany: jest.Mock } };
+
+  beforeEach(async () => {
+    prisma = { registration: { findMany: jest.fn().mockResolvedValue([]) } };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        RegistrationsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: UploadsService, useValue: {} },
+      ],
+    }).compile();
+
+    service = moduleRef.get<RegistrationsService>(RegistrationsService);
+  });
+
+  it('scopes the query to the caller and excludes soft-deleted rows', async () => {
+    await service.listMine('user-1');
+
+    expect(prisma.registration.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1', deletedAt: null },
+      }),
+    );
+  });
+
+  it('returns whatever the query resolves, including the latest payment per registration', async () => {
+    const rows = [
+      {
+        id: 'reg-1',
+        status: 'PENDING_PAYMENT',
+        event: { id: 'event-1', slug: 'e2e', name: 'E2E Event' },
+        payments: [
+          {
+            id: 'pay-1',
+            amount: 500,
+            mode: 'MANUAL_SCREENSHOT',
+            status: 'INITIATED',
+          },
+        ],
+      },
+    ];
+    prisma.registration.findMany.mockResolvedValue(rows);
+
+    await expect(service.listMine('user-1')).resolves.toEqual(rows);
+  });
+});
