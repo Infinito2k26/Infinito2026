@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import styles from "./layout.module.css";
 
@@ -41,8 +42,20 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.navbar_inner}>
         <Link href="/" className={styles.brand} aria-label="Infinito 2026, home">
-          <span className={styles.brandMark}>Infinito</span>
-          <span className={styles.brandSub}>Ruins of Ragnarok</span>
+          <div className={styles.brandLogoWrapper}>
+            <Image
+              src="/logo.png"
+              alt="Infinito 2026 Logo"
+              width={42}
+              height={42}
+              className={styles.brandLogo}
+              priority
+            />
+          </div>
+          <div className={styles.brandText}>
+            <span className={styles.brandMark}>Infinito</span>
+            <span className={styles.brandSub}>Ruins of Ragnarok</span>
+          </div>
         </Link>
 
         <div className={styles.navbar_list_left}>
