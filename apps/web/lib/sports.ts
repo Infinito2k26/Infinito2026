@@ -36,15 +36,23 @@ export const SPORTS: Sport[] = [
   {
     id: "football",
     name: "Football",
-    category: "Open",
+    category: "Boys",
     type: "team",
     format: "Team · 11-a-side",
     poster: "football",
   },
   {
+    id: "football-girls",
+    name: "Football",
+    category: "Girls",
+    type: "team",
+    format: "Team · 7-a-side",
+    poster: "football",
+  },
+  {
     id: "cricket",
     name: "Cricket",
-    category: "Open",
+    category: "Boys",
     type: "team",
     format: "Team · T20",
     poster: "cricket",
@@ -66,6 +74,14 @@ export const SPORTS: Sport[] = [
     poster: "kabaddi",
   },
   {
+    id: "kabaddi-girls",
+    name: "Kabaddi",
+    category: "Girls",
+    type: "team",
+    format: "Team · 7-a-side",
+    poster: "kabaddi",
+  },
+  {
     id: "volleyball-boys",
     name: "Volleyball",
     category: "Boys",
@@ -82,17 +98,17 @@ export const SPORTS: Sport[] = [
     poster: "volleyball",
   },
   {
-    id: "athletics",
-    name: "Athletics",
-    category: "Open",
-    type: "individual",
-    format: "Track and field",
-    poster: "athletics",
-  },
-  {
     id: "badminton",
     name: "Badminton",
-    category: "Open",
+    category: "Boys",
+    type: "individual",
+    format: "Singles and doubles",
+    poster: "badminton",
+  },
+  {
+    id: "badminton-girls",
+    name: "Badminton",
+    category: "Girls",
     type: "individual",
     format: "Singles and doubles",
     poster: "badminton",
@@ -100,7 +116,15 @@ export const SPORTS: Sport[] = [
   {
     id: "tabletennis",
     name: "Table Tennis",
-    category: "Open",
+    category: "Boys",
+    type: "individual",
+    format: "Singles and doubles",
+    poster: "tabletennis",
+  },
+  {
+    id: "tabletennis-girls",
+    name: "Table Tennis",
+    category: "Girls",
     type: "individual",
     format: "Singles and doubles",
     poster: "tabletennis",
@@ -108,7 +132,15 @@ export const SPORTS: Sport[] = [
   {
     id: "lawntennis",
     name: "Lawn Tennis",
-    category: "Open",
+    category: "Boys",
+    type: "individual",
+    format: "Singles and doubles",
+    poster: "lawntennis",
+  },
+  {
+    id: "lawntennis-girls",
+    name: "Lawn Tennis",
+    category: "Girls",
     type: "individual",
     format: "Singles and doubles",
     poster: "lawntennis",
@@ -116,10 +148,26 @@ export const SPORTS: Sport[] = [
   {
     id: "squash",
     name: "Squash",
-    category: "Open",
+    category: "Boys",
     type: "individual",
     format: "Singles",
     poster: "squash",
+  },
+  {
+    id: "squash-girls",
+    name: "Squash",
+    category: "Girls",
+    type: "individual",
+    format: "Singles",
+    poster: "squash",
+  },
+  {
+    id: "athletics",
+    name: "Athletics",
+    category: "Open",
+    type: "individual",
+    format: "Track and field",
+    poster: "athletics",
   },
   {
     id: "chess",
@@ -153,22 +201,53 @@ export const FEATURED_SPORTS = FEATURED_SPORT_IDS.map(
   (id) => SPORTS.find((s) => s.id === id)!,
 ).filter(Boolean);
 
-/**
- * Matches a live event's name against the sport catalogue to find its poster.
- * Live events come from the API as free-text names ("Table Tennis", "Football
- * (Open)"); the catalogue's `poster` slug is what the artwork in /public is
- * keyed by. Normalising both to bare letters is enough to match "Table Tennis"
- * to `event-tabletennis.jpg` without a second hand-maintained mapping.
- */
+export const GIRLS_POSTER_SLUGS = new Set([
+  "football",
+  "badminton",
+  "kabaddi",
+  "volleyball",
+  "lawntennis",
+  "tabletennis",
+  "squash",
+]);
+
+export function getSportPosterPath(posterSlug: string, isGirls = false): string {
+  const clean = posterSlug.replace(/-girls$/, "").replace(/-boys$/, "").toLowerCase();
+  if (isGirls && GIRLS_POSTER_SLUGS.has(clean)) {
+    return `/event-${clean}-girls.jpg`;
+  }
+  return `/event-${clean}.jpg`;
+}
+
 function normalize(name: string): string {
   return name.toLowerCase().replace(/[^a-z]/g, "");
 }
 
-export function findSportForEventName(name: string): Sport | undefined {
+export function findSportForEventName(name: string, genderCategory?: string): Sport | undefined {
   const target = normalize(name);
-  // Substring, not exact match: real event names carry a year/gender suffix
-  // ("Cricket 2K26", "Kabaddi Boys 2K26") that never equals the catalogue's
-  // bare "Cricket"/"Kabaddi" — but does contain it.
+  const isFemale =
+    genderCategory?.toUpperCase() === "WOMEN" ||
+    target.includes("women") ||
+    target.includes("womens") ||
+    target.includes("girls") ||
+    target.includes("female");
+
+  if (isFemale) {
+    const femaleMatch = SPORTS.find(
+      (s) =>
+        s.category === "Girls" &&
+        (target.includes(normalize(s.name)) || target.includes(normalize(s.id))),
+    );
+    if (femaleMatch) return femaleMatch;
+  }
+
+  const nonFemaleMatch = SPORTS.find(
+    (s) =>
+      s.category !== "Girls" &&
+      (target.includes(normalize(s.name)) || target.includes(normalize(s.id))),
+  );
+  if (nonFemaleMatch) return nonFemaleMatch;
+
   return SPORTS.find(
     (s) => target.includes(normalize(s.name)) || target.includes(normalize(s.id)),
   );

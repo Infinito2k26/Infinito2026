@@ -32,6 +32,7 @@ export interface EventSummary {
     slug: string;
     broadCategory: BroadCategory;
     sportCategory: string;
+    genderCategory?: GenderCategory;
     registrationType: EventRegistrationType;
     feeStructure: FeeStructure;
     feeFlat: string | number | null;
