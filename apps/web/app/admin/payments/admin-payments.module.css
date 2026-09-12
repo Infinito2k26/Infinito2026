@@ -100,7 +100,7 @@
   white-space: nowrap;
 }
 
-/* Proof row: screenshot thumbnail + transaction ID */
+/* Proof row: screenshot thumbnail + UTR / reference number */
 .proofRow {
   display: flex;
   gap: var(--space-4);

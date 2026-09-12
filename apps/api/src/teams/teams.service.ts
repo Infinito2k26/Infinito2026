@@ -72,7 +72,13 @@ export class TeamsService {
             payments: {
               orderBy: { createdAt: 'desc' },
               take: 1,
-              select: { id: true, amount: true, mode: true, status: true },
+              select: {
+                id: true,
+                amount: true,
+                mode: true,
+                status: true,
+                rejectionReason: true,
+              },
             },
           },
         },

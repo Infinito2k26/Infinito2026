@@ -19,7 +19,7 @@ interface AdminOrder {
     status: "PENDING_PAYMENT" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
     paymentStatus: "INITIATED" | "RECONCILIATION_PENDING" | "SUCCESS" | "FAILED";
     screenshotUrl: string | null;
-    transactionId: string | null;
+    utrNumber: string | null;
     rejectionReason: string | null;
     createdAt: string;
     user: { id: string; name: string; email: string };
@@ -136,8 +136,8 @@ export default function AdminMerchOrdersPage() {
                                     <img src={order.screenshotUrl} alt="Payment screenshot" className={styles.screenshotThumb} />
                                 </a>
                             )}
-                            {order.transactionId && (
-                                <p className={styles.txn}>Transaction ID: {order.transactionId}</p>
+                            {order.utrNumber && (
+                                <p className={styles.txn}>UTR / Reference No.: {order.utrNumber}</p>
                             )}
                             {order.rejectionReason && (
                                 <p className={styles.rejection}><strong>Rejected:</strong> {order.rejectionReason}</p>

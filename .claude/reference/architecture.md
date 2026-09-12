@@ -77,7 +77,7 @@ sequenceDiagram
   Web->>API: POST /registrations
   API->>DB: transaction: registration (PENDING_PAYMENT) + stub Payment (INITIATED)
   API-->>Web: UPI QR / VPA + amount due
-  User->>Web: Pay externally via UPI, upload screenshot + transaction ID
+  User->>Web: Pay externally via UPI, upload screenshot + UTR no. / reference number
   Web->>API: POST /payments
   API->>DB: fill stub Payment, status -> RECONCILIATION_PENDING
   Admin->>API: PATCH /admin/payments/:id/verify

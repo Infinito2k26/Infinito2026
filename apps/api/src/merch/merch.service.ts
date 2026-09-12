@@ -178,7 +178,10 @@ export class MerchService {
       return replay;
     }
 
-    if (order.paymentStatus !== 'INITIATED') {
+    // A FAILED order payment (rejected by admin) is also eligible for
+    // resubmission — same order, retried — matching PaymentsService's
+    // registration-payment resubmission behaviour.
+    if (!['INITIATED', 'FAILED'].includes(order.paymentStatus)) {
       throw new ConflictException(
         `Order payment is not awaiting submission (current status: ${order.paymentStatus})`,
       );
@@ -191,12 +194,13 @@ export class MerchService {
     );
 
     const updated = await this.prisma.merchOrder.updateMany({
-      where: { id: orderId, paymentStatus: 'INITIATED' },
+      where: { id: orderId, paymentStatus: order.paymentStatus },
       data: {
         paymentStatus: 'RECONCILIATION_PENDING',
         screenshotUrl: uploaded.key,
-        transactionId: dto.transactionId,
+        utrNumber: dto.utrNumber,
         idempotencyKey: dto.idempotencyKey,
+        rejectionReason: null,
       },
     });
 

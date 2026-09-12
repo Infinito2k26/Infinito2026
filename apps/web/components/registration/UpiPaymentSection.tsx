@@ -18,13 +18,15 @@ interface UpiPaymentSectionProps {
   isIITP?: boolean;
   /** Registration this payment is submitted against. Required unless isIITP/waived or onSubmit is provided. */
   registrationId?: string;
-  /** Called once the screenshot + transaction ID are successfully submitted for review. */
+  /** Called once the screenshot + UTR number are successfully submitted for review. */
   onSubmitted?: () => void;
   /** True when resuming a registration whose payment proof was already submitted (RECONCILIATION_PENDING/SUCCESS) — skips straight to the "submitted" banner instead of showing the upload form again. */
   initiallySubmitted?: boolean;
+  /** Set when the most recent submission was rejected — shown above the form along with a prompt to resubmit. */
+  rejectionReason?: string | null;
   /**
    * Override for what happens on submit — receives a FormData already
-   * carrying transactionId/idempotencyKey/file. When omitted, defaults to
+   * carrying utrNumber/idempotencyKey/file. When omitted, defaults to
    * POST /payments with registrationId (the event-registration flow). Pass
    * this to reuse the same UPI/screenshot UI against a different endpoint
    * (e.g. merch order payment).
@@ -52,9 +54,10 @@ export default function UpiPaymentSection({
   onSubmitted,
   onSubmit,
   initiallySubmitted = false,
+  rejectionReason,
 }: UpiPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
-  const [transactionId, setTransactionId] = useState("");
+  const [utrNumber, setUtrNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -93,13 +96,13 @@ export default function UpiPaymentSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!registrationId && !onSubmit) || !file || !transactionId.trim()) return;
+    if ((!registrationId && !onSubmit) || !file || !utrNumber.trim()) return;
 
     setSubmitting(true);
     setSubmitError(null);
     try {
       const formData = new FormData();
-      formData.append("transactionId", transactionId.trim());
+      formData.append("utrNumber", utrNumber.trim());
       formData.append("idempotencyKey", crypto.randomUUID());
       formData.append("file", file);
 
@@ -135,8 +138,8 @@ export default function UpiPaymentSection({
         <>
           <p className={styles.instructions}>
             Scan the QR code with any UPI app, or pay directly to the VPA below.
-            Keep the payment confirmation screenshot and transaction ID handy —
-            you&apos;ll need to submit them on the next step.
+            Keep the payment confirmation screenshot and the UTR no. / reference
+            number handy — you&apos;ll need to submit them on the next step.
           </p>
 
           <div className={styles.qrBox}>
@@ -164,18 +167,25 @@ export default function UpiPaymentSection({
 
           <p className={styles.payee}>Payable to: {payeeName}</p>
 
+          {(registrationId || onSubmit) && !submitted && rejectionReason && (
+            <div className={styles.rejectionBanner}>
+              Your last submission was rejected: {rejectionReason}. Please
+              double-check the details and resubmit below.
+            </div>
+          )}
+
           {(registrationId || onSubmit) && !submitted && (
             <form className={styles.proofForm} onSubmit={handleSubmit}>
-              <label className={styles.fieldLabel} htmlFor="upi-transaction-id">
-                Transaction ID
+              <label className={styles.fieldLabel} htmlFor="upi-utr-number">
+                UTR No. / Reference Number
               </label>
               <input
-                id="upi-transaction-id"
+                id="upi-utr-number"
                 type="text"
                 className={styles.textInput}
                 placeholder="e.g. 123456789012"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
                 required
               />
 
@@ -201,7 +211,7 @@ export default function UpiPaymentSection({
               <button
                 type="submit"
                 className={styles.submitBtn}
-                disabled={submitting || !file || !transactionId.trim()}
+                disabled={submitting || !file || !utrNumber.trim()}
               >
                 {submitting ? (
                   <>
@@ -217,8 +227,9 @@ export default function UpiPaymentSection({
 
           {submitted && (
             <div className={styles.successBanner}>
-              Payment proof submitted. Admin will verify it shortly — you can
-              track status on your dashboard.
+              Payment proof submitted — status: <strong>Paid, awaiting verification</strong>.
+              An admin will verify it shortly and your status will update to
+              Verified automatically.
             </div>
           )}
         </>

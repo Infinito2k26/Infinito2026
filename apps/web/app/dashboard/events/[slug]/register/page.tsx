@@ -8,6 +8,7 @@ import { Copy, Check } from "lucide-react";
 import Card from "@/components/ui/card";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import Badge from "@/components/ui/badge";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { api, ApiError } from "@/lib/api";
@@ -18,6 +19,7 @@ import SubOptionPicker from "@/components/registration/SubOptionPicker";
 import AccommodationSection, { AccommodationValue } from "@/components/registration/AccommodationSection";
 import UpiPaymentSection from "@/components/registration/UpiPaymentSection";
 import { useSitePaymentSettings } from "@/lib/site-settings";
+import { describePaymentStatus } from "@/lib/payment-status";
 
 import styles from "./register.module.css";
 
@@ -184,7 +186,13 @@ export default function RegisterPage() {
                     registration: {
                         id: string;
                         status: string;
-                        payments: { id: string; amount: string | number; mode: string; status: string }[];
+                        payments: {
+                            id: string;
+                            amount: string | number;
+                            mode: string;
+                            status: string;
+                            rejectionReason?: string | null;
+                        }[];
                     } | null;
                 }>;
                 const existing = teams.find(
@@ -235,7 +243,13 @@ export default function RegisterPage() {
                     id: string;
                     status: string;
                     event: { id: string };
-                    payments: { id: string; amount: string | number; mode: string; status: string }[];
+                    payments: {
+                        id: string;
+                        amount: string | number;
+                        mode: string;
+                        status: string;
+                        rejectionReason?: string | null;
+                    }[];
                 }>;
                 const existing = registrations.find(
                     (r) => r.event.id === event.id && !["CANCELLED", "REFUNDED"].includes(r.status),
@@ -533,23 +547,38 @@ export default function RegisterPage() {
                 )}
 
                 {step === "payment" && registration && registration.status === "CONFIRMED" && (
-                    <p className={styles.successText}>
-                        Your registration is confirmed — nothing else to do here.
-                    </p>
+                    <div className={styles.detailsForm}>
+                        <Badge variant="success">Verified</Badge>
+                        <p className={styles.successText}>
+                            Payment verified — your registration is confirmed. Nothing else to do here.
+                        </p>
+                    </div>
                 )}
 
                 {step === "payment" && registration && registration.status !== "CONFIRMED" && (
-                    <UpiPaymentSection
-                        amountDue={Number(registration.payment.amount)}
-                        registrationId={registration.id}
-                        isIITP={Number(registration.payment.amount) === 0}
-                        vpa={paymentSettings.vpa}
-                        payeeName={paymentSettings.payeeName}
-                        qrImageUrl={paymentSettings.qrImageUrl}
-                        initiallySubmitted={["RECONCILIATION_PENDING", "SUCCESS"].includes(
-                            registration.payment.status,
+                    <div className={styles.detailsForm}>
+                        {Number(registration.payment.amount) > 0 && (
+                            <Badge variant={describePaymentStatus(registration.payment.status).variant}>
+                                {describePaymentStatus(registration.payment.status).label}
+                            </Badge>
                         )}
-                    />
+                        <UpiPaymentSection
+                            amountDue={Number(registration.payment.amount)}
+                            registrationId={registration.id}
+                            isIITP={Number(registration.payment.amount) === 0}
+                            vpa={paymentSettings.vpa}
+                            payeeName={paymentSettings.payeeName}
+                            qrImageUrl={paymentSettings.qrImageUrl}
+                            initiallySubmitted={["RECONCILIATION_PENDING", "SUCCESS"].includes(
+                                registration.payment.status,
+                            )}
+                            rejectionReason={
+                                registration.payment.status === "FAILED"
+                                    ? registration.payment.rejectionReason
+                                    : undefined
+                            }
+                        />
+                    </div>
                 )}
             </Card>
         </div>

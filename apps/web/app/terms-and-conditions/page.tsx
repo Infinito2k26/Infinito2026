@@ -24,9 +24,9 @@ export default function TermsAndConditionsPage() {
                     <h2>Payment</h2>
                     <p>
                         Payment is collected by UPI transfer to the details shown at checkout. After paying, you
-                        submit a screenshot and transaction ID as proof; an organizer manually verifies this
-                        against the amount due. Your registration is confirmed only once payment is verified —
-                        until then it stays in a pending state.
+                        submit a screenshot and the UTR no. / reference number as proof; an organizer manually
+                        verifies this against the amount due. Your registration is confirmed only once payment
+                        is verified — until then it stays in a pending state.
                     </p>
                     <p>
                         If your payment proof is rejected (for example, a mismatched amount or an unreadable
