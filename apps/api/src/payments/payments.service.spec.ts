@@ -87,7 +87,7 @@ describe('PaymentsService', () => {
   describe('submitPayment', () => {
     const dto = {
       registrationId: 'reg-1',
-      transactionId: 'txn-1',
+      utrNumber: 'utr-1',
       idempotencyKey: 'key-1',
     };
 
@@ -205,6 +205,54 @@ describe('PaymentsService', () => {
       await expect(
         service.submitPayment('user-1', dto, file),
       ).resolves.toBeDefined();
+    });
+
+    it('resubmits over a previously FAILED payment and clears its rejection reason', async () => {
+      prisma.registration.findUnique.mockResolvedValue({
+        id: 'reg-1',
+        userId: 'user-1',
+        team: null,
+        status: 'PENDING_PAYMENT',
+      });
+
+      const stub = {
+        id: 'pay-1',
+        status: 'FAILED',
+        rejectionReason: 'Amount mismatch',
+      };
+      const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const finalPayment = {
+        ...stub,
+        status: 'RECONCILIATION_PENDING',
+        rejectionReason: null,
+      };
+
+      prisma.$transaction.mockImplementation((fn: (tx: unknown) => unknown) =>
+        fn({
+          payment: {
+            findUnique: jest.fn().mockResolvedValue(null),
+            findFirst: jest
+              .fn()
+              .mockResolvedValueOnce(null) // no existing active payment
+              .mockResolvedValueOnce(stub), // the FAILED stub, eligible for retry
+            updateMany,
+            findUniqueOrThrow: jest.fn().mockResolvedValue(finalPayment),
+          },
+        }),
+      );
+
+      const result = await service.submitPayment('user-1', dto, file);
+
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { id: 'pay-1', status: 'FAILED' },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining is untyped in @types/jest
+        data: expect.objectContaining({
+          status: 'RECONCILIATION_PENDING',
+          utrNumber: dto.utrNumber,
+          rejectionReason: null,
+        }),
+      });
+      expect(result).toEqual(finalPayment);
     });
 
     it('throws NotFoundException when no INITIATED stub exists for the registration', async () => {

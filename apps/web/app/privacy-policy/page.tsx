@@ -27,8 +27,9 @@ export default function PrivacyPolicyPage() {
                             accommodation or mess-only add-ons you select.
                         </li>
                         <li>
-                            Payment verification details: the UPI transaction ID and payment screenshot you
-                            submit, used solely to confirm your payment. We do not process or store your UPI PIN,
+                            Payment verification details: the UPI UTR no. / reference number and payment
+                            screenshot you submit, used solely to confirm your payment. We do not process or
+                            store your UPI PIN,
                             bank credentials, or card details — payments are made directly between you and the
                             event organizers over UPI.
                         </li>

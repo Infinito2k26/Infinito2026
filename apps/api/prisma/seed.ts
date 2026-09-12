@@ -1351,7 +1351,7 @@ async function main() {
     gatewayOrderId: null,
     gatewayPaymentId: null,
     screenshotUrl: 'https://placeholder.infinito2k26.in/seed-payment-screenshot.jpg',
-    transactionId: 'SEED-TXN-20260901-001',
+    utrNumber: 'SEED-UTR-20260901-001',
     webhookVerified: false,
     idempotencyKey: 'seed-payment-football-001',
   });

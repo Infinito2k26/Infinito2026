@@ -18,7 +18,7 @@ interface AdminPayment {
     mode: string;
     status: 'INITIATED' | 'RECONCILIATION_PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
     screenshotUrl: string | null;
-    transactionId: string | null;
+    utrNumber: string | null;
     rejectionReason: string | null;
     createdAt: string;
     registration: {
@@ -162,7 +162,7 @@ export default function AdminPaymentsPage() {
             <header className={styles.header}>
                 <div>
                     <h1 className={styles.pageTitle}>Payments</h1>
-                    <p className={styles.pageSubtitle}>Review UPI screenshot + transaction ID submissions.</p>
+                    <p className={styles.pageSubtitle}>Review UPI screenshot + UTR / reference number submissions.</p>
                 </div>
             </header>
 
@@ -215,8 +215,8 @@ export default function AdminPaymentsPage() {
                                 </a>
                             )}
                             <div className={styles.txnDetails}>
-                                <span className={styles.txnLabel}>Transaction ID</span>
-                                <span className={styles.txnValue}>{payment.transactionId ?? '—'}</span>
+                                <span className={styles.txnLabel}>UTR / Reference No.</span>
+                                <span className={styles.txnValue}>{payment.utrNumber ?? '—'}</span>
                             </div>
                         </div>
 

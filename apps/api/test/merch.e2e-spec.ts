@@ -204,7 +204,7 @@ describe('Merch: full happy path (e2e)', () => {
     await request(app.getHttpServer())
       .post(`/api/merch/orders/${order.id}/payment`)
       .set('Authorization', `Bearer ${buyer.token}`)
-      .field('transactionId', 'TXN12345')
+      .field('utrNumber', 'UTR12345')
       .field('idempotencyKey', randomUUID())
       .attach('file', FAKE_PNG, {
         filename: 'proof.png',
