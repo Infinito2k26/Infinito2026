@@ -10,6 +10,7 @@ import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api, ApiError } from "@/lib/api";
+import { describePaymentStatus } from "@/lib/payment-status";
 import styles from "./teams.module.css";
 
 interface MyTeam {
@@ -27,7 +28,11 @@ interface MyTeam {
     coachPhone: string | null;
     event: { id: string; name: string; slug: string; teamSizeMin: number | null; teamSizeMax: number | null };
     participants: { id: string; name: string; role: string }[];
-    registration: { id: string; status: string } | null;
+    registration: {
+        id: string;
+        status: string;
+        payments: { id: string; status: string; rejectionReason: string | null }[];
+    } | null;
 }
 
 export default function TeamsPage() {
@@ -108,6 +113,23 @@ export default function TeamsPage() {
                                         {team.registration ? team.registration.status.replace('_', ' ') : "Not registered"}
                                     </Badge>
                                 </div>
+
+                                {team.registration && team.registration.payments[0] && (
+                                    <div className={styles.metaRow}>
+                                        <span>Payment status</span>
+                                        <Badge variant={describePaymentStatus(team.registration.payments[0].status).variant}>
+                                            {describePaymentStatus(team.registration.payments[0].status).label}
+                                        </Badge>
+                                    </div>
+                                )}
+
+                                {team.registration?.payments[0]?.status === "FAILED" &&
+                                    team.registration.payments[0].rejectionReason && (
+                                        <p className={styles.errorText}>
+                                            Rejected: {team.registration.payments[0].rejectionReason} — the
+                                            captain can resubmit from the event&apos;s registration page.
+                                        </p>
+                                    )}
 
                                 <ul className={styles.rosterList}>
                                     {team.participants.map((p) => (

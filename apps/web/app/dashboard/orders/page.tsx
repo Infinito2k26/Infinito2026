@@ -7,6 +7,7 @@ import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
+import { describePaymentStatus } from "@/lib/payment-status";
 import styles from "./orders.module.css";
 
 interface OrderItem {
@@ -22,6 +23,7 @@ interface MerchOrder {
     totalAmount: string | number;
     status: string;
     paymentStatus: string;
+    rejectionReason: string | null;
     createdAt: string;
     items: OrderItem[];
 }
@@ -82,6 +84,20 @@ export default function MyOrdersPage() {
                                     {order.status.replace("_", " ")}
                                 </Badge>
                             </div>
+                            {order.status === "PENDING_PAYMENT" && (
+                                <div className={styles.orderHeader}>
+                                    <span>Payment status</span>
+                                    <Badge variant={describePaymentStatus(order.paymentStatus).variant}>
+                                        {describePaymentStatus(order.paymentStatus).label}
+                                    </Badge>
+                                </div>
+                            )}
+                            {order.paymentStatus === "FAILED" && order.rejectionReason && (
+                                <p className={styles.rejectionText}>
+                                    Rejected: {order.rejectionReason} — please contact the organizers to
+                                    resolve this.
+                                </p>
+                            )}
                             <ul className={styles.itemList}>
                                 {order.items.map((item) => (
                                     <li key={item.id}>

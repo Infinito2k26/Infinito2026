@@ -82,7 +82,12 @@ export class RegistrationsService {
             },
           },
           payments: {
-            select: { id: true, status: true, amount: true },
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              rejectionReason: true,
+            },
             orderBy: { createdAt: 'desc' },
             take: 1,
           },
@@ -119,7 +124,13 @@ export class RegistrationsService {
         payments: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          select: { id: true, amount: true, mode: true, status: true },
+          select: {
+            id: true,
+            amount: true,
+            mode: true,
+            status: true,
+            rejectionReason: true,
+          },
         },
       },
     });

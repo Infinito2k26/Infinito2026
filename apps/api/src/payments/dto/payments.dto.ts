@@ -11,10 +11,12 @@ export class SubmitPaymentDto {
   @IsUUID()
   registrationId!: string;
 
+  // UPI UTR (Unique Transaction Reference) no. / bank reference number —
+  // not a generic "transaction ID", which UPI payments don't have.
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  transactionId!: string;
+  utrNumber!: string;
 
   // Client-generated, stable across retries of the same submission attempt —
   // lets a network retry replay safely instead of creating a duplicate Payment.
