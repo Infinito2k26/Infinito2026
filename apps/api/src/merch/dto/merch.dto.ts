@@ -109,10 +109,12 @@ export class CreateMerchOrderDto {
 }
 
 export class SubmitOrderPaymentDto {
+  // UPI UTR (Unique Transaction Reference) no. / bank reference number —
+  // not a generic "transaction ID", which UPI payments don't have.
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  transactionId!: string;
+  utrNumber!: string;
 
   // Client-generated, stable across retries — same idempotency-replay
   // contract as SubmitPaymentDto.idempotencyKey.

@@ -42,6 +42,12 @@
     color: var(--char-500);
 }
 
+.rejectionText {
+    font-size: var(--fs-micro);
+    color: var(--err);
+    margin: 0;
+}
+
 .itemList {
     font-size: var(--fs-micro);
     color: var(--char-800);

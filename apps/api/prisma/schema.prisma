@@ -104,7 +104,7 @@ enum RegistrationStatus {
 
 enum PaymentMode {
   ONLINE            // Razorpay / gateway
-  MANUAL_SCREENSHOT // screenshot + transaction ID submitted by registrant
+  MANUAL_SCREENSHOT // screenshot + UTR no. / reference number submitted by registrant
 }
 
 enum PaymentStatus {
@@ -594,7 +594,7 @@ model MerchOrder {
   // idempotency-replay pattern as PaymentsService.
   paymentStatus   PaymentStatus    @default(INITIATED)
   screenshotUrl   String?
-  transactionId   String?
+  utrNumber       String?
   rejectionReason String?
   idempotencyKey  String           @unique
   createdAt       DateTime         @default(now())
@@ -782,7 +782,7 @@ model Payment {
   gatewayOrderId   String?       @unique // null for manual payments
   gatewayPaymentId String?       @unique // set on webhook success
   screenshotUrl    String?       // manual payments
-  transactionId    String?       // user-entered transaction ID for manual payments
+  utrNumber        String?       // user-entered UPI UTR no. / reference number for manual payments
   rejectionReason  String?       // set by admin when status is set to FAILED via manual review
   webhookVerified  Boolean       @default(false)
   idempotencyKey   String        @unique

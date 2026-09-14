@@ -5,7 +5,7 @@ const SECTIONS = [
     { title: "Users", href: "/admin/users", description: "Search any user, change their role, or ban/unban their account." },
     { title: "Roles", href: "/admin/roles", description: "Create scoped roles with per-service read/write/delete access." },
     { title: "Registrations", href: "/admin/registrations", description: "Every registration across all events, with live payment status." },
-    { title: "Payments", href: "/admin/payments", description: "Review UPI screenshot + transaction ID submissions." },
+    { title: "Payments", href: "/admin/payments", description: "Review UPI screenshot + UTR / reference number submissions." },
     { title: "Events", href: "/admin/events", description: "Create, edit, and publish events." },
     { title: "Teams", href: "/admin/teams", description: "Browse all registered teams and rosters." },
     { title: "Gate Scans", href: "/admin/scans", description: "Most recent QR credential scans across all gates." },
