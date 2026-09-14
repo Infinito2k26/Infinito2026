@@ -28,5 +28,6 @@ export interface RegistrationResult {
         amount: string | number;
         mode: string;
         status: string;
+        rejectionReason?: string | null;
     };
 }

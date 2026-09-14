@@ -226,7 +226,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 #### `GET /registrations/mine`
 
-- Returns the caller's own INDIVIDUAL (`userId`-linked) registrations, newest first — `{ id, status, event: { id, slug, name }, payments: [latest] }` (`payments` is at most one row: the most recently created `Payment` for that registration). TEAM registrations aren't included here; they travel with `GET /teams/mine` instead (each team row already carries its own `registration` + latest payment).
+- Returns the caller's own INDIVIDUAL (`userId`-linked) registrations, newest first — `{ id, status, event: { id, slug, name }, payments: [latest] }` (`payments` is at most one row: the most recently created `Payment` for that registration, including its `rejectionReason` so a rejected submission's reason can be shown before the registrant resubmits). TEAM registrations aren't included here; they travel with `GET /teams/mine` instead (each team row already carries its own `registration` + latest payment).
 - Used by the web registration page to resume a registrant who created a `PENDING_PAYMENT` registration and left before paying straight to the Payment step, instead of them hitting the `(eventId, userId)` unique-constraint `409` trying to register again.
 
 #### `POST /teams`
@@ -254,7 +254,7 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 - Returns teams the caller captains or has joined (`captainId` match, or a `Participant` row with `userId` matching the caller). Each team is tagged `role: "CAPTAIN" | "MEMBER"`; `inviteCode` is only populated for the captain (`null` for members) — showing it to everyone would leak a credential that lets anyone claim a roster slot.
 - Includes the full editable field set (`collegeName`, `collegeAddress`, `isIITP`, `viceCaptainName`, `viceCaptainPhone`, `coachName`, `coachPhone`) plus `event.teamSizeMin`/`teamSizeMax`, so a captain-facing UI can prefill a `PATCH /teams/:id` form without a second request.
-- `registration`, when present, also includes its most recent `payments` entry (`id`, `amount`, `mode`, `status`) — enough for a client to resume straight to the payment/review step for a team that already has a `PENDING_PAYMENT`/`CONFIRMED`/`WAITLISTED` registration, instead of re-showing the create-team form (which would 409). Only `CANCELLED`/`REFUNDED` registrations don't block a fresh team, matching `POST /teams`'s own duplicate-team guard.
+- `registration`, when present, also includes its most recent `payments` entry (`id`, `amount`, `mode`, `status`, `rejectionReason`) — enough for a client to resume straight to the payment/review step for a team that already has a `PENDING_PAYMENT`/`CONFIRMED`/`WAITLISTED` registration, instead of re-showing the create-team form (which would 409), and to show why a rejected submission failed. Only `CANCELLED`/`REFUNDED` registrations don't block a fresh team, matching `POST /teams`'s own duplicate-team guard.
 
 #### `POST /teams/:id/join`
 
@@ -272,21 +272,21 @@ non-ADMIN user holding one — API calls remain enforced server-side either way.
 
 ### Payments
 
-No payment gateway — every registration is paid via UPI outside the platform, then proven with a screenshot + transaction ID. Admin manually approves or rejects against that proof (see `.claude/plans/master-roadmap-sept30-launch.md`).
+No payment gateway — every registration is paid via UPI outside the platform, then proven with a screenshot + UTR no. / reference number. Admin manually approves or rejects against that proof (see `.claude/plans/master-roadmap-sept30-launch.md`).
 
 | Method | Path                          | Access        | Purpose                                                          |
 | ------ | ----------------------------- | ------------- | ----------------------------------------------------------------- |
-| POST   | `/payments`                   | Authenticated | Submit screenshot + transaction ID for a registration's payment |
+| POST   | `/payments`                   | Authenticated | Submit screenshot + UTR no. / reference number for a registration's payment |
 | GET    | `/admin/payments`             | Admin         | List payments by status, paginated, for manual review            |
 | PATCH  | `/admin/payments/:id/verify`  | Admin         | Approve or reject a manual payment submission                    |
 
 #### `POST /payments`
 
-- Multipart form: `registrationId` (UUID), `transactionId`, `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot).
+- Multipart form: `registrationId` (UUID), `utrNumber` (the UPI UTR no. / bank reference number), `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot).
 - Screenshot rules match CA task proof: max 5 MB, `image/jpeg` / `image/png` / `image/webp` only. Stored under `payment-proof/` via the shared `UploadsService`.
 - Caller must be the registration's `userId`, or the `captainId` of its `team`, else `403`.
 - The registration must currently be `PENDING_PAYMENT`, else `409`.
-- Registration creates a stub `Payment` row (`mode = MANUAL_SCREENSHOT`, `status = INITIATED`, `amount` computed from `Event.feeStructure`) at registration time. This endpoint fills that stub in and moves it to `RECONCILIATION_PENDING` — it does not compute the fee itself. Returns `404` if no `INITIATED` stub exists for the registration yet.
+- Registration creates a stub `Payment` row (`mode = MANUAL_SCREENSHOT`, `status = INITIATED`, `amount` computed from `Event.feeStructure`) at registration time. This endpoint fills that stub in and moves it to `RECONCILIATION_PENDING` — it does not compute the fee itself. The same row is reused (and its `rejectionReason` cleared) when resubmitting after a `FAILED` verification, so a rejected registrant can retry without a new registration. Returns `404` if no `INITIATED`/`FAILED` stub exists for the registration yet.
 - If a payment for the registration is already `RECONCILIATION_PENDING` or `SUCCESS`, returns `409` — no second submission until the first is rejected.
 - Idempotent: replaying the same `idempotencyKey` returns the already-created result instead of erroring or duplicating.
 
@@ -373,7 +373,7 @@ No payment gateway here either — same manual UPI-screenshot flow as event regi
 | GET    | `/merch/products/:id`              | Public        | Product detail (published only)             |
 | POST   | `/merch/orders`                    | Authenticated | Place an order                              |
 | GET    | `/merch/orders/mine`               | Authenticated | My order history                            |
-| POST   | `/merch/orders/:id/payment`        | Authenticated | Submit screenshot + transaction ID          |
+| POST   | `/merch/orders/:id/payment`        | Authenticated | Submit screenshot + UTR no. / reference number |
 | GET    | `/admin/merch/products`            | Admin         | List all products, any stock/publish state  |
 | POST   | `/admin/merch/products`            | Admin         | Create a product (always starts unpublished) |
 | PATCH  | `/admin/merch/products/:id`        | Admin         | Update a product                            |
@@ -394,8 +394,8 @@ Mirrors `Event.isPublished`/`PATCH /events/:id/publish` exactly: `POST /admin/me
 
 #### `POST /merch/orders/:id/payment`
 
-- Multipart form: `transactionId`, `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `merch-payment-proof/`).
-- Caller must own the order (`order.userId`), else `403`. Order's `paymentStatus` must be `INITIATED`, else `409`. Idempotent: replaying the same `idempotencyKey` returns the already-recorded order instead of erroring or duplicating.
+- Multipart form: `utrNumber` (the UPI UTR no. / bank reference number), `idempotencyKey` (client-generated UUID, replayed unchanged on retry), `file` (the screenshot, max 5 MB, `image/jpeg`/`image/png`/`image/webp`, stored under `merch-payment-proof/`).
+- Caller must own the order (`order.userId`), else `403`. Order's `paymentStatus` must be `INITIATED` or `FAILED`, else `409` — a `FAILED` order reuses the same row and clears `rejectionReason`, mirroring `PaymentsService.submitPayment`'s resubmission behaviour. Idempotent: replaying the same `idempotencyKey` returns the already-recorded order instead of erroring or duplicating.
 - Moves `paymentStatus` to `RECONCILIATION_PENDING` via compare-and-swap (`updateMany` + count check), identical pattern to `PaymentsService.submitPayment`.
 
 #### `PATCH /admin/merch/orders/:id/verify`

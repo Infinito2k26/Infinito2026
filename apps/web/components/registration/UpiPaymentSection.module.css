@@ -221,3 +221,12 @@
   color: var(--char-800);
   font-size: var(--fs-micro);
 }
+
+.rejectionBanner {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background-color: var(--bone-50);
+  border: 1px solid var(--err);
+  color: var(--char-800);
+  font-size: var(--fs-micro);
+}

@@ -98,10 +98,14 @@ export class PaymentsService {
       // Registration creates this stub row (mode = MANUAL_SCREENSHOT, status =
       // INITIATED, amount computed from Event.feeStructure) at registration time.
       // Payments never computes the fee itself — that stays Registration's job.
+      // A FAILED row (rejected by admin) is also eligible here — that's the
+      // same stub being resubmitted, not a fresh one, since the registrant is
+      // meant to be able to retry after a rejection (see PATCH
+      // /admin/payments/:id/verify's FAILED case).
       const stub = await tx.payment.findFirst({
         where: {
           registrationId: dto.registrationId,
-          status: 'INITIATED',
+          status: { in: ['INITIATED', 'FAILED'] },
           mode: 'MANUAL_SCREENSHOT',
         },
         orderBy: { createdAt: 'desc' },
@@ -114,12 +118,13 @@ export class PaymentsService {
       }
 
       const updated = await tx.payment.updateMany({
-        where: { id: stub.id, status: 'INITIATED' },
+        where: { id: stub.id, status: stub.status },
         data: {
           status: 'RECONCILIATION_PENDING',
           screenshotUrl: uploaded.key,
-          transactionId: dto.transactionId,
+          utrNumber: dto.utrNumber,
           idempotencyKey: dto.idempotencyKey,
+          rejectionReason: null,
         },
       });
 
@@ -159,7 +164,7 @@ export class PaymentsService {
           mode: true,
           status: true,
           screenshotUrl: true,
-          transactionId: true,
+          utrNumber: true,
           rejectionReason: true,
           createdAt: true,
           updatedAt: true,

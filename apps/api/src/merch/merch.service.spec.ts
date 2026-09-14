@@ -259,7 +259,7 @@ describe('MerchService', () => {
         service.submitOrderPayment(
           'user-1',
           'o1',
-          { transactionId: 't1', idempotencyKey: 'k1' },
+          { utrNumber: 't1', idempotencyKey: 'k1' },
           file,
         ),
       ).rejects.toThrow(ForbiddenException);
@@ -276,7 +276,7 @@ describe('MerchService', () => {
       const result = await service.submitOrderPayment(
         'user-1',
         'o1',
-        { transactionId: 't1', idempotencyKey: 'k1' },
+        { utrNumber: 't1', idempotencyKey: 'k1' },
         file,
       );
 
@@ -301,10 +301,44 @@ describe('MerchService', () => {
         service.submitOrderPayment(
           'user-1',
           'o1',
-          { transactionId: 't1', idempotencyKey: 'k1' },
+          { utrNumber: 't1', idempotencyKey: 'k1' },
           file,
         ),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('resubmits over a previously FAILED order payment and clears its rejection reason', async () => {
+      prisma.merchOrder.findUnique
+        .mockResolvedValueOnce({
+          id: 'o1',
+          userId: 'user-1',
+          paymentStatus: 'FAILED',
+        })
+        .mockResolvedValueOnce(null);
+      prisma.merchOrder.updateMany.mockResolvedValue({ count: 1 });
+      prisma.merchOrder.findUniqueOrThrow.mockResolvedValue({
+        id: 'o1',
+        paymentStatus: 'RECONCILIATION_PENDING',
+        rejectionReason: null,
+      });
+
+      const result = await service.submitOrderPayment(
+        'user-1',
+        'o1',
+        { utrNumber: 't1', idempotencyKey: 'k1' },
+        file,
+      );
+
+      expect(prisma.merchOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'o1', paymentStatus: 'FAILED' },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining is untyped in @types/jest
+        data: expect.objectContaining({
+          paymentStatus: 'RECONCILIATION_PENDING',
+          utrNumber: 't1',
+          rejectionReason: null,
+        }),
+      });
+      expect(result.paymentStatus).toBe('RECONCILIATION_PENDING');
     });
 
     it('uploads proof and moves the order to RECONCILIATION_PENDING', async () => {
@@ -324,7 +358,7 @@ describe('MerchService', () => {
       const result = await service.submitOrderPayment(
         'user-1',
         'o1',
-        { transactionId: 't1', idempotencyKey: 'k1' },
+        { utrNumber: 't1', idempotencyKey: 'k1' },
         file,
       );
 

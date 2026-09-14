@@ -155,7 +155,7 @@ enum RegistrationStatus {
 
 enum PaymentMode {
   ONLINE             // Razorpay / gateway
-  MANUAL_SCREENSHOT  // screenshot + transaction ID submitted by registrant
+  MANUAL_SCREENSHOT  // screenshot + UTR no. / reference number submitted by registrant
 }
 
 enum PaymentStatus {
@@ -807,8 +807,8 @@ Every payment attempt against a registration. Supports both Razorpay (online) an
 | `gatewayOrderId` | String? unique | Null for manual payments |
 | `gatewayPaymentId` | String? unique | Set on webhook success |
 | `screenshotUrl` | String? | Uploaded screenshot for manual payments |
-| `transactionId` | String? | User-entered transaction ID for manual payments |
-| `rejectionReason` | String? | Set by admin when `PATCH /admin/payments/:id/verify` sets status to `FAILED` |
+| `utrNumber` | String? | User-entered UPI UTR no. / bank reference number for manual payments |
+| `rejectionReason` | String? | Set by admin when `PATCH /admin/payments/:id/verify` sets status to `FAILED`; cleared automatically when the registrant resubmits |
 | `webhookVerified` | Boolean | Default false |
 | `idempotencyKey` | String unique | Prevents duplicate payment records |
 | `createdAt` | DateTime | |
@@ -899,8 +899,8 @@ One order, one or more `MerchOrderItem` rows. Paid via the same manual UPI-scree
 | `status` | MerchOrderStatus | PENDING_PAYMENT / CONFIRMED / SHIPPED / DELIVERED / CANCELLED |
 | `paymentStatus` | PaymentStatus | Same enum as `Payment.status`; reused, not the table itself |
 | `screenshotUrl` | String? | Uploaded via `UploadsService`, `merch-payment-proof/` folder |
-| `transactionId` | String? | |
-| `rejectionReason` | String? | Set by admin on a rejected `verify` call |
+| `utrNumber` | String? | User-entered UPI UTR no. / bank reference number |
+| `rejectionReason` | String? | Set by admin on a rejected `verify` call; cleared automatically when the buyer resubmits |
 | `idempotencyKey` | String unique | Set to a placeholder at order-creation time, overwritten by the client-supplied key on `POST /merch/orders/:id/payment` — identical two-step pattern to `Payment.idempotencyKey` via the registration stub |
 | `createdAt` | DateTime | |
 | `updatedAt` | DateTime | |
