@@ -57,7 +57,13 @@ describe('Roles & permissions (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password: PASSWORD, name, consent: true })
+      .send({
+        email,
+        password: PASSWORD,
+        name,
+        phone: '9876543210',
+        consent: true,
+      })
       .expect(201);
 
     if (role) {
@@ -350,7 +356,13 @@ describe('Roles & permissions: service granularity (e2e)', () => {
     const prisma = app.get(PrismaService);
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password: PASSWORD, name, consent: true })
+      .send({
+        email,
+        password: PASSWORD,
+        name,
+        phone: '9876543210',
+        consent: true,
+      })
       .expect(201);
 
     if (role) {

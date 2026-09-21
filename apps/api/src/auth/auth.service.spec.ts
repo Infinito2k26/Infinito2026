@@ -144,6 +144,7 @@ describe('AuthService', () => {
 
       await service.register({
         consent: true,
+        phone: '9876543210',
         email: 'new@infinito.dev',
         password: 'plaintext-password',
         name: 'New User',
@@ -165,6 +166,7 @@ describe('AuthService', () => {
       await expect(
         service.register({
           consent: true,
+          phone: '9876543210',
           email: baseUser.email,
           password: 'plaintext-password',
           name: 'Dup User',
@@ -184,6 +186,7 @@ describe('AuthService', () => {
 
       await service.register({
         consent: true,
+        phone: '9876543210',
         email: baseUser.email,
         password: 'plaintext-password',
         name: 'Re-registering User',
@@ -211,6 +214,7 @@ describe('AuthService', () => {
       await expect(
         service.register({
           consent: true,
+          phone: '9876543210',
           email: baseUser.email,
           password: 'plaintext-password',
           name: 'Re-registering User',

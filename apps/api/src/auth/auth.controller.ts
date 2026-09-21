@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Patch,
   Post,
   Req,
   Res,
@@ -19,6 +20,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdatePhoneDto } from './dto/update-phone.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { RequestUser } from './strategies/jwt.strategy';
@@ -112,6 +114,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: RequestUser) {
     return this.authService.me(user.id);
+  }
+
+  @Patch('me/phone')
+  @UseGuards(JwtAuthGuard)
+  updatePhone(@CurrentUser() user: RequestUser, @Body() dto: UpdatePhoneDto) {
+    return this.authService.updatePhone(user.id, dto.phone);
   }
 
   private setRefreshCookie(

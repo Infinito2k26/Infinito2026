@@ -51,6 +51,7 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
+  phone: string | null;
   role: User['role'];
   isEmailVerified: boolean;
   college: string | null;
@@ -77,6 +78,7 @@ function toProfile(user: User): UserProfile {
     id: user.id,
     email: user.email,
     name: user.name,
+    phone: user.phone,
     role: user.role,
     isEmailVerified: user.isEmailVerified,
     college: user.college,
@@ -444,6 +446,17 @@ export class AuthService {
             }
           : null,
     };
+  }
+
+  // Backfills phone for users who signed up before it was collected at
+  // registration -- self-serve from Settings, no admin action needed.
+  async updatePhone(userId: string, phone: string): Promise<UserProfile> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { phone },
+    });
+
+    return toProfile(user);
   }
 
   private async issueTokens(user: User): Promise<TokenPair> {

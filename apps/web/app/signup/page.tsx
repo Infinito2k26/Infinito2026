@@ -18,6 +18,7 @@ import styles from './signup.module.css';
 const signupSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('Please enter a valid email address'),
+    phone: z.string().min(10, 'Enter a valid phone number'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     consent: z.literal(true, {
         message: 'You must agree to the Privacy Policy and data collection',
@@ -91,6 +92,20 @@ export default function SignupPage() {
                         disabled={isSubmitting}
                         error={errors.email?.message}
                         {...register('email')}
+                    />
+                </div>
+
+                <div className={styles.inputGroup}>
+                    <label htmlFor="phone" className={styles.label}>
+                        Phone Number
+                    </label>
+                    <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="9876543210"
+                        disabled={isSubmitting}
+                        error={errors.phone?.message}
+                        {...register('phone')}
                     />
                 </div>
 
