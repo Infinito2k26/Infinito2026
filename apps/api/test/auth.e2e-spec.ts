@@ -70,6 +70,7 @@ describe('Auth (e2e)', () => {
     const registerRes = await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password,
         name: 'E2E User',
@@ -120,6 +121,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password,
         name: 'Dup User',
@@ -138,6 +140,7 @@ describe('Auth (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password,
         name: 'Dup User',
@@ -155,6 +158,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password: 'correct-password',
         name: 'Wrong Pass',
@@ -182,6 +186,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password,
         name: 'Rotate User',
@@ -225,6 +230,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password: 'a-strong-password',
         name: 'No Consent',
@@ -238,6 +244,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email,
         password: 'a-strong-password',
         name: 'False Consent',
@@ -255,6 +262,7 @@ describe('Auth (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: adminEmail,
         password,
         name: 'E2E Admin',
@@ -266,6 +274,7 @@ describe('Auth (e2e)', () => {
     const targetRes = await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: targetEmail,
         password,
         name: 'E2E Target',
@@ -377,6 +386,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: participantEmail,
         password,
         name: 'E2E Participant',
@@ -418,6 +428,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: caEmail,
         password,
         name: 'E2E CA',
@@ -465,6 +476,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: unonboardedEmail,
         password,
         name: 'E2E Unonboarded CA',
@@ -520,6 +532,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: caEmail,
         password,
         name: 'E2E CA Edge Cases',
@@ -588,6 +601,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: caEmail,
         password,
         name: 'E2E Upload CA',
@@ -686,6 +700,7 @@ describe('CA onboarding RBAC (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
       .send({
+        phone: '9876543210',
         email: caEmail,
         password,
         name: 'E2E URL CA',
@@ -791,6 +806,7 @@ describe('Admin CA assignment listing (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
+          phone: '9876543210',
           email,
           password,
           name,
@@ -899,6 +915,7 @@ describe('Admin CA assignment listing (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
+          phone: '9876543210',
           email,
           password,
           name,
@@ -1070,7 +1087,7 @@ describe('CA application intake (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, password, name, consent: true })
+      .send({ email, password, name, phone: '9876543210', consent: true })
       .expect(201);
 
     await prisma.user.update({

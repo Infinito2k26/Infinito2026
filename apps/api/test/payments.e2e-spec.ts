@@ -59,7 +59,7 @@ async function registerLoginWithRole(
 
   const registerRes = await request(app.getHttpServer())
     .post('/api/auth/register')
-    .send({ email, password, name, consent: true })
+    .send({ email, password, name, phone: '9876543210', consent: true })
     .expect(201);
 
   const userId = (registerRes.body as SuccessResponse<UserProfile>).data.id;

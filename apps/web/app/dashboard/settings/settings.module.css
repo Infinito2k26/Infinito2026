@@ -68,6 +68,12 @@
     color: var(--char-800);
 }
 
+.phoneEditRow {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+}
+
 .signOutBtn {
     border-color: var(--err);
     color: var(--err);

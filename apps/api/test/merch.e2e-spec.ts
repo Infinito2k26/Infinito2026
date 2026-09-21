@@ -64,7 +64,7 @@ async function registerAndLogin(
 
   await request(app.getHttpServer())
     .post('/api/auth/register')
-    .send({ email, password, name, consent: true })
+    .send({ email, password, name, phone: '9876543210', consent: true })
     .expect(201);
 
   await prisma.user.update({
@@ -98,7 +98,7 @@ async function registerLoginWithRole(
 
   await request(app.getHttpServer())
     .post('/api/auth/register')
-    .send({ email, password, name, consent: true })
+    .send({ email, password, name, phone: '9876543210', consent: true })
     .expect(201);
 
   await prisma.user.update({
