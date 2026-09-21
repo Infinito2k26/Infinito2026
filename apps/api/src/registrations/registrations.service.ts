@@ -73,12 +73,14 @@ export class RegistrationsService {
           isIITP: true,
           createdAt: true,
           event: { select: { id: true, name: true } },
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, phone: true } },
           team: {
             select: {
               id: true,
               name: true,
-              captain: { select: { id: true, name: true, email: true } },
+              captain: {
+                select: { id: true, name: true, email: true, phone: true },
+              },
             },
           },
           payments: {

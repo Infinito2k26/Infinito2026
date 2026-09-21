@@ -52,6 +52,7 @@ export class AdminUsersService {
           id: true,
           name: true,
           email: true,
+          phone: true,
           role: true,
           college: true,
           isIITP: true,
