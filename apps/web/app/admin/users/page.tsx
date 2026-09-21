@@ -19,6 +19,7 @@ interface UserRow {
     id: string;
     name: string;
     email: string;
+    phone: string | null;
     role: UserRole;
     college: string | null;
     isIITP: boolean;
@@ -124,6 +125,7 @@ export default function AdminUsersPage() {
                             <tr className={styles.headRow}>
                                 <th className={styles.headCell}>Name</th>
                                 <th className={styles.headCell}>Email</th>
+                                <th className={styles.headCell}>Phone</th>
                                 <th className={styles.headCell}>Role</th>
                                 <th className={styles.headCell}>Custom Role</th>
                                 <th className={styles.headCell}>College</th>
@@ -139,6 +141,7 @@ export default function AdminUsersPage() {
                                         </Link>
                                     </td>
                                     <td className={styles.cell}>{user.email}</td>
+                                    <td className={styles.cell}>{user.phone ?? "—"}</td>
                                     <td className={styles.cell}>{user.role.replace("_", " ")}</td>
                                     <td className={styles.cell}>{user.customRole?.name ?? "—"}</td>
                                     <td className={styles.cell}>{user.college ?? "—"}</td>
