@@ -18,8 +18,8 @@ interface RegistrationRow {
     isIITP: boolean;
     createdAt: string;
     event: { id: string; name: string };
-    user: { id: string; name: string; email: string } | null;
-    team: { id: string; name: string; captain: { name: string; email: string } } | null;
+    user: { id: string; name: string; email: string; phone: string | null } | null;
+    team: { id: string; name: string; captain: { name: string; email: string; phone: string | null } } | null;
     payments: { id: string; status: string; amount: string }[];
 }
 
@@ -57,6 +57,10 @@ function registrantLabel(row: RegistrationRow): string {
         return `${row.team.name} — captain ${row.team.captain.name}`;
     }
     return "Unknown registrant";
+}
+
+function registrantPhone(row: RegistrationRow): string {
+    return row.user?.phone ?? row.team?.captain.phone ?? "—";
 }
 
 export default function AdminRegistrationsPage() {
@@ -129,6 +133,7 @@ export default function AdminRegistrationsPage() {
                                 <th className={styles.headCell}>Registered</th>
                                 <th className={styles.headCell}>Event</th>
                                 <th className={styles.headCell}>Registrant</th>
+                                <th className={styles.headCell}>Phone</th>
                                 <th className={styles.headCell}>Status</th>
                                 <th className={styles.headCell}>Payment</th>
                             </tr>
@@ -141,6 +146,7 @@ export default function AdminRegistrationsPage() {
                                     </td>
                                     <td className={styles.cell}>{row.event.name}</td>
                                     <td className={styles.cell}>{registrantLabel(row)}</td>
+                                    <td className={styles.cell}>{registrantPhone(row)}</td>
                                     <td className={styles.cell}>
                                         <StatusBadge status={row.status} />
                                     </td>
