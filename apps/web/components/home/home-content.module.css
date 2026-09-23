@@ -13,8 +13,32 @@
 }
 
 .inner {
+  position: relative;
+  z-index: 1;
   max-width: var(--container);
   margin-inline: auto;
+}
+
+/* --- Ghost words ----------------------------------------------------------
+   A huge outlined word behind each section, dragged sideways by the scroll.
+   Pure decoration: the section's own heading carries the meaning. */
+
+.ghost {
+  position: absolute;
+  z-index: 0;
+  top: clamp(1rem, 4vw, 3rem);
+  left: 0;
+  font-family: var(--f-sport);
+  font-size: clamp(7rem, 24vw, 22rem);
+  line-height: 0.8;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--char-700);
+  transform: translateX(calc(12vw - var(--progress, 0) * 55vw));
+  pointer-events: none;
+  user-select: none;
 }
 
 /* --- Section heads ------------------------------------------------------- */
@@ -52,15 +76,17 @@
 
 .eyebrow::before {
   content: "";
-  width: 32px;
-  height: 2px;
+  width: 40px;
+  height: 4px;
   background: var(--crimson-600);
 }
 
 .sectionTitle {
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  line-height: 1;
-  color: var(--bone-200);
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 900;
+  line-height: 0.9;
+  color: var(--bone-100);
+  text-shadow: 5px 5px 0 var(--crimson-800);
 }
 
 .sectionLede {
@@ -70,8 +96,10 @@
 }
 
 .textLink {
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--ember-500);
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--ember-500);
+  box-shadow: 5px 5px 0 var(--crimson-800);
+  transition: transform 90ms linear, box-shadow 90ms linear, color var(--t-state) var(--ease);
   font-family: var(--f-caps);
   font-size: var(--fs-small);
   font-weight: 700;
@@ -83,7 +111,8 @@
 
 .textLink:hover {
   color: var(--bone-100);
-  border-bottom-color: var(--bone-100);
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 var(--crimson-800);
 }
 
 /* --- Stats + countdown --------------------------------------------------- */
@@ -103,8 +132,8 @@
   grid-template-columns: repeat(2, 1fr);
   width: 100%;
   background: var(--char-800);
-  border: 1px solid var(--char-700);
-  border-radius: var(--radius-sm);
+  border: 2px solid var(--stone-600);
+  box-shadow: 10px 10px 0 var(--crimson-800);
 }
 
 @media (min-width: 768px) {
@@ -119,8 +148,13 @@
   align-items: flex-start;
   gap: 0.875rem;
   padding: clamp(1.5rem, 3vw, 2.5rem);
-  border-right: 1px solid var(--char-700);
-  border-bottom: 1px solid var(--char-700);
+  border-right: 2px solid var(--char-700);
+  border-bottom: 2px solid var(--char-700);
+  transition: background var(--t-state) var(--ease);
+}
+
+.stat:hover {
+  background: var(--char-750);
 }
 
 .stat:nth-child(2n) {
@@ -137,7 +171,7 @@
   }
 
   .stat:nth-child(2n) {
-    border-right: 1px solid var(--char-700);
+    border-right: 2px solid var(--char-700);
   }
 
   .stat:last-child {
@@ -147,17 +181,17 @@
 
 .statValue {
   font-family: var(--f-sport);
-  font-size: clamp(3rem, 6vw, 4.5rem);
-  line-height: 0.9;
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  line-height: 0.85;
   letter-spacing: 0.01em;
-  color: var(--bone-200);
+  color: var(--bone-100);
   font-variant-numeric: tabular-nums;
 }
 
 .statRule {
-  width: 28px;
-  height: 2px;
-  background: var(--ember-500);
+  width: 36px;
+  height: 4px;
+  background: var(--crimson-600);
 }
 
 .statLabel {
@@ -172,9 +206,11 @@
 /* --- Choose your sport --------------------------------------------------- */
 
 .sports {
+  position: relative;
+  overflow: hidden;
   padding: clamp(4.5rem, 9vw, 8rem) var(--spacing-container);
   background: var(--abyss-950);
-  border-block: 1px solid var(--char-700);
+  border-block: 3px solid var(--crimson-800);
 }
 
 .bento {
@@ -201,7 +237,15 @@
 /* --- Three days ---------------------------------------------------------- */
 
 .schedule {
+  position: relative;
+  overflow: hidden;
   padding: clamp(4.5rem, 9vw, 8rem) var(--spacing-container) clamp(5rem, 10vw, 9rem);
+}
+
+/* --burn: 0 → 1 while the timeline crosses the middle of the screen. The line
+   fills with fire and each day ignites as the burn reaches it. */
+.timeline {
+  --burn: clamp(0, calc((var(--progress, 0) - 0.28) * 2.6), 1);
 }
 
 .timeline {
@@ -227,19 +271,34 @@
 
 .dayItem {
   position: relative;
+  --lit: clamp(0, calc((var(--burn) * 3 - var(--i, 0)) * 3), 1);
+}
+
+.timeline::after {
+  content: "";
+  position: absolute;
+  background: linear-gradient(to right, var(--crimson-700), var(--ember-500) 85%, var(--glow-200));
+  box-shadow: 0 0 14px var(--ember-500);
+  transform-origin: left center;
 }
 
 .node {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
   background: var(--stone-600);
-  transform: rotate(45deg);
+  border: 2px solid var(--abyss-950);
+  transform: rotate(45deg) scale(calc(1 + var(--lit) * 0.4));
 }
 
-.climax .node {
+.node::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
   background: var(--ember-500);
-  box-shadow: 0 0 16px var(--ember-500);
+  box-shadow: 0 0 18px var(--ember-500), 0 0 36px var(--crimson-600);
+  opacity: var(--lit);
 }
 
 .day {
@@ -252,21 +311,35 @@
   min-height: 300px;
   padding: clamp(1.5rem, 3vw, 2.25rem);
   background: var(--char-800);
-  border: 1px solid var(--char-700);
-  border-radius: var(--radius-sm);
-  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
-  transition: border-color var(--t-reveal) var(--ease), transform var(--t-reveal) var(--ease);
+  border: 2px solid var(--char-700);
+  box-shadow: 8px 8px 0 var(--abyss-950);
+  transition: border-color var(--t-reveal) var(--ease), transform 90ms linear,
+    box-shadow 90ms linear;
+}
+
+/* The burn bar across the top of each card, filling as the day ignites. */
+.day::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 5px;
+  background: linear-gradient(to right, var(--crimson-700), var(--ember-500));
+  transform: scaleX(var(--lit));
+  transform-origin: left;
 }
 
 .day:hover {
   border-color: var(--stone-600);
-  transform: translateY(-4px);
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0 var(--abyss-950);
 }
 
 .climax .day {
   background: linear-gradient(to bottom, #3a1a14, var(--char-800));
   border-color: var(--ember-500);
-  box-shadow: 0 12px 48px -8px rgba(212, 98, 47, 0.25);
+  box-shadow: 8px 8px 0 var(--crimson-800), 0 20px 60px -10px rgba(212, 98, 47, calc(var(--lit) * 0.45));
 }
 
 /* Engraved roman numeral behind each day. */
@@ -279,13 +352,13 @@
   font-weight: 700;
   line-height: 1;
   color: var(--stone-600);
-  opacity: 0.55;
+  opacity: calc(0.4 + var(--lit) * 0.3);
+  text-shadow: 0 0 calc(var(--lit) * 30px) rgba(212, 98, 47, 0.6);
   pointer-events: none;
 }
 
 .climax .numeral {
   color: var(--crimson-700);
-  opacity: 0.7;
 }
 
 .dayLabel {
@@ -322,11 +395,21 @@
     padding-left: 28px;
   }
 
+  .timeline::after {
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    transform: scaleY(var(--burn));
+    transform-origin: top center;
+    background: linear-gradient(to bottom, var(--crimson-700), var(--ember-500) 85%, var(--glow-200));
+  }
+
   .timeline::before {
     left: 6px;
     top: 0;
     bottom: 0;
-    width: 2px;
+    width: 3px;
     background: repeating-linear-gradient(
       to bottom,
       var(--stone-600) 0 120px,
@@ -337,7 +420,7 @@
   }
 
   .node {
-    left: -27px;
+    left: -28px;
     top: 26px;
   }
 
@@ -353,16 +436,21 @@
     padding-top: 48px;
   }
 
-  .timeline::before {
+  .timeline::before,
+  .timeline::after {
     left: 0;
     right: 0;
     top: 10px;
-    height: 2px;
+    height: 3px;
+  }
+
+  .timeline::after {
+    transform: scaleX(var(--burn));
   }
 
   .node {
     left: 36px;
-    top: -43px;
+    top: -44px;
   }
 
   .day {
@@ -375,8 +463,29 @@
 .legacyBand {
   position: relative;
   overflow: hidden;
-  padding: clamp(6rem, 12vw, 9rem) var(--spacing-container) clamp(6rem, 12vw, 9rem);
+  padding: clamp(7rem, 14vw, 11rem) var(--spacing-container) clamp(8rem, 16vw, 12rem);
   background: linear-gradient(to bottom, var(--char-900) 44px, var(--abyss-950) 44px);
+}
+
+.legacyFire {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 75%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: calc(0.5 + var(--progress, 0) * 0.8);
+}
+
+/* "RISE" climbs out of the fire as the band scrolls through. */
+.ghostRise {
+  top: auto;
+  bottom: -0.12em;
+  left: 50%;
+  font-size: clamp(10rem, 36vw, 34rem);
+  -webkit-text-stroke: 2px rgba(163, 39, 42, 0.45);
+  transform: translate(-50%, calc(40% - var(--progress-ease, 0) * 40%));
 }
 
 .legacyRidge {
@@ -402,46 +511,14 @@
     rgba(94, 15, 17, 0)
   );
   filter: blur(30px);
-  animation: glow-breathe 6s ease-in-out infinite;
+  opacity: calc(0.4 + var(--progress, 0) * 0.9);
   pointer-events: none;
 }
 
-@keyframes glow-breathe {
-  0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -54%) scale(1.06); }
-}
-
-.legacyEmbers span {
-  position: absolute;
-  bottom: 0;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--ember-300);
-  box-shadow: 0 0 8px rgba(212, 98, 47, 0.9);
-  opacity: 0;
-  animation: legacy-ember 7s ease-in infinite;
-}
-
-@keyframes legacy-ember {
-  0% { opacity: 0; transform: translateY(0); }
-  15% { opacity: 0.9; }
-  100% { opacity: 0; transform: translateY(-420px) translateX(var(--drift, 10px)); }
-}
-
-.legacyEmbers span:nth-child(1)  { left: 30%; animation-delay: 0s;   --drift: 14px; }
-.legacyEmbers span:nth-child(2)  { left: 38%; animation-delay: 1.4s; --drift: -10px; }
-.legacyEmbers span:nth-child(3)  { left: 45%; animation-delay: 2.8s; --drift: 18px; }
-.legacyEmbers span:nth-child(4)  { left: 51%; animation-delay: 0.7s; --drift: -16px; }
-.legacyEmbers span:nth-child(5)  { left: 57%; animation-delay: 3.5s; --drift: 8px; }
-.legacyEmbers span:nth-child(6)  { left: 63%; animation-delay: 2.1s; --drift: -12px; }
-.legacyEmbers span:nth-child(7)  { left: 70%; animation-delay: 4.6s; --drift: 16px; }
-.legacyEmbers span:nth-child(8)  { left: 34%; animation-delay: 5.2s; --drift: -8px; }
-.legacyEmbers span:nth-child(9)  { left: 48%; animation-delay: 6s;   --drift: 12px; }
-.legacyEmbers span:nth-child(10) { left: 66%; animation-delay: 1s;   --drift: -18px; }
 
 .legacy {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -466,12 +543,13 @@
 
 .legacyTitle {
   font-family: var(--f-display);
-  font-size: clamp(3rem, 8vw, 6rem);
-  font-weight: 700;
-  line-height: 1;
+  font-size: clamp(3.5rem, 10vw, 8rem);
+  font-weight: 900;
+  line-height: 0.9;
   color: var(--bone-100);
   max-width: 12ch;
-  text-shadow: 0 0 40px rgba(193, 68, 42, 0.45);
+  text-shadow: 6px 6px 0 var(--crimson-800), 0 0 50px rgba(193, 68, 42, 0.6);
+  transform: scale(calc(0.9 + var(--progress-ease, 0) * 0.16));
 }
 
 .legacyBody {
@@ -494,11 +572,10 @@
   text-transform: uppercase;
   color: var(--bone-100);
   background: var(--crimson-700);
-  border: 1px solid var(--crimson-600);
-  border-radius: var(--radius-sm);
-  transition: background var(--t-state) var(--ease), transform var(--t-state) var(--ease),
-    box-shadow var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
-  animation: legacy-cta-pulse 2.6s ease-in-out infinite;
+  border: 2px solid var(--abyss-950);
+  box-shadow: 7px 7px 0 var(--bone-100);
+  transition: background var(--t-state) var(--ease), transform 90ms linear,
+    box-shadow 90ms linear;
 }
 
 .legacyCta span {
@@ -506,21 +583,16 @@
   transition: transform var(--t-state) var(--ease);
 }
 
-@keyframes legacy-cta-pulse {
-  0%, 100% {
-    box-shadow: 0 10px 40px -6px rgba(139, 26, 26, 0.5), 0 0 0 0 rgba(212, 98, 47, 0.35);
-  }
-  50% {
-    box-shadow: 0 10px 40px -6px rgba(139, 26, 26, 0.5), 0 0 0 10px rgba(212, 98, 47, 0);
-  }
-}
-
 .legacyCta:hover {
   color: var(--bone-50);
   background: var(--crimson-600);
-  border-color: var(--ember-500);
-  transform: skewX(-4deg) translateY(-2px);
-  animation-play-state: paused;
+  transform: translate(-3px, -3px);
+  box-shadow: 10px 10px 0 var(--bone-100), 0 0 40px rgba(212, 98, 47, 0.5);
+}
+
+.legacyCta:active {
+  transform: translate(7px, 7px);
+  box-shadow: 0 0 0 var(--bone-100);
 }
 
 .legacyCta:hover span {

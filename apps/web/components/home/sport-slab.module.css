@@ -7,19 +7,48 @@
   overflow: hidden;
   isolation: isolate;
   background: var(--char-800);
-  border: 1px solid var(--stone-600);
-  border-radius: var(--radius-sm);
+  border: 2px solid var(--stone-600);
   color: var(--bone-100);
-  /* The chipped top-right corner of a stone slab. */
-  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
-  transition: border-color var(--t-reveal) var(--ease), box-shadow var(--t-reveal) var(--ease);
+  box-shadow: 0 0 0 var(--crimson-700);
+  transition: border-color var(--t-state) var(--ease), transform 110ms linear,
+    box-shadow 110ms linear;
 }
 
+/* Brutal lift: the slab jumps off a hard crimson shadow. */
 .slab:hover,
 .slab:focus-visible {
   color: var(--bone-100);
   border-color: var(--ember-500);
-  box-shadow: 0 16px 48px -12px rgba(212, 98, 47, 0.35);
+  transform: translate(-6px, -6px);
+  box-shadow: 10px 10px 0 var(--crimson-700);
+}
+
+/* Fire catching along the bottom edge on hover. */
+.slab::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: -10%;
+  right: -10%;
+  bottom: -30%;
+  height: 60%;
+  background: radial-gradient(ellipse 50% 60% at 50% 100%, rgba(240, 138, 74, 0.85), rgba(181, 42, 32, 0.5) 45%, rgba(94, 15, 17, 0) 75%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateY(20%);
+  transition: opacity var(--t-reveal) var(--ease), transform 400ms var(--ease);
+  pointer-events: none;
+}
+
+.slab:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+  animation: slab-burn 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes slab-burn {
+  from { filter: brightness(0.85); }
+  to { filter: brightness(1.2); }
 }
 
 .slab:focus-visible {
@@ -90,6 +119,7 @@
 }
 
 .tag {
+  box-shadow: 3px 3px 0 var(--abyss-950);
   font-family: var(--f-caps);
   font-size: 0.5625rem;
   font-weight: 700;
@@ -109,6 +139,7 @@
 
 .name {
   font-family: var(--f-sport);
+  text-shadow: 3px 3px 0 var(--crimson-800);
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   line-height: 0.95;
   letter-spacing: 0.04em;

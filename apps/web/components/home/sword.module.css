@@ -1,0 +1,124 @@
+/* The rig is a zero-size point at the sword's grip; everything is laid out
+   around it, so the sword and its trail share one pivot. The parent sets
+   --progress-ease; --swing turns it into an angle. */
+
+.rig {
+  --len: min(108vh, 1080px);
+  --swing: calc(12deg - var(--progress-ease, 0) * 137deg);
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* The rig is zero-width, and globals.css caps every svg at max-width: 100%. */
+.sword,
+.trail {
+  max-width: none;
+}
+
+.sword {
+  position: absolute;
+  height: var(--len);
+  width: calc(var(--len) / 10);
+  left: calc(var(--len) / -20);
+  top: calc(var(--len) * -0.875);
+  transform-origin: 50% 87.5%;
+  transform: rotate(var(--swing));
+  filter: drop-shadow(0 0 2px #0e0c0b) drop-shadow(0 0 22px rgba(212, 98, 47, 0.65))
+    drop-shadow(0 30px 40px rgba(0, 0, 0, 0.7));
+  overflow: visible;
+  animation: sword-idle 5s ease-in-out infinite;
+}
+
+/* At rest the blade breathes — a slow sway, so the hero is never still. */
+@keyframes sword-idle {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+.heat {
+  opacity: calc(0.35 + var(--progress-ease, 0) * 0.65);
+  mix-blend-mode: screen;
+}
+
+.edge {
+  fill: none;
+  stroke: #d4622f;
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 6px #d4622f);
+}
+
+.edgeFaint {
+  fill: none;
+  stroke: #a3272a;
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.runes {
+  fill: none;
+  stroke: #f0a06a;
+  stroke-width: 1.6;
+  stroke-linecap: square;
+  opacity: calc(0.35 + var(--progress-ease, 0) * 0.65);
+  filter: drop-shadow(0 0 3px #d4622f);
+  animation: rune-flicker 2.4s ease-in-out infinite;
+}
+
+@keyframes rune-flicker {
+  0%, 100% { stroke: #f0a06a; }
+  50% { stroke: #f7d9b8; }
+}
+
+.guard {
+  fill: #8b1a1a;
+  stroke: #0e0c0b;
+  stroke-width: 2;
+}
+
+.pommel {
+  fill: #d4622f;
+  stroke: #0e0c0b;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px #d4622f);
+}
+
+/* The trail: an arc swept by the tip, drawn in as the blade passes and burnt
+   off again at the end of the swing. */
+.trail {
+  position: absolute;
+  width: calc(var(--len) * 1.9);
+  height: calc(var(--len) * 1.9);
+  left: calc(var(--len) * -0.95);
+  top: calc(var(--len) * -0.95);
+  overflow: visible;
+  opacity: min(calc(var(--progress-ease, 0) * 5), calc((1 - var(--progress-ease, 0)) * 2.2));
+}
+
+.trailWide,
+.trailCore {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--progress-ease, 0));
+}
+
+.trailWide {
+  stroke: url(#trail-burn);
+  stroke-width: 0.075;
+  opacity: 0.55;
+  filter: blur(6px);
+}
+
+.trailCore {
+  stroke: url(#trail-burn);
+  stroke-width: 0.018;
+  filter: drop-shadow(0 0 6px #a3272a);
+}
+
+@media (max-width: 768px) {
+  .rig {
+    --len: min(78vh, 640px);
+  }
+}

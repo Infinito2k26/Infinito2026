@@ -1,0 +1,70 @@
+.tapes {
+  position: relative;
+  z-index: 5;
+  height: clamp(5rem, 9vw, 8rem);
+  margin-top: calc(clamp(5rem, 9vw, 8rem) / -2);
+  margin-bottom: calc(clamp(5rem, 9vw, 8rem) / -2);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tape {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  top: 50%;
+  padding: 0.55rem 0 0.35rem;
+  border-block: 3px solid var(--abyss-950);
+  overflow: hidden;
+}
+
+.front {
+  background: var(--crimson-700);
+  transform: translateY(-50%) rotate(-2.4deg);
+  box-shadow: 0 8px 0 var(--abyss-950);
+}
+
+.back {
+  background: var(--char-750);
+  transform: translateY(-50%) rotate(2.2deg);
+}
+
+.run {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  font-family: var(--f-sport);
+  font-size: clamp(1.375rem, 2.6vw, 2.25rem);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.front .run {
+  color: var(--bone-100);
+  transform: translateX(calc(-8% - var(--progress, 0) * 22%));
+}
+
+.back .run {
+  color: var(--stone-600);
+  transform: translateX(calc(-30% + var(--progress, 0) * 22%));
+}
+
+.run span {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.run i {
+  width: 0.55em;
+  height: 0.55em;
+  background: currentColor;
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+
+.front .run i {
+  background: var(--glow-200);
+}

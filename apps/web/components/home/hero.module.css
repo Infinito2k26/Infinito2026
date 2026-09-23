@@ -1,172 +1,302 @@
 /* ---------------------------------------------------------------------------
-   Landing hero — the art, burnt down to dusk.
+   Landing hero — Ragnarök, burning.
 
-   Layers, back to front: abyss ground → art (parallax slow) → multiply grade →
-   fire glow (screen) → fade into the page → embers (parallax fast) → actions.
+   ScrollScene writes --progress / --progress-ease (0 → 1 as the hero scrolls
+   away). Everything that moves on scroll reads them through calc().
    ------------------------------------------------------------------------- */
 
 .hero {
   position: relative;
-  background: var(--abyss-950);
-  isolation: isolate;
+  height: max(100svh, 640px);
+  max-height: 1180px;
   overflow: hidden;
+  isolation: isolate;
+  /* Smoke-red sky behind the title, where the art has been masked away. */
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 30%, rgba(139, 26, 26, 0.55), rgba(94, 15, 17, 0) 70%),
+    var(--abyss-950);
 }
 
 .underNav {
   padding-top: var(--navbar-h);
 }
 
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* --- Art ----------------------------------------------------------------- */
+
 .artWrap {
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  /* The art's baked-in title lives in its upper band. Fade that band into the
+     abyss so only the live title reads, whatever the viewport's shape. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 54%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 54%);
+}
+
+.underNav .artWrap {
+  top: var(--navbar-h);
 }
 
 .picture {
   display: block;
+  height: 100%;
+  transform: translateY(calc(var(--progress, 0) * 22%));
+  will-change: transform;
 }
 
+/* Scaled up from the bottom edge so the art's own baked-in title leaves the
+   frame — the live title replaces it — while the battlefield stays. */
 .art {
   width: 100%;
-  height: auto;
-  display: block;
-  transform: scale(1.06);
-  animation: kenburns 14s var(--ease) forwards;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  transform-origin: center bottom;
+  animation: kenburns 16s var(--ease) forwards;
 }
 
 @keyframes kenburns {
-  to {
-    transform: scale(1);
-  }
+  from { transform: scale(1.5); }
+  to { transform: scale(1.38); }
 }
 
-/* The sky is bone; multiplying it by this gradient turns it to a warm glow
-   behind the title and abyss at the edges. Charcoal figures stay charcoal. */
+/* Bone sky × this = a crimson dusk, brightest where the fire giant burns. */
 .grade {
   position: absolute;
   inset: 0;
   mix-blend-mode: multiply;
-  background: radial-gradient(
-    ellipse 58% 66% at 50% 24%,
-    #ffd7ae 0%,
-    #c4704a 30%,
-    #5a2a1c 62%,
-    #1a120e 96%
-  );
+  background:
+    radial-gradient(ellipse 55% 55% at 50% 72%, #ffcf9e 0%, #d8743e 24%, transparent 60%),
+    linear-gradient(to bottom, #0e0605 0%, #1c0907 22%, #5a1611 44%, #8e3522 66%, #3a1510 100%);
   pointer-events: none;
 }
 
-/* The fire giant's blaze, lifted back out of the grade. */
 .fireGlow {
   position: absolute;
   left: 50%;
-  top: 62%;
-  width: min(34vw, 420px);
-  aspect-ratio: 5 / 6;
-  transform: translate(-50%, -50%);
+  bottom: 6%;
+  width: min(70vw, 900px);
+  height: 60%;
+  transform: translateX(-50%);
   mix-blend-mode: screen;
-  background: radial-gradient(closest-side, rgba(212, 98, 47, 0.5), rgba(212, 98, 47, 0));
-  filter: blur(24px);
+  background: radial-gradient(closest-side, rgba(212, 98, 47, 0.55), rgba(163, 39, 42, 0.25) 55%, rgba(163, 39, 42, 0));
+  filter: blur(30px);
   pointer-events: none;
-  animation: flicker 3.2s ease-in-out infinite;
+  animation: flicker 2.8s ease-in-out infinite;
 }
 
 @keyframes flicker {
-  0%, 100% { opacity: 0.85; }
-  40% { opacity: 1; }
-  55% { opacity: 0.7; }
+  0%, 100% { opacity: 0.8; }
+  30% { opacity: 1; }
+  45% { opacity: 0.65; }
+  70% { opacity: 0.95; }
 }
 
 .fade {
   position: absolute;
   inset: auto 0 0 0;
-  height: 42%;
-  background: linear-gradient(to bottom, rgba(27, 23, 21, 0), rgba(27, 23, 21, 0.6) 55%, var(--char-900));
+  height: 30%;
+  background: linear-gradient(to bottom, rgba(14, 12, 11, 0), var(--abyss-950));
   pointer-events: none;
 }
 
-/* --- Embers -------------------------------------------------------------- */
+/* --- Sword --------------------------------------------------------------- */
 
-.embers {
-  position: absolute;
-  inset: 20% 0 0 0;
-  pointer-events: none;
-  overflow: hidden;
+.sword {
   z-index: 1;
+  right: 24vw;
+  bottom: 16%;
 }
 
-.ember {
+/* --- Title --------------------------------------------------------------- */
+
+.titleBlock {
   position: absolute;
-  bottom: -2%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--ember-300);
-  box-shadow: 0 0 8px 2px rgba(212, 98, 47, 0.8);
+  z-index: 2;
+  left: 50%;
+  top: calc(var(--navbar-h) + clamp(2.5rem, 9vh, 6rem));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translate(-50%, calc(var(--progress-ease, 0) * -12vh))
+    scale(calc(1 + var(--progress-ease, 0) * 0.32));
+  opacity: calc(1 - var(--progress, 0) * 1.7);
+  will-change: transform, opacity;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  max-width: none;
+  font-family: var(--f-caps);
+  font-size: clamp(0.625rem, 1vw, 0.8125rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--bone-200);
   opacity: 0;
-  animation: ember-rise 7s ease-in infinite;
+  animation: rise-in 900ms var(--ease) 200ms forwards;
 }
 
-@keyframes ember-rise {
-  0% {
+.kicker i {
+  width: 7px;
+  height: 7px;
+  background: var(--crimson-600);
+  transform: rotate(45deg);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: clamp(0.5rem, 2vh, 1.25rem);
+  line-height: 1;
+  color: inherit;
+}
+
+.titleOf {
+  font-family: var(--f-display);
+  font-size: clamp(1.75rem, 4.4vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--bone-100);
+  text-shadow: 0 0 24px rgba(212, 98, 47, 0.6), 0 3px 0 #0e0c0b;
+  opacity: 0;
+  animation: rise-in 900ms var(--ease) 350ms forwards;
+}
+
+/* RAGNARÖK: as wide as the screen, filled with a moving flame gradient and
+   shimmering in its own heat. The ::before is the fire behind the letters. */
+.titleMain {
+  position: relative;
+  display: block;
+  font-family: var(--f-display);
+  font-size: clamp(5rem, 21vw, 22rem);
+  font-weight: 900;
+  line-height: 0.82;
+  letter-spacing: -0.01em;
+  padding: 0 0.05em 0.08em;
+  color: transparent;
+  background: linear-gradient(
+    to top,
+    #ffd9a8 0%,
+    #f08a4a 9%,
+    #d4622f 20%,
+    #b52a20 36%,
+    #8b1a1a 56%,
+    #5e0f11 80%,
+    #2a0707 100%
+  );
+  background-size: 100% 170%;
+  background-position: 0 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: url(#ragnarok-heat) drop-shadow(0 0 28px rgba(212, 98, 47, 0.5))
+    drop-shadow(0 8px 0 #0e0c0b);
+  animation: burn-in 1.4s var(--ease) 450ms both, flame-shift 2.6s ease-in-out 1.9s infinite alternate;
+}
+
+.titleMain::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: inherit;
+  color: #a3272a;
+  filter: blur(30px);
+  opacity: 0.5;
+  animation: flicker 1.9s ease-in-out infinite;
+}
+
+@keyframes burn-in {
+  from {
     opacity: 0;
-    transform: translate(0, 0) scale(0.6);
+    background-position: 0 0%;
+    transform: translateY(30px) scale(0.96);
   }
-  12% {
-    opacity: 0.95;
-  }
-  80% {
-    opacity: 0.35;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--drift, 12px), -70vh) scale(1.1);
+  to {
+    opacity: 1;
+    background-position: 0 100%;
+    transform: none;
   }
 }
 
-.ember:nth-child(1)  { left: 4%;  animation-delay: 0s;   animation-duration: 6.5s; --drift: 18px; }
-.ember:nth-child(2)  { left: 11%; animation-delay: 2.1s; animation-duration: 8.8s; --drift: -24px; }
-.ember:nth-child(3)  { left: 17%; animation-delay: 4.4s; animation-duration: 6.2s; --drift: 10px; }
-.ember:nth-child(4)  { left: 24%; animation-delay: 0.6s; animation-duration: 9.4s; --drift: -8px; }
-.ember:nth-child(5)  { left: 31%; animation-delay: 3.1s; animation-duration: 7.1s; --drift: 26px; }
-.ember:nth-child(6)  { left: 37%; animation-delay: 1.8s; animation-duration: 6.9s; --drift: -16px; }
-.ember:nth-child(7)  { left: 43%; animation-delay: 5s;   animation-duration: 7.6s; --drift: 14px; }
-.ember:nth-child(8)  { left: 48%; animation-delay: 0.3s; animation-duration: 5.8s; --drift: -20px; }
-.ember:nth-child(9)  { left: 52%; animation-delay: 2.7s; animation-duration: 6.4s; --drift: 22px; }
-.ember:nth-child(10) { left: 57%; animation-delay: 4.1s; animation-duration: 8.2s; --drift: -12px; }
-.ember:nth-child(11) { left: 63%; animation-delay: 1.2s; animation-duration: 7.3s; --drift: 16px; }
-.ember:nth-child(12) { left: 69%; animation-delay: 3.6s; animation-duration: 6.1s; --drift: -26px; }
-.ember:nth-child(13) { left: 74%; animation-delay: 0.9s; animation-duration: 9s;   --drift: 8px; }
-.ember:nth-child(14) { left: 80%; animation-delay: 5.4s; animation-duration: 6.7s; --drift: -14px; }
-.ember:nth-child(15) { left: 86%; animation-delay: 2.4s; animation-duration: 7.8s; --drift: 20px; }
-.ember:nth-child(16) { left: 91%; animation-delay: 4.7s; animation-duration: 6.3s; --drift: -18px; }
-.ember:nth-child(17) { left: 95%; animation-delay: 1.5s; animation-duration: 8.5s; --drift: 12px; }
-.ember:nth-child(18) { left: 28%; animation-delay: 6s;   animation-duration: 7.4s; --drift: -10px; }
-
-.ember:nth-child(3n) {
-  width: 2px;
-  height: 2px;
-  background: var(--glow-200);
+@keyframes flame-shift {
+  from { background-position: 0 100%; }
+  to { background-position: 0 78%; }
 }
 
-.ember:nth-child(4n) {
-  width: 4px;
-  height: 4px;
-  filter: blur(0.6px);
+/* Brutal date slab — hard crimson block, hard black shadow, knocked askew. */
+.dates {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  max-width: none;
+  margin-top: clamp(0.75rem, 2.4vh, 1.5rem);
+  padding: 0.35rem 1rem 0.2rem;
+  font-family: var(--f-sport);
+  font-size: clamp(1.125rem, 2vw, 1.75rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-100);
+  background: var(--crimson-700);
+  border: 2px solid var(--abyss-950);
+  box-shadow: 6px 6px 0 var(--abyss-950);
+  transform: rotate(-2deg);
+  opacity: 0;
+  animation: slam-in 500ms cubic-bezier(0.3, 1.6, 0.5, 1) 1.2s forwards;
+}
+
+.dates span {
+  font-size: 1.35em;
+  color: var(--glow-200);
+}
+
+@keyframes slam-in {
+  from { opacity: 0; transform: rotate(-8deg) scale(1.6); }
+  to { opacity: 1; transform: rotate(-2deg) scale(1); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --- Flames -------------------------------------------------------------- */
+
+.flames {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 58%;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 /* --- Actions ------------------------------------------------------------- */
 
-/* On phones the 4:5 crop is tall, so the actions drop below the image. From
-   tablet up they sit in the dark ruin band along the bottom of the art. */
 .actions {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: clamp(5.5rem, 13vh, 8.5rem);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 1rem;
   justify-content: center;
-  padding: var(--space-5) var(--spacing-container) var(--space-7);
-  background: var(--char-900);
+  padding-inline: var(--spacing-container);
 }
 
 .primary,
@@ -175,200 +305,152 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  min-height: 48px;
-  padding: 1rem 1.75rem;
+  min-height: 52px;
+  padding: 1rem 1.875rem;
   font-family: var(--f-caps);
   font-size: var(--fs-small);
   font-weight: 700;
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
   color: var(--bone-100);
+  border: 2px solid var(--abyss-950);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 var(--abyss-950);
   opacity: 0;
-  transform: translateY(16px);
-  animation: cta-enter 700ms var(--ease) forwards;
-  transition: background var(--t-state) var(--ease), border-color var(--t-state) var(--ease),
-    transform var(--t-state) var(--ease), box-shadow var(--t-state) var(--ease),
-    color var(--t-state) var(--ease);
-}
-
-.primary span,
-.secondary span {
-  transition: transform var(--t-state) var(--ease);
+  animation: cta-enter 600ms var(--ease) forwards;
+  transition: transform 90ms linear, box-shadow 90ms linear, background var(--t-state) var(--ease);
 }
 
 .primary {
-  animation-delay: 900ms;
   background: var(--crimson-700);
-  border-color: var(--crimson-600);
-  box-shadow: 0 8px 28px -6px rgba(139, 26, 26, 0.6);
+  animation-delay: 1.4s;
+}
+
+.secondary {
+  background: var(--bone-100);
+  color: var(--abyss-950);
+  animation-delay: 1.55s;
 }
 
 .primary span {
   color: var(--glow-200);
 }
 
-.secondary {
-  animation-delay: 1050ms;
-  background: rgba(14, 12, 11, 0.55);
-  border-color: var(--stone-600);
-  backdrop-filter: blur(6px);
-}
-
 .secondary span {
-  color: var(--ember-300);
+  color: var(--crimson-700);
 }
 
 @keyframes cta-enter {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
 
-/* Brutal, not bouncy: a hard skew and a harsh crimson glow. */
+/* Brutal press: lifts off its shadow on hover, slams flat on click. */
+.primary:hover,
+.secondary:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--abyss-950);
+}
+
 .primary:hover {
   color: var(--bone-50);
   background: var(--crimson-600);
-  border-color: var(--ember-500);
-  transform: skewX(-4deg) translateY(-2px);
-  box-shadow: 0 0 0 1px var(--ember-500), 0 10px 40px -4px rgba(163, 39, 42, 0.85);
+  box-shadow: 9px 9px 0 var(--abyss-950), 0 0 40px rgba(212, 98, 47, 0.45);
 }
 
 .secondary:hover {
-  color: var(--bone-50);
-  background: var(--char-750);
-  border-color: var(--ember-500);
-  transform: skewX(-4deg) translateY(-2px);
+  color: var(--abyss-950);
+  background: var(--glow-200);
 }
 
-.primary:hover span,
-.secondary:hover span {
-  transform: translateX(4px);
+.primary:active,
+.secondary:active {
+  transform: translate(6px, 6px);
+  box-shadow: 0 0 0 var(--abyss-950);
 }
 
 .primary:focus-visible,
 .secondary:focus-visible {
-  outline: 2px solid var(--ember-300);
-  outline-offset: 3px;
+  outline: 3px solid var(--ember-300);
+  outline-offset: 4px;
 }
 
-.cue,
-.ridge {
-  display: none;
+/* --- Scroll cue ---------------------------------------------------------- */
+
+.cue {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--mist-400);
+  opacity: calc(1 - var(--progress, 0) * 6);
 }
 
-@media (max-width: 480px) {
-  .primary,
-  .secondary {
-    flex: 1 1 100%;
-  }
+.cue i {
+  width: 2px;
+  height: 36px;
+  background: linear-gradient(var(--crimson-600), transparent);
+  transform-origin: top;
+  animation: cue-drop 2s var(--ease) infinite;
 }
 
-/* --- Tablet and up: full-height stage ------------------------------------ */
+@keyframes cue-drop {
+  0% { transform: scaleY(0); opacity: 1; }
+  70% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
 
-@media (min-width: 769px) {
+/* --- Phones -------------------------------------------------------------- */
+
+@media (max-width: 768px) {
   .hero {
-    height: min(100svh, 1080px);
-    min-height: 620px;
+    height: max(100svh, 620px);
   }
 
-  .artWrap {
-    position: absolute;
-    inset: 0;
-  }
-
-  .underNav .artWrap {
-    top: var(--navbar-h);
-  }
-
-  .picture,
   .art {
-    height: 100%;
+    animation-name: kenburns-mobile;
   }
 
-  /* Anchored high so the baked-in title survives the crop at every width. */
-  .art {
-    object-fit: cover;
-    object-position: center 20%;
+  @keyframes kenburns-mobile {
+    from { transform: scale(1.62); }
+    to { transform: scale(1.55); }
+  }
+
+  .sword {
+    right: 30vw;
+    bottom: 30%;
+  }
+
+  .titleBlock {
+    top: calc(var(--navbar-h) + 7vh);
+  }
+
+  .kicker {
+    gap: 0.5rem;
+    letter-spacing: 0.18em;
+  }
+
+  .titleMain {
+    font-size: 20.5vw;
   }
 
   .actions {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: clamp(6.5rem, 14vh, 9rem);
-    padding-block: 0;
-    background: transparent;
+    bottom: 4.5rem;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .cue {
-    position: absolute;
-    z-index: 2;
-    left: 50%;
-    bottom: 2.75rem;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.625rem;
-    font-family: var(--f-caps);
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: var(--track-micro);
-    text-transform: uppercase;
-    color: var(--mist-400);
-  }
-
-  .cue i {
-    width: 1px;
-    height: 40px;
-    background: linear-gradient(var(--ember-500), transparent);
-    animation: cue-drop 2.2s var(--ease) infinite;
-    transform-origin: top;
-  }
-
-  @keyframes cue-drop {
-    0% { transform: scaleY(0); opacity: 1; }
-    70% { transform: scaleY(1); opacity: 1; }
-    100% { transform: scaleY(1); opacity: 0; }
-  }
-
-  .ridge {
-    display: block;
-    position: absolute;
-    z-index: 2;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    width: 100%;
-    height: 44px;
-  }
-}
-
-/* --- Parallax, where the browser can drive it from scroll ---------------- */
-
-@supports (animation-timeline: scroll()) {
-  @media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
-    .picture {
-      animation: drift-slow linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-
-    .embers {
-      animation: drift-fast linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-
-    @keyframes drift-slow {
-      to { transform: translateY(18%); }
-    }
-
-    @keyframes drift-fast {
-      to { transform: translateY(-30%); }
-    }
+    display: none;
   }
 }

@@ -2,6 +2,9 @@ import Link from "next/link";
 import Hero from "@/components/home/hero";
 import Countdown from "@/components/home/countdown";
 import SportSlab from "@/components/home/sport-slab";
+import WarTape from "@/components/home/war-tape";
+import FireCanvas from "@/components/home/fire-canvas";
+import ScrollScene from "@/components/ui/scroll-scene";
 import Ornament from "@/components/ui/ornament";
 import Reveal from "@/components/ui/reveal";
 import CountUp from "@/components/ui/count-up";
@@ -61,6 +64,7 @@ export default function HomeContent({
   return (
     <div className={styles.ruins}>
       <Hero underNav={underNav} />
+      <WarTape />
 
       <section className={styles.stats} aria-label="Infinito 2026 at a glance">
         <div className={styles.statsInner}>
@@ -77,7 +81,10 @@ export default function HomeContent({
         <Countdown target={festDates.start} />
       </section>
 
-      <section className={styles.sports}>
+      <ScrollScene className={styles.sports}>
+        <span className={styles.ghost} aria-hidden="true">
+          Battlefield
+        </span>
         <div className={styles.inner}>
           <div className={styles.sectionHeadRow}>
             <Reveal className={styles.sectionHead}>
@@ -105,9 +112,12 @@ export default function HomeContent({
             ))}
           </div>
         </div>
-      </section>
+      </ScrollScene>
 
-      <section className={styles.schedule}>
+      <ScrollScene className={styles.schedule}>
+        <span className={styles.ghost} aria-hidden="true">
+          Days of war
+        </span>
         <div className={styles.inner}>
           <Reveal className={styles.sectionHead}>
             <p className={styles.eyebrow}>{festDates.label}</p>
@@ -119,6 +129,7 @@ export default function HomeContent({
               <li
                 key={day}
                 className={`${styles.dayItem} ${i === DAYS.length - 1 ? styles.climax : ""}`}
+                style={{ "--i": i } as React.CSSProperties}
               >
                 <span className={styles.node} aria-hidden="true" />
                 <Reveal index={i} className={styles.day}>
@@ -135,16 +146,15 @@ export default function HomeContent({
             ))}
           </ol>
         </div>
-      </section>
+      </ScrollScene>
 
-      <section className={styles.legacyBand}>
+      <ScrollScene className={styles.legacyBand}>
         <Ornament variant="ridge" fill="var(--abyss-950)" className={styles.legacyRidge} />
+        <span className={`${styles.ghost} ${styles.ghostRise}`} aria-hidden="true">
+          Rise
+        </span>
         <div className={styles.legacyGlow} aria-hidden="true" />
-        <div className={styles.legacyEmbers} aria-hidden="true">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <span key={i} />
-          ))}
-        </div>
+        <FireCanvas className={styles.legacyFire} density={1.3} />
         <Reveal className={styles.legacy}>
           <Ornament variant="valknut" className={styles.legacyMark} />
           <h2 className={styles.legacyTitle}>From the ruins, we rise</h2>
@@ -156,7 +166,7 @@ export default function HomeContent({
             Write your legacy <span aria-hidden="true">→</span>
           </Link>
         </Reveal>
-      </section>
+      </ScrollScene>
     </div>
   );
 }
