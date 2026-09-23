@@ -1,17 +1,29 @@
 /* ---------------------------------------------------------------------------
-   Landing hero — Ragnarök, burning.
+   Landing hero — Surtr, the fire giant, igniting.
 
-   ScrollScene writes --progress / --progress-ease (0 → 1 as the hero scrolls
-   away). Everything that moves on scroll reads them through calc().
+   ScrollScene writes --progress (0 → 1 across the whole section). The scene is
+   pinned (.pin is sticky) for the first --hero-run of scroll, and --lit rises
+   0 → 1 over that stretch: the painting starts as smouldering embers and
+   catches fire outward from the giant's burning head.
    ------------------------------------------------------------------------- */
 
-/* The hero is taller than the screen: its scene is pinned (sticky) while the
-   first --hero-run of scroll drives the giant's swing, then scrolls away.
-   Progress (0 → 1) spans the whole section, so the pinned stretch is roughly
-   the first half of it. */
 .hero {
   --hero-h: min(max(100svh, 640px), 1180px);
-  --hero-run: 90vh;
+  --hero-run: 70vh;
+  --lit: clamp(0.1, calc(var(--progress, 0) / 0.34), 1);
+  /* The painting, hero-surtr.jpg (1992×1386): its anchor (--fx, --fy, as
+     fractions of the art) lands at (--at-x, --at-y) in the hero. The stage is
+     --stage-h × the hero's height, and at least --stage-w × the viewport's
+     width. --core-x / --core-y: the giant's burning head, where fire starts. */
+  --ratio: 1.437;
+  --stage-h: 1;
+  --stage-w: 1.1;
+  --fx: 0.54;
+  --fy: 0;
+  --at-x: 50%;
+  --at-y: 10%;
+  --core-x: 56%;
+  --core-y: 22%;
   position: relative;
   height: calc(var(--hero-h) + var(--hero-run));
   background: var(--abyss-950);
@@ -23,9 +35,8 @@
   height: var(--hero-h);
   overflow: hidden;
   isolation: isolate;
-  /* Smoke-red sky behind the battlefield. */
   background:
-    radial-gradient(ellipse 70% 45% at 50% 30%, rgba(139, 26, 26, 0.55), rgba(94, 15, 17, 0) 70%),
+    radial-gradient(ellipse 60% 45% at 55% 30%, rgba(94, 15, 17, 0.5), rgba(94, 15, 17, 0) 70%),
     var(--abyss-950);
 }
 
@@ -40,126 +51,98 @@
   height: 0;
 }
 
-/* --- Stage --------------------------------------------------------------
-   The art keeps its own aspect ratio and is placed by one focal point — the
-   art's anchor (--fx, --fy, as fractions of the art) lands at (--at-x,
-   --at-y) in the hero — at --stage-h times the hero's height.               */
-
-.hero {
-  /* Desktop art, hero-ragnarok-desktop.jpg (2592×1080): the whole
-     battlefield, anchored at its bottom edge. */
-  --ratio: 2.4;
-  --stage-h: 1.3;
-  --fx: 0.482; /* the painted giant, hidden behind the new one */
-  --fy: 1;
-  --at-x: var(--giant-x);
-  --at-y: 100%;
-  /* Where the giant stands (see fire-giant.module.css). */
-  --giant-x: 50%;
-  --giant-top: 20%;
-  --giant-h: 88%;
-}
+/* --- Painting ------------------------------------------------------------ */
 
 .artWrap {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 2%, #000 26%);
-  mask-image: linear-gradient(to bottom, transparent 2%, #000 26%);
 }
 
 .stage {
   position: absolute;
   left: var(--at-x);
   top: var(--at-y);
-  height: calc(var(--stage-h) * 100%);
+  height: max(calc(var(--stage-h) * 100%), calc(var(--stage-w) * 100vw / var(--ratio)));
   aspect-ratio: var(--ratio);
   translate: calc(var(--fx) * -100%) calc(var(--fy) * -100%);
-  transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
-  /* The battlefield sinks a little as the hero scrolls away. */
-  transform: translateY(calc(var(--progress, 0) * 12%));
+  /* Rises and looms a little as it ignites. */
+  transform: translateY(calc(var(--lit) * -2%)) scale(calc(1 + var(--lit) * 0.05));
+  transform-origin: var(--core-x) var(--core-y);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%);
   animation: approach 14s var(--ease) both;
   will-change: transform;
 }
 
 @keyframes approach {
-  from { scale: 1.1; }
+  from { scale: 1.08; }
   to { scale: 1; }
 }
 
-.picture {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  filter: contrast(1.12) saturate(1.1);
-}
-
-/* Bone sky × this = a crimson dusk; the giant stays lit by its own fire. */
-.grade {
+.art,
+.lit {
   position: absolute;
   inset: 0;
-  mix-blend-mode: multiply;
-  background:
-    radial-gradient(ellipse 30% 48% at var(--giant-x) 70%, #ffe2c2 0%, #eea06a 34%, transparent 74%),
-    linear-gradient(to bottom, #0e0605 0%, #2a0c09 18%, #7a2418 42%, #b0502f 64%, #4a1a12 100%);
-  pointer-events: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
 }
 
-.fireGlow {
+/* Unlit: the same painting as embers — dark, desaturated, faintly warm. */
+.art {
+  filter: brightness(calc(0.2 + var(--lit) * 0.3)) saturate(0.55) contrast(1.15);
+}
+
+/* Lit: full fire, revealed outward from the core as --lit rises. */
+.lit {
+  filter: saturate(1.15) contrast(1.06);
+  -webkit-mask-image: radial-gradient(
+    ellipse calc(var(--lit) * 95% + 1%) calc(var(--lit) * 125% + 1%) at var(--core-x) var(--core-y),
+    #000 40%,
+    rgba(0, 0, 0, 0.55) 68%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse calc(var(--lit) * 95% + 1%) calc(var(--lit) * 125% + 1%) at var(--core-x) var(--core-y),
+    #000 40%,
+    rgba(0, 0, 0, 0.55) 68%,
+    transparent 100%
+  );
+}
+
+/* The heart of the fire, breathing at the giant's head. */
+.core {
   position: absolute;
-  left: var(--giant-x);
-  bottom: 2%;
-  width: min(80vw, 1000px);
-  height: 70%;
-  transform: translateX(-50%);
+  left: var(--core-x);
+  top: var(--core-y);
+  width: 46%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 160, 0.75), rgba(240, 138, 74, 0.4) 35%, rgba(163, 39, 42, 0) 100%);
   mix-blend-mode: screen;
-  background: radial-gradient(closest-side, rgba(212, 98, 47, 0.5), rgba(163, 39, 42, 0.22) 55%, rgba(163, 39, 42, 0));
-  filter: blur(30px);
+  opacity: calc(0.25 + var(--lit) * 0.75);
+  scale: calc(0.5 + var(--lit) * 0.7);
+  animation: flicker 2.4s ease-in-out infinite;
   pointer-events: none;
-  animation: flicker 2.8s ease-in-out infinite;
 }
 
 @keyframes flicker {
-  0%, 100% { opacity: 0.8; }
-  30% { opacity: 1; }
-  45% { opacity: 0.65; }
-  70% { opacity: 0.95; }
+  0%, 100% { filter: brightness(1); }
+  30% { filter: brightness(1.25); }
+  45% { filter: brightness(0.85); }
+  70% { filter: brightness(1.1); }
 }
 
-.fade {
+/* Keeps the copy legible over the painting. */
+.scrim {
   position: absolute;
-  inset: auto 0 0 0;
-  height: 22%;
-  background: linear-gradient(to bottom, rgba(14, 12, 11, 0), var(--abyss-950));
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%),
+    radial-gradient(ellipse 90% 80% at 55% 45%, rgba(14, 12, 11, 0) 50%, rgba(14, 12, 11, 0.7) 100%);
   pointer-events: none;
-}
-
-/* --- Giant --------------------------------------------------------------- */
-
-.giant {
-  z-index: 1;
-}
-
-/* The strike lands: the ground shakes. FireGiant sets data-impact. */
-.hero[data-impact] .artWrap,
-.hero[data-impact] .giant {
-  animation: quake 480ms cubic-bezier(0.3, 0.6, 0.4, 1);
-}
-
-@keyframes quake {
-  0% { translate: 0 0; }
-  12% { translate: -14px 10px; }
-  26% { translate: 12px -8px; }
-  40% { translate: -8px 6px; }
-  56% { translate: 5px -3px; }
-  74% { translate: -2px 2px; }
-  100% { translate: 0 0; }
 }
 
 /* --- Title --------------------------------------------------------------- */
@@ -177,8 +160,8 @@
   justify-content: space-between;
   pointer-events: none;
   transform: translateY(calc(var(--progress-ease, 0) * -10vh));
-  /* Gone by the time the blade lands. */
-  opacity: calc(1 - var(--progress, 0) * 3.2);
+  /* Burnt away as the giant ignites. */
+  opacity: calc(1 - var(--progress, 0) * 2.6);
   will-change: transform, opacity;
 }
 
@@ -343,6 +326,7 @@
   height: 58%;
   mix-blend-mode: screen;
   pointer-events: none;
+  opacity: calc(0.3 + var(--lit) * 0.8);
 }
 
 /* --- Actions ------------------------------------------------------------- */
@@ -465,12 +449,13 @@
   100% { transform: scaleY(1); opacity: 0; }
 }
 
-/* --- Tablets: centred copy, so the giant sits a little lower ------------ */
+/* --- Tablets and phones: copy over the top, the giant below ------------ */
 
-@media (min-width: 769px) and (max-width: 1023px) {
-  .hero {
-    --giant-top: 30%;
-    --giant-h: 78%;
+@media (max-width: 1023px) {
+  .scrim {
+    background:
+      linear-gradient(to bottom, var(--abyss-950) 0%, rgba(14, 12, 11, 0.75) 26%, rgba(14, 12, 11, 0) 46%),
+      linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%);
   }
 }
 
@@ -478,9 +463,16 @@
 
 @media (min-width: 1024px) {
   .hero {
-    --giant-x: 66%;
-    --giant-top: 6%;
-    --giant-h: 104%;
+    --stage-h: 1.12;
+    --stage-w: 1.2;
+    --at-x: 60%;
+    --at-y: 7%;
+  }
+
+  .scrim {
+    background:
+      linear-gradient(to right, rgba(14, 12, 11, 0.88) 0%, rgba(14, 12, 11, 0.55) 32%, rgba(14, 12, 11, 0) 56%),
+      linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%);
   }
 
   .copy {
@@ -513,15 +505,10 @@
 @media (max-width: 768px) {
   .hero {
     --hero-h: max(100svh, 620px);
-    --hero-run: 75vh;
-    /* Mobile art, hero-ragnarok-mobile.jpg (1080×1350). */
-    --ratio: 0.8;
-    --stage-h: 1.15;
-    --fx: 0.51;
-    /* Left of centre, so the raised sword stays on screen. */
-    --giant-x: 42%;
-    --giant-top: 34%;
-    --giant-h: 70%;
+    --hero-run: 60vh;
+    --stage-h: 0.95;
+    --stage-w: 0;
+    --at-y: 28%;
   }
 
   .copy {
@@ -546,5 +533,11 @@
 
   .cue {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    --lit: 1;
   }
 }

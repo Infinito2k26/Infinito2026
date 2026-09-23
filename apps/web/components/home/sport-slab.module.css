@@ -27,7 +27,7 @@
 .slab::after {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: 2;
   left: -10%;
   right: -10%;
   bottom: -30%;
@@ -56,6 +56,44 @@
   outline-offset: -4px;
 }
 
+/* --- Burn in two ------------------------------------------------------- */
+
+/* Molten lava under the poster, only seen once the halves part. The bright
+   band runs corner to corner ("to bottom right" puts its 50% line through the
+   bottom-left and top-right corners), whatever the slab's shape. */
+.seam {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle, rgba(255, 214, 160, 0.85), rgba(240, 138, 74, 0) 60%) 0 100% / 40% 40% no-repeat,
+    repeating-linear-gradient(-45deg, rgba(14, 6, 5, 0.55) 0 5px, rgba(14, 6, 5, 0) 5px 11px, rgba(14, 6, 5, 0.3) 11px 13px, rgba(14, 6, 5, 0) 13px 26px),
+    linear-gradient(to bottom right, #3a0a08 38%, #8b1a1a 44%, #d4622f 47.5%, #fff1dc 50%, #d4622f 52.5%, #8b1a1a 56%, #3a0a08 62%);
+  opacity: 0;
+  transition: opacity 200ms var(--ease);
+}
+
+.half {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transition: transform 560ms cubic-bezier(0.2, 0.9, 0.25, 1), filter 300ms var(--ease);
+}
+
+.shard {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.shardA {
+  clip-path: polygon(0% 0%, 100% 0%, 93.27% 9.93%, 82.13% 15.47%, 77.1% 27.1%, 64.87% 31.53%, 59.43% 42.77%, 47.7% 47.7%, 43.37% 60.03%, 32.43% 65.77%, 27% 77%, 15.17% 81.83%, 9.53% 92.87%, 0% 100%);
+}
+
+.shardB {
+  clip-path: polygon(100% 0%, 93.27% 9.93%, 82.13% 15.47%, 77.1% 27.1%, 64.87% 31.53%, 59.43% 42.77%, 47.7% 47.7%, 43.37% 60.03%, 32.43% 65.77%, 27% 77%, 15.17% 81.83%, 9.53% 92.87%, 0% 100%, 100% 100%);
+}
+
 .poster {
   position: absolute;
   inset: 0;
@@ -64,11 +102,6 @@
   object-fit: cover;
   object-position: center top;
   filter: saturate(0.85) contrast(1.1) brightness(0.9);
-  transition: transform 600ms var(--ease);
-}
-
-.slab:hover .poster {
-  transform: scale(1.06);
 }
 
 /* The poster's bone sky multiplied down to dusk, then a scrim so the name
@@ -79,35 +112,60 @@
   background:
     linear-gradient(to bottom, rgba(14, 12, 11, 0) 38%, rgba(14, 12, 11, 0.88) 74%, var(--abyss-950)),
     linear-gradient(to bottom, #a8684a, #5a3326 50%, var(--char-900));
-  background-blend-mode: normal, normal;
   mix-blend-mode: multiply;
-  transition: opacity var(--t-reveal) var(--ease);
 }
 
-/* The crimson slash that cuts across on hover. */
-.slash {
+/* Each half's torn edge: charred, then glowing where it meets the crack. */
+.burn {
   position: absolute;
-  left: -30%;
-  top: 50%;
-  width: 160%;
-  height: 8px;
-  background: var(--crimson-600);
-  box-shadow: 0 0 18px rgba(212, 98, 47, 0.8);
-  transform: translate(-110%, -50%) rotate(-32deg);
-  transform-origin: center;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(14, 6, 5, 0) 34%, rgba(14, 6, 5, 0.85) 44%, #8b1a1a 47.5%, #f08a4a 49.4%, #fff1dc 50%, #f08a4a 50.6%, #8b1a1a 52.5%, rgba(14, 6, 5, 0.85) 56%, rgba(14, 6, 5, 0) 66%);
   opacity: 0;
-  transition: transform 360ms var(--ease), opacity 120ms var(--ease);
-  pointer-events: none;
+  transition: opacity 260ms var(--ease);
 }
 
-.slab:hover .slash {
-  opacity: 0.9;
-  transform: translate(0, -50%) rotate(-32deg);
+@media (hover: hover) {
+  .slab:hover .seam,
+  .slab:focus-visible .seam {
+    opacity: 1;
+    animation: lava-flow 1.8s linear infinite, lava-pulse 1.1s ease-in-out infinite alternate;
+  }
+
+  .slab:hover .burn,
+  .slab:focus-visible .burn {
+    opacity: 1;
+  }
+
+  .slab:hover .halfA,
+  .slab:focus-visible .halfA {
+    transform: translate(-3.5%, -3.5%) rotate(-1.5deg);
+  }
+
+  .slab:hover .halfB,
+  .slab:focus-visible .halfB {
+    transform: translate(3.5%, 3.5%) rotate(1.5deg);
+  }
+
+  .slab:hover .half,
+  .slab:focus-visible .half {
+    filter: drop-shadow(0 0 4px #f08a4a) drop-shadow(0 0 14px rgba(181, 42, 32, 0.85));
+  }
+}
+
+/* A hot spot travels up the crack. */
+@keyframes lava-flow {
+  from { background-position: 0% 100%, 0 0, 0 0; }
+  to { background-position: 100% 0%, 52px 0, 0 0; }
+}
+
+@keyframes lava-pulse {
+  from { filter: brightness(0.9); }
+  to { filter: brightness(1.25); }
 }
 
 .info {
   position: absolute;
-  z-index: 1;
+  z-index: 3;
   left: 0;
   right: 0;
   bottom: 0;
@@ -168,8 +226,12 @@
   }
 }
 
-@media (hover: none) {
-  .slash {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  .half {
+    transition: none;
+  }
+
+  .slab:hover .seam {
+    animation: none;
   }
 }

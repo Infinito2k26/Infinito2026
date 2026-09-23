@@ -2,48 +2,38 @@ import { getImageProps } from "next/image";
 import Link from "next/link";
 import ScrollScene from "@/components/ui/scroll-scene";
 import FireCanvas from "@/components/home/fire-canvas";
-import FireGiant from "@/components/home/fire-giant";
 import styles from "./hero.module.css";
 
 /**
- * The landing hero — Surtr, the fire giant, sword raised over the ruins.
+ * The landing hero — Surtr, the fire giant, igniting.
  *
- * The giant is an original, rigged SVG figure (<FireGiant>) standing in front
- * of the key art's battlefield; scrolling makes it wind up and strike, with
- * canvas fire streaming off the blade (see fire-giant.tsx).
+ * One painting (`hero-surtr.jpg`), drawn twice: once as smouldering embers
+ * (dark, desaturated) and once at full fire, masked to an ellipse that grows
+ * from the giant's burning head as the reader scrolls. The scene is pinned
+ * (sticky) while that happens, then scrolls away. All of it is CSS reading
+ * --progress from ScrollScene; see hero.module.css.
  *
- * The battlefield art sits on a "stage" that keeps its own aspect ratio and is
- * positioned by one focal point per breakpoint (CSS custom properties).
- * `hero-ragnarok-*.jpg` are `main-*.png` with the baked-in title and the
- * painted giant's sword removed; what is left of the painted giant is hidden
- * behind the new one.
- *
- * The section is taller than the screen and its scene (.pin) is sticky, so the
- * swing plays out in full view before the hero scrolls away.
- *
- * Layers, back to front: stage (art) → grade → fire glow → fade → giant →
+ * Layers, back to front: embers → fire (masked) → core glow → scrim →
  * canvas flames → copy.
+ *
+ * The painting is signed third-party art (Guardino 2017): it needs the
+ * artist's permission, or replacing, before this ships publicly.
  */
 
 const ALT =
-  "A ruined battlefield under a burning sky, where warriors with hammer and spear face a wolf.";
-
-const COMMON = {
-  alt: ALT,
-  // The stage renders the art several viewports wide around the giant.
-  sizes: "300vw",
-  priority: true,
-  quality: 75,
-} as const;
+  "Surtr, the fire giant of Ragnarök, horned and wreathed in flame, a great sword in his hand.";
 
 export default function Hero({ underNav = false }: { underNav?: boolean }) {
-  const {
-    props: { srcSet: desktop },
-  } = getImageProps({ ...COMMON, src: "/hero-ragnarok-desktop.jpg", width: 2592, height: 1080 });
-
-  const {
-    props: { srcSet: mobile, ...rest },
-  } = getImageProps({ ...COMMON, src: "/hero-ragnarok-mobile.jpg", width: 1080, height: 1350 });
+  const { props: art } = getImageProps({
+    src: "/hero-surtr.jpg",
+    alt: ALT,
+    width: 1992,
+    height: 1386,
+    // The stage renders the painting wider than the viewport.
+    sizes: "(max-width: 768px) 320vw, 125vw",
+    preload: true,
+    quality: 75,
+  });
 
   return (
     <ScrollScene
@@ -68,21 +58,16 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
 
         <div className={styles.artWrap}>
           <div className={styles.stage}>
-            <picture className={styles.picture}>
-              <source media="(min-width: 769px)" srcSet={desktop} />
-              <source media="(max-width: 768px)" srcSet={mobile} />
-              <img {...rest} alt={ALT} className={styles.art} />
-            </picture>
+            {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+            <img {...art} alt={ALT} className={styles.art} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- same image, the lit pass */}
+            <img {...art} alt="" aria-hidden="true" className={styles.lit} />
+            <span className={styles.core} aria-hidden="true" />
           </div>
-          <div className={styles.grade} aria-hidden="true" />
-          <div className={styles.fireGlow} aria-hidden="true" />
-          <div className={styles.fade} aria-hidden="true" />
+          <div className={styles.scrim} aria-hidden="true" />
         </div>
 
-        <FireGiant className={styles.giant} />
-
         <FireCanvas className={styles.flames} density={1.1} />
-
         <div className={styles.copy}>
           <div className={styles.titleBlock}>
             <p className={styles.kicker}>
