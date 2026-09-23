@@ -1,19 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Sport } from "@/lib/sports";
+import PaperBurn from "@/components/home/paper-burn";
+import { PAPER_DECKLE, PAPER_GRAIN } from "@/components/home/paper";
 import styles from "./sport-slab.module.css";
 
 /**
- * A featured sport on the landing page — a stone slab with the poster burnt
- * into it. Landing only; every list page keeps the plain PosterCard.
+ * A featured sport on the landing page: a fight bill printed on parchment,
+ * pinned to a stone slab. Landing only; every list page keeps the plain
+ * PosterCard.
  *
- * The poster already carries the sport's name in blackletter at the top, so the
- * slab anchors the art high and sets the broadcast name low, over a scrim, where
- * the art is only ruin. `wide` slabs span two grid columns on desktop.
- *
- * On hover the slab burns in two: the poster is drawn twice, each copy clipped
- * to one side of a jagged diagonal, and the halves part to show molten lava
- * beneath. The name stays whole on top.
+ * On hover the bill burns away from the middle (<PaperBurn>), uncovering the
+ * slab beneath with the sport's details carved into it. The slab's text is the
+ * link's real content; the bill's printed text is decorative (aria-hidden).
+ * `wide` slabs span two grid columns on desktop.
  */
 export default function SportSlab({
   sport,
@@ -24,40 +24,56 @@ export default function SportSlab({
   wide?: boolean;
   eager?: boolean;
 }) {
+  const deckle = { clipPath: PAPER_DECKLE };
+  const boys = sport.category === "Boys";
+
   return (
     <Link
       href={`/events?sport=${sport.id}`}
       className={`${styles.slab} ${wide ? styles.wide : ""}`}
     >
-      <span className={styles.seam} aria-hidden="true" />
-      {(["A", "B"] as const).map((side) => (
-        <span key={side} className={`${styles.half} ${styles[`half${side}`]}`}>
-          <span className={`${styles.shard} ${styles[`shard${side}`]}`}>
-          <Image
-            src={`/event-${sport.poster}.jpg`}
-            alt={side === "A" ? `${sport.name} at Infinito 2026 — Ruins of Ragnarok` : ""}
-            width={1600}
-            height={2000}
-            sizes={wide ? "(max-width: 1023px) 46vw, 600px" : "(max-width: 1023px) 46vw, 300px"}
-            quality={75}
-            loading={eager ? "eager" : "lazy"}
-            className={styles.poster}
-          />
-            <span className={styles.grade} aria-hidden="true" />
-            <span className={styles.burn} aria-hidden="true" />
+      {/* The slab, uncovered as the bill burns */}
+      <span className={styles.under}>
+        <span className={`${styles.uTag} ${boys ? styles.uTagCrimson : ""}`}>{sport.category}</span>
+        <span className={styles.uName}>{sport.name}</span>
+        <span className={styles.uFormat}>{sport.format}</span>
+        <span className={styles.uCta}>
+          Enter the arena <span aria-hidden="true">→</span>
+        </span>
+      </span>
+
+      {/* The bill (the canvas repaints this and burns it) */}
+      <span
+        className={styles.paper}
+        style={{ ...deckle, backgroundImage: `url("${PAPER_GRAIN}")` }}
+        data-paper=""
+        aria-hidden="true"
+      >
+        <Image
+          src={`/event-${sport.poster}.jpg`}
+          alt=""
+          width={1600}
+          height={2000}
+          sizes={wide ? "(max-width: 1023px) 46vw, 600px" : "(max-width: 1023px) 46vw, 300px"}
+          quality={75}
+          loading={eager ? "eager" : "lazy"}
+          className={styles.poster}
+        />
+        <span className={styles.age} />
+        <span className={styles.print}>
+          <span className={`${styles.pTag} ${boys ? styles.pTagBoys : ""}`} data-print="">
+            {sport.category}
+          </span>
+          <span className={styles.pName} data-print="">
+            {sport.name}
+          </span>
+          <span className={styles.pFormat} data-print="">
+            {sport.format}
           </span>
         </span>
-      ))}
-
-      <span className={styles.info}>
-        <span
-          className={`${styles.tag} ${sport.category === "Boys" ? styles.tagCrimson : ""}`}
-        >
-          {sport.category}
-        </span>
-        <span className={styles.name}>{sport.name}</span>
-        <span className={styles.format}>{sport.format}</span>
       </span>
+
+      <PaperBurn className={styles.fire} style={deckle} />
     </Link>
   );
 }
