@@ -1,0 +1,144 @@
+.slab {
+  position: relative;
+  display: block;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--char-800);
+  border: 1px solid var(--stone-600);
+  border-radius: var(--radius-sm);
+  color: var(--bone-100);
+  /* The chipped top-right corner of a stone slab. */
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+  transition: border-color var(--t-reveal) var(--ease), box-shadow var(--t-reveal) var(--ease);
+}
+
+.slab:hover,
+.slab:focus-visible {
+  color: var(--bone-100);
+  border-color: var(--ember-500);
+  box-shadow: 0 16px 48px -12px rgba(212, 98, 47, 0.35);
+}
+
+.slab:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: -4px;
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: saturate(0.85) contrast(1.1) brightness(0.9);
+  transition: transform 600ms var(--ease);
+}
+
+.slab:hover .poster {
+  transform: scale(1.06);
+}
+
+/* The poster's bone sky multiplied down to dusk, then a scrim so the name
+   reads at the bottom. Same grade as the hero art. */
+.grade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(14, 12, 11, 0) 38%, rgba(14, 12, 11, 0.88) 74%, var(--abyss-950)),
+    linear-gradient(to bottom, #a8684a, #5a3326 50%, var(--char-900));
+  background-blend-mode: normal, normal;
+  mix-blend-mode: multiply;
+  transition: opacity var(--t-reveal) var(--ease);
+}
+
+/* The crimson slash that cuts across on hover. */
+.slash {
+  position: absolute;
+  left: -30%;
+  top: 50%;
+  width: 160%;
+  height: 8px;
+  background: var(--crimson-600);
+  box-shadow: 0 0 18px rgba(212, 98, 47, 0.8);
+  transform: translate(-110%, -50%) rotate(-32deg);
+  transform-origin: center;
+  opacity: 0;
+  transition: transform 360ms var(--ease), opacity 120ms var(--ease);
+  pointer-events: none;
+}
+
+.slab:hover .slash {
+  opacity: 0.9;
+  transform: translate(0, -50%) rotate(-32deg);
+}
+
+.info {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0 clamp(0.875rem, 2vw, 1.75rem) clamp(0.875rem, 2vw, 1.625rem);
+}
+
+.tag {
+  font-family: var(--f-caps);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ember-300);
+  background: rgba(14, 12, 11, 0.6);
+  border: 1px solid var(--ember-500);
+  padding: 0.2rem 0.5rem;
+  line-height: 1.3;
+}
+
+.tagCrimson {
+  color: var(--bone-100);
+  border-color: var(--crimson-600);
+}
+
+.name {
+  font-family: var(--f-sport);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bone-100);
+}
+
+.wide .name {
+  font-size: clamp(1.75rem, 4.2vw, 3.5rem);
+}
+
+.format {
+  font-size: var(--fs-small);
+  color: var(--mist-400);
+  transition: color var(--t-state) var(--ease);
+}
+
+.slab:hover .format {
+  color: var(--bone-100);
+}
+
+/* Desktop: a bento. The grid sets the height, so the slab fills its cell. */
+@media (min-width: 1024px) {
+  .slab {
+    aspect-ratio: auto;
+  }
+}
+
+@media (hover: none) {
+  .slash {
+    display: none;
+  }
+}

@@ -36,6 +36,12 @@
   --char-700: #38302c;
   --char-500: #6b5f56;
 
+  /* --- Ruin: the dark landing page only (components/home). Deeper than
+     char-900 so the charcoal slabs read as stone laid on the abyss. ------- */
+  --abyss-950: #0e0c0b;
+  --char-750: #2e2724;
+  --stone-600: #4f443d;
+
   /* --- Semantic text ----------------------------------------------------- */
   --text: var(--char-800);
   --text-muted: var(--char-500);
@@ -61,6 +67,9 @@
   --f-display: var(--font-display), "Grenze Gotisch", Georgia, serif;
   --f-caps: var(--font-caps), "Cinzel", Georgia, serif;
   --f-ui: var(--font-ui), "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+  /* Condensed sans for sport data only — numbers, countdown, sport names.
+     Myth stays blackletter; the fixtures read like a broadcast. */
+  --f-sport: var(--font-sport), "Bebas Neue", "Oswald", Impact, sans-serif;
 
   --fs-display: clamp(2.25rem, 7vw, 4.5rem);
   --fs-h1: clamp(1.75rem, 4.6vw, 3rem);

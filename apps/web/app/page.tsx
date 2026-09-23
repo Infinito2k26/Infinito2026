@@ -22,12 +22,18 @@ async function getFestDates(): Promise<FestDates> {
   }
 }
 
+// The landing page is the one dark page — match the browser chrome to it.
+export const viewport = {
+  themeColor: "#0e0c0b",
+  colorScheme: "dark",
+};
+
 export default async function Home() {
   const festDates = await getFestDates();
 
   return (
-    <PublicLayout>
-      <HomeContent festDates={festDates} />
+    <PublicLayout tone="dark">
+      <HomeContent festDates={festDates} underNav />
     </PublicLayout>
   );
 }

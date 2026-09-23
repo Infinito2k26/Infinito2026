@@ -558,3 +558,107 @@
   text-transform: uppercase;
   color: var(--char-500);
 }
+
+/* ------------------------------------------------------ Dark tone (home) -- */
+/* The landing page only. The hero art runs up under a transparent navbar,
+   which turns to solid stone once the reader scrolls. */
+
+.publicShellDark {
+  background: var(--char-900);
+}
+
+.publicMainDark {
+  padding-top: 0;
+}
+
+.navbarDark {
+  border-bottom-color: transparent;
+  transition: border-color var(--t-reveal) var(--ease);
+}
+
+.navbarDark .navbar_inner {
+  max-width: none;
+  padding-inline: clamp(1rem, 3.4vw, 3rem);
+  background: linear-gradient(to bottom, rgba(14, 12, 11, 0.85), rgba(14, 12, 11, 0));
+  backdrop-filter: none;
+  transition: background var(--t-reveal) var(--ease);
+}
+
+.navbarDarkSolid {
+  border-bottom-color: var(--char-700);
+}
+
+.navbarDarkSolid .navbar_inner {
+  background: rgba(14, 12, 11, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.navbarDark .brand {
+  color: var(--bone-100);
+}
+
+.navbarDark .brandSub {
+  color: var(--ember-300);
+}
+
+.navbarDark .navbar_item {
+  color: var(--mist-400);
+}
+
+.navbarDark .navbar_item:hover,
+.navbarDark .navbar_item_active {
+  color: var(--bone-100);
+}
+
+.navbarDark .navbar_item_active::after {
+  left: 50%;
+  right: auto;
+  width: 22px;
+  transform: translateX(-50%) skewX(-24deg);
+}
+
+.navbarDark .navbar_signup {
+  border: 1px solid var(--crimson-600);
+}
+
+.navbarDark .navbar_signup:hover {
+  box-shadow: 0 0 22px rgba(139, 26, 26, 0.6);
+}
+
+.navbarDark .hamburger span {
+  background-color: var(--bone-100);
+}
+
+@media (max-width: 1100px) {
+  .navbarDark .mobile_menu_active {
+    background: var(--abyss-950);
+    border-top-color: var(--char-700);
+  }
+
+  .navbarDark .mobile_menu_item {
+    color: var(--bone-200);
+    border-bottom-color: var(--char-700);
+  }
+
+  .navbarDark .mobile_menu_item_active {
+    color: var(--bone-50);
+  }
+
+  .navbarDark .mobile_menu_login {
+    border-color: var(--stone-600);
+    color: var(--bone-100);
+  }
+}
+
+.footerDark {
+  background: var(--abyss-950);
+  border-top: 1px solid var(--char-700);
+}
+
+.footerDark .footer_bottom {
+  border-top-color: var(--char-700);
+}
+
+.footerDark .footer_bottom_text:last-child {
+  color: var(--crimson-600);
+}

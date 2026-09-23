@@ -1,27 +1,110 @@
 /* ---------------------------------------------------------------------------
-   Landing page.
+   Landing page — "Rise from the ruins".
 
-   The art's own structure sets the page's: a bone sky, then a ridge, then the
-   dark ruin below it. Sections alternate between bone-100 and bone-200 so the
-   page has rhythm without needing decoration, and the one dark band at the
-   bottom is where the closing call to action lives.
+   The only dark page in the product. Black and stone, with crimson kept for
+   actions and ember for the few things that are alive: the countdown's live
+   unit, the last day, the closing glow. Sections alternate char-900 and the
+   deeper abyss so the page has rhythm without decoration.
    ------------------------------------------------------------------------- */
+
+.ruins {
+  background: var(--char-900);
+  color: var(--bone-100);
+}
+
+.inner {
+  max-width: var(--container);
+  margin-inline: auto;
+}
+
+/* --- Section heads ------------------------------------------------------- */
+
+.sectionHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.sectionHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.schedule .sectionHead {
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--f-caps);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--ember-300);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 32px;
+  height: 2px;
+  background: var(--crimson-600);
+}
+
+.sectionTitle {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+  color: var(--bone-200);
+}
+
+.sectionLede {
+  max-width: 36rem;
+  font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
+  color: var(--mist-400);
+}
+
+.textLink {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ember-500);
+  font-family: var(--f-caps);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--ember-300);
+  white-space: nowrap;
+}
+
+.textLink:hover {
+  color: var(--bone-100);
+  border-bottom-color: var(--bone-100);
+}
+
+/* --- Stats + countdown --------------------------------------------------- */
 
 .stats {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
+  gap: clamp(3rem, 6vw, 4.5rem);
   max-width: var(--container);
   margin-inline: auto;
-  padding: var(--space-7) var(--spacing-container);
+  padding: clamp(3.5rem, 7vw, 6rem) var(--spacing-container) clamp(4.5rem, 9vw, 7.5rem);
 }
 
 .statsInner {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-5) var(--space-4);
   width: 100%;
+  background: var(--char-800);
+  border: 1px solid var(--char-700);
+  border-radius: var(--radius-sm);
 }
 
 @media (min-width: 768px) {
@@ -33,172 +116,345 @@
 .stat {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  text-align: center;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-right: 1px solid var(--char-700);
+  border-bottom: 1px solid var(--char-700);
+}
+
+.stat:nth-child(2n) {
+  border-right: none;
+}
+
+.stat:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .stat {
+    border-bottom: none;
+  }
+
+  .stat:nth-child(2n) {
+    border-right: 1px solid var(--char-700);
+  }
+
+  .stat:last-child {
+    border-right: none;
+  }
 }
 
 .statValue {
-  font-family: var(--f-display);
-  font-size: clamp(2.25rem, 6vw, 3.5rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--crimson-800);
+  font-family: var(--f-sport);
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  color: var(--bone-200);
   font-variant-numeric: tabular-nums;
+}
+
+.statRule {
+  width: 28px;
+  height: 2px;
+  background: var(--ember-500);
 }
 
 .statLabel {
   font-family: var(--f-caps);
   font-size: var(--fs-micro);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--char-500);
+  color: var(--mist-400);
 }
 
-/* --- Shared section frame ------------------------------------------------ */
+/* --- Choose your sport --------------------------------------------------- */
 
-.section,
-.schedule {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: var(--space-8) var(--spacing-container);
+.sports {
+  padding: clamp(4.5rem, 9vw, 8rem) var(--spacing-container);
+  background: var(--abyss-950);
+  border-block: 1px solid var(--char-700);
 }
 
-.schedule {
-  max-width: none;
-  background: var(--bone-200);
-}
-
-.schedule > * {
-  max-width: var(--container);
-  margin-inline: auto;
-}
-
-.sectionHead {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
-}
-
-.sectionTitle {
-  font-size: var(--fs-h2);
-}
-
-.sectionLede {
-  color: var(--char-700);
-  max-width: var(--measure);
-}
-
-.posterGrid {
+.bento {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-  gap: var(--space-4);
-  perspective: 1200px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(0.75rem, 1.4vw, 1rem);
 }
 
-/* A fixed 3D tilt (not cursor-tracked — that needs JS) reserved for the
-   landing showcase; every other poster-card grid in the product keeps the
-   plain lift so dense list pages don't feel gimmicky. */
-.posterTilt {
-  transition: transform var(--t-reveal) var(--ease);
-  transform-style: preserve-3d;
+@media (min-width: 1024px) {
+  .bento {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: clamp(360px, 32vw, 440px);
+  }
+
+  .bentoWide {
+    grid-column: span 2;
+  }
 }
 
-.posterTilt:hover {
-  transform: rotateY(-6deg) rotateX(3deg) translateY(-4px);
+.bentoCell {
+  min-width: 0;
 }
 
-.sectionFoot {
-  margin-top: var(--space-6);
+/* --- Three days ---------------------------------------------------------- */
+
+.schedule {
+  padding: clamp(4.5rem, 9vw, 8rem) var(--spacing-container) clamp(5rem, 10vw, 9rem);
 }
 
-.textLink {
-  font-family: var(--f-caps);
-  font-size: var(--fs-small);
-  font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  color: var(--crimson-700);
-}
-
-.textLink:hover {
-  color: var(--ember-600);
-}
-
-/* --- Schedule ------------------------------------------------------------ */
-
-.dayGrid {
+.timeline {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+}
+
+/* A cracked line: broken segments with the odd hairline gap. */
+.timeline::before {
+  content: "";
+  position: absolute;
+  background: repeating-linear-gradient(
+    to right,
+    var(--stone-600) 0 140px,
+    transparent 140px 146px,
+    var(--stone-600) 146px 320px,
+    transparent 320px 324px
+  );
+}
+
+.dayItem {
+  position: relative;
+}
+
+.node {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--stone-600);
+  transform: rotate(45deg);
+}
+
+.climax .node {
+  background: var(--ember-500);
+  box-shadow: 0 0 16px var(--ember-500);
 }
 
 .day {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-5);
-  background: var(--bone-50);
-  border: var(--hairline);
-  border-left: 3px solid var(--ember-500);
+  justify-content: flex-end;
+  gap: var(--space-3);
+  min-height: 300px;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  background: var(--char-800);
+  border: 1px solid var(--char-700);
   border-radius: var(--radius-sm);
-  transition: transform var(--t-reveal) var(--ease), box-shadow var(--t-reveal) var(--ease),
-    border-left-color var(--t-state) var(--ease);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  transition: border-color var(--t-reveal) var(--ease), transform var(--t-reveal) var(--ease);
 }
 
 .day:hover {
+  border-color: var(--stone-600);
   transform: translateY(-4px);
-  box-shadow: var(--shadow-md), 0 0 20px rgba(212, 98, 47, 0.18);
-  border-left-color: var(--crimson-700);
+}
+
+.climax .day {
+  background: linear-gradient(to bottom, #3a1a14, var(--char-800));
+  border-color: var(--ember-500);
+  box-shadow: 0 12px 48px -8px rgba(212, 98, 47, 0.25);
+}
+
+/* Engraved roman numeral behind each day. */
+.numeral {
+  position: absolute;
+  top: 0.5rem;
+  right: 1.5rem;
+  font-family: var(--f-caps);
+  font-size: clamp(7rem, 12vw, 11rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--stone-600);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.climax .numeral {
+  color: var(--crimson-700);
+  opacity: 0.7;
 }
 
 .dayLabel {
+  position: relative;
   font-family: var(--f-caps);
   font-size: var(--fs-micro);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--ember-600);
+  color: var(--ember-300);
 }
 
 .dayTitle {
+  position: relative;
   font-family: var(--f-display);
-  font-size: 1.5rem;
+  font-size: clamp(2rem, 3.4vw, 2.75rem);
   font-weight: 700;
+  line-height: 1.05;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--crimson-800);
+  color: var(--bone-200);
 }
 
 .dayBody {
-  font-size: var(--fs-small);
-  color: var(--char-700);
-  line-height: 1.7;
+  position: relative;
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  color: var(--mist-400);
 }
 
-/* --- Legacy band --------------------------------------------------------- */
+/* Phones and tablets: a vertical timeline down the left edge. */
+@media (max-width: 899px) {
+  .timeline {
+    padding-left: 28px;
+  }
+
+  .timeline::before {
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--stone-600) 0 120px,
+      transparent 120px 125px,
+      var(--stone-600) 125px 260px,
+      transparent 260px 263px
+    );
+  }
+
+  .node {
+    left: -27px;
+    top: 26px;
+  }
+
+  .day {
+    min-height: 240px;
+  }
+}
+
+/* Desktop: a horizontal timeline, the line running above the cards. */
+@media (min-width: 900px) {
+  .timeline {
+    grid-template-columns: repeat(3, 1fr);
+    padding-top: 48px;
+  }
+
+  .timeline::before {
+    left: 0;
+    right: 0;
+    top: 10px;
+    height: 2px;
+  }
+
+  .node {
+    left: 36px;
+    top: -43px;
+  }
+
+  .day {
+    min-height: 360px;
+  }
+}
+
+/* --- Closing band -------------------------------------------------------- */
+
+.legacyBand {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(6rem, 12vw, 9rem) var(--spacing-container) clamp(6rem, 12vw, 9rem);
+  background: linear-gradient(to bottom, var(--char-900) 44px, var(--abyss-950) 44px);
+}
+
+.legacyRidge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 46px;
+}
+
+.legacyGlow {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: min(90vw, 780px);
+  aspect-ratio: 16 / 9;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(193, 68, 42, 0.5),
+    rgba(139, 26, 26, 0.2) 55%,
+    rgba(94, 15, 17, 0)
+  );
+  filter: blur(30px);
+  animation: glow-breathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -54%) scale(1.06); }
+}
+
+.legacyEmbers span {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ember-300);
+  box-shadow: 0 0 8px rgba(212, 98, 47, 0.9);
+  opacity: 0;
+  animation: legacy-ember 7s ease-in infinite;
+}
+
+@keyframes legacy-ember {
+  0% { opacity: 0; transform: translateY(0); }
+  15% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-420px) translateX(var(--drift, 10px)); }
+}
+
+.legacyEmbers span:nth-child(1)  { left: 30%; animation-delay: 0s;   --drift: 14px; }
+.legacyEmbers span:nth-child(2)  { left: 38%; animation-delay: 1.4s; --drift: -10px; }
+.legacyEmbers span:nth-child(3)  { left: 45%; animation-delay: 2.8s; --drift: 18px; }
+.legacyEmbers span:nth-child(4)  { left: 51%; animation-delay: 0.7s; --drift: -16px; }
+.legacyEmbers span:nth-child(5)  { left: 57%; animation-delay: 3.5s; --drift: 8px; }
+.legacyEmbers span:nth-child(6)  { left: 63%; animation-delay: 2.1s; --drift: -12px; }
+.legacyEmbers span:nth-child(7)  { left: 70%; animation-delay: 4.6s; --drift: 16px; }
+.legacyEmbers span:nth-child(8)  { left: 34%; animation-delay: 5.2s; --drift: -8px; }
+.legacyEmbers span:nth-child(9)  { left: 48%; animation-delay: 6s;   --drift: 12px; }
+.legacyEmbers span:nth-child(10) { left: 66%; animation-delay: 1s;   --drift: -18px; }
 
 .legacy {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
   text-align: center;
-  background: var(--char-900);
-  padding: var(--space-8) var(--spacing-container) var(--space-9);
-  /* The ridge above this section already carries char-900, so they meet with no
-     seam. Pull it up by a hair to defend against sub-pixel rounding. */
-  margin-top: -1px;
 }
 
 .legacyMark {
+  width: 64px;
+  height: 64px;
   color: var(--ember-300);
-  opacity: 0.35;
-  width: 56px;
-  height: 56px;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 12px rgba(212, 98, 47, 0.6));
   animation: legacy-spin 40s linear infinite;
 }
 
@@ -210,51 +466,65 @@
 
 .legacyTitle {
   font-family: var(--f-display);
-  font-size: var(--fs-display);
+  font-size: clamp(3rem, 8vw, 6rem);
   font-weight: 700;
-  line-height: var(--lh-tight);
+  line-height: 1;
   color: var(--bone-100);
-  max-width: 16ch;
+  max-width: 12ch;
+  text-shadow: 0 0 40px rgba(193, 68, 42, 0.45);
 }
 
 .legacyBody {
+  max-width: 34rem;
+  font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
   color: var(--mist-400);
-  max-width: 52ch;
 }
 
 .legacyCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
   margin-top: var(--space-2);
+  padding: 1.125rem 2rem;
   font-family: var(--f-caps);
   font-size: var(--fs-small);
   font-weight: 700;
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  background: var(--crimson-700);
   color: var(--bone-100);
-  padding: 0.875rem 1.75rem;
+  background: var(--crimson-700);
+  border: 1px solid var(--crimson-600);
   border-radius: var(--radius-sm);
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
   transition: background var(--t-state) var(--ease), transform var(--t-state) var(--ease),
-    box-shadow var(--t-state) var(--ease);
+    box-shadow var(--t-state) var(--ease), border-color var(--t-state) var(--ease);
   animation: legacy-cta-pulse 2.6s ease-in-out infinite;
+}
+
+.legacyCta span {
+  color: var(--glow-200);
+  transition: transform var(--t-state) var(--ease);
 }
 
 @keyframes legacy-cta-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(212, 98, 47, 0.35);
+    box-shadow: 0 10px 40px -6px rgba(139, 26, 26, 0.5), 0 0 0 0 rgba(212, 98, 47, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(212, 98, 47, 0);
+    box-shadow: 0 10px 40px -6px rgba(139, 26, 26, 0.5), 0 0 0 10px rgba(212, 98, 47, 0);
   }
 }
 
 .legacyCta:hover {
-  background: var(--crimson-600);
   color: var(--bone-50);
-  transform: translateY(-2px) scale(1.03);
+  background: var(--crimson-600);
+  border-color: var(--ember-500);
+  transform: skewX(-4deg) translateY(-2px);
   animation-play-state: paused;
+}
+
+.legacyCta:hover span {
+  transform: translateX(4px);
 }
 
 .legacyCta:focus-visible {

@@ -34,10 +34,16 @@ const CONTACTS = [
   { name: "Ayush", phone: "7979844511" },
 ];
 
-const Footer = () => {
+const Footer = ({ tone = "light" }: { tone?: "light" | "dark" }) => {
+  const dark = tone === "dark";
+
   return (
-    <footer className={styles.footer}>
-      <Ornament variant="ridge" fill="var(--char-900)" className={styles.footerRidge} />
+    <footer className={`${styles.footer} ${dark ? styles.footerDark : ""}`}>
+      {/* On the dark landing page the ruin is already behind us — the closing
+          band carries its own skyline, so the footer just meets it on a rule. */}
+      {dark ? null : (
+        <Ornament variant="ridge" fill="var(--char-900)" className={styles.footerRidge} />
+      )}
 
       <div className={styles.footer_inner}>
         <div className={styles.footer_column}>
