@@ -4,26 +4,27 @@
    ScrollScene writes --progress (0 → 1 across the whole section). The scene is
    pinned (.pin is sticky) for the first --hero-run of scroll, and --lit rises
    0 → 1 over that stretch: the painting starts as smouldering embers and
-   catches fire outward from the giant's burning head.
+   catches fire outward from the giant's burning sword.
    ------------------------------------------------------------------------- */
 
 .hero {
   --hero-h: min(max(100svh, 640px), 1180px);
   --hero-run: 70vh;
   --lit: clamp(0.1, calc(var(--progress, 0) / 0.34), 1);
-  /* The painting, hero-surtr.jpg (1992×1386): its anchor (--fx, --fy, as
+  /* The painting, hero-ragnarok.jpg (1672×941): its anchor (--fx, --fy, as
      fractions of the art) lands at (--at-x, --at-y) in the hero. The stage is
      --stage-h × the hero's height, and at least --stage-w × the viewport's
-     width. --core-x / --core-y: the giant's burning head, where fire starts. */
-  --ratio: 1.437;
-  --stage-h: 1;
-  --stage-w: 1.1;
-  --fx: 0.54;
+     width. --fx 0.676 is the giant's middle. --core-x / --core-y: the sword's
+     crossguard, where fire starts. */
+  --ratio: 1.777;
+  --stage-h: 0.9;
+  --stage-w: 1.6;
+  --fx: 0.676;
   --fy: 0;
   --at-x: 50%;
-  --at-y: 10%;
-  --core-x: 56%;
-  --core-y: 22%;
+  --at-y: 24%;
+  --core-x: 65%;
+  --core-y: 50%;
   position: relative;
   height: calc(var(--hero-h) + var(--hero-run));
   background: var(--abyss-950);
@@ -69,8 +70,15 @@
   /* Rises and looms a little as it ignites. */
   transform: translateY(calc(var(--lit) * -2%)) scale(calc(1 + var(--lit) * 0.05));
   transform-origin: var(--core-x) var(--core-y);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%);
+  /* Narrow screens show a slice of the painting below the title: its edges
+     dissolve into the abyss instead of stopping hard. Desktop is full-bleed
+     and keeps only the top fade (under the navbar). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%),
+    linear-gradient(to right, transparent 0%, #000 20%, #000 82%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 12%),
+    linear-gradient(to right, transparent 0%, #000 20%, #000 82%, transparent 100%);
+  mask-composite: intersect;
   animation: approach 14s var(--ease) both;
   will-change: transform;
 }
@@ -92,7 +100,7 @@
 
 /* Unlit: the same painting as embers — dark, desaturated, faintly warm. */
 .art {
-  filter: brightness(calc(0.2 + var(--lit) * 0.3)) saturate(0.55) contrast(1.15);
+  filter: brightness(calc(0.38 + var(--lit) * 0.3)) saturate(0.75) contrast(1.1);
 }
 
 /* Lit: full fire, revealed outward from the core as --lit rises. */
@@ -112,12 +120,12 @@
   );
 }
 
-/* The heart of the fire, breathing at the giant's head. */
+/* The heart of the fire, breathing at the sword's crossguard. */
 .core {
   position: absolute;
   left: var(--core-x);
   top: var(--core-y);
-  width: 46%;
+  width: 22%;
   aspect-ratio: 1;
   translate: -50% -50%;
   background: radial-gradient(closest-side, rgba(255, 214, 160, 0.75), rgba(240, 138, 74, 0.4) 35%, rgba(163, 39, 42, 0) 100%);
@@ -463,10 +471,16 @@
 
 @media (min-width: 1024px) {
   .hero {
-    --stage-h: 1.12;
-    --stage-w: 1.2;
-    --at-x: 60%;
-    --at-y: 7%;
+    --stage-h: 1;
+    --stage-w: 1;
+    --fx: 0.5;
+    --at-x: 50%;
+    --at-y: 0%;
+  }
+
+  .stage {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 12%);
   }
 
   .scrim {
@@ -508,7 +522,7 @@
     --hero-run: 60vh;
     --stage-h: 0.95;
     --stage-w: 0;
-    --at-y: 28%;
+    --at-y: 30%;
   }
 
   .copy {
