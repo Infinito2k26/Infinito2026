@@ -4,6 +4,7 @@ import Link from "next/link";
 import SportIcon from "./sport-icon";
 import styles from "./poster-card.module.css";
 import { useState, useEffect } from "react";
+import { getSportPosterPath } from "@/lib/sports";
 
 /**
  * The event poster card.
@@ -46,10 +47,17 @@ export default function PosterCard({
   image,
   priority = false,
 }: PosterCardProps) {
-   const isGirls = category?.toLowerCase() === "girls";
+  const isGirls =
+    category?.toLowerCase() === "girls" ||
+    category?.toLowerCase() === "women" ||
+    category?.toLowerCase() === "womens" ||
+    name?.toLowerCase().includes("women") ||
+    name?.toLowerCase().includes("girls") ||
+    href?.toLowerCase().includes("women") ||
+    href?.toLowerCase().includes("girls");
 
-    const defaultSrc = image ?? (isGirls ? `/event-${slug}-girls.jpg` : `/event-${slug}.jpg`);
-    const fallbackSrc = `/event-${slug}.jpg`;
+  const defaultSrc = image ?? getSportPosterPath(slug, isGirls);
+  const fallbackSrc = getSportPosterPath(slug, false);
 
     // Reset the fallback state whenever the computed default source changes
     // (e.g. different event rendered via the same mounted component/key changes)

@@ -14,7 +14,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { NotFound } from "@/components/ui/not-found";
 import { api, ApiError } from "@/lib/api";
 import { formatFeeSummary } from "@/lib/format-event-fee";
-import { findSportForEventName } from "@/lib/sports";
+import { findSportForEventName, getSportPosterPath } from "@/lib/sports";
 import type { EventDetail } from "@/lib/types/event";
 
 import styles from "./event-detail.module.css";
@@ -77,14 +77,16 @@ export default function EventDetailPage() {
         return <ErrorState description={error ?? "Event not found."} onRetry={fetchEvent} />;
     }
 
-    const poster = findSportForEventName(event.name);
+    const isGirls = event.genderCategory === "WOMEN" || event.name.toLowerCase().includes("women") || event.name.toLowerCase().includes("girls");
+    const poster = findSportForEventName(event.name, event.genderCategory);
+    const posterSrc = poster ? getSportPosterPath(poster.poster, isGirls) : null;
 
     return (
         <div className={styles.container}>
-            {poster && (
+            {posterSrc && (
                 <div className={styles.posterBanner}>
                     <Image
-                        src={`/event-${poster.poster}.jpg`}
+                        src={posterSrc}
                         alt={`${event.name} at Infinito 2026 — Ruins of Ragnarok`}
                         width={1600}
                         height={2000}

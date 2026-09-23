@@ -74,7 +74,8 @@ export default function EventsPage() {
             ) : (
                 <div className={styles.grid}>
                     {events.map((event, i) => {
-                        const matched = findSportForEventName(event.name);
+                        const matched = findSportForEventName(event.name, event.genderCategory);
+                        const isWomen = event.genderCategory === "WOMEN" || event.name.toLowerCase().includes("women") || event.name.toLowerCase().includes("girls");
                         const date = new Date(event.startDate).toLocaleDateString("en-IN", {
                             day: "numeric",
                             month: "short",
@@ -86,7 +87,7 @@ export default function EventsPage() {
                                     key={event.id}
                                     slug={matched.poster}
                                     name={event.name}
-                                    category={event.sportCategory}
+                                    category={isWomen ? "Girls" : (event.genderCategory === "MEN" ? "Boys" : event.sportCategory)}
                                     format={formatFeeSummary(event)}
                                     date={date}
                                     href={`/dashboard/events/${event.slug}`}

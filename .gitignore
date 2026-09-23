@@ -48,3 +48,4 @@ yarn-error.log*
 *.zip
 apps/api/prisma/seed.js
 apps/api/test-prisma.ts
+dump.rdb
