@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { FLAME_STAGES, flameSprites } from "@/components/home/flame-sprites";
 
 /**
  * Flames licking up from the bottom edge of whatever contains this canvas.
@@ -25,30 +26,6 @@ type Flame = {
   spark: boolean;
 };
 
-// Glow → ember → burnt orange → crimson: the colour a flame cools through.
-const STAGES: [number, number, number][] = [
-  [255, 222, 180],
-  [240, 150, 90],
-  [212, 98, 47],
-  [163, 39, 42],
-  [94, 15, 17],
-];
-
-function sprite(rgb: [number, number, number]) {
-  const s = 64;
-  const c = document.createElement("canvas");
-  c.width = c.height = s;
-  const g = c.getContext("2d")!;
-  const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  const [r, gr, b] = rgb;
-  grad.addColorStop(0, `rgba(${r},${gr},${b},1)`);
-  grad.addColorStop(0.4, `rgba(${r},${gr},${b},0.45)`);
-  grad.addColorStop(1, `rgba(${r},${gr},${b},0)`);
-  g.fillStyle = grad;
-  g.fillRect(0, 0, s, s);
-  return c;
-}
-
 export default function FireCanvas({
   className,
   density = 1,
@@ -65,7 +42,7 @@ export default function FireCanvas({
     if (!canvas || !ctx) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const sprites = STAGES.map(sprite);
+    const sprites = flameSprites();
     const flames: Flame[] = [];
     let w = 0;
     let h = 0;
@@ -124,7 +101,7 @@ export default function FireCanvas({
         f.x += f.vx + Math.sin(f.life * 0.06 + f.seed) * (f.spark ? 0.9 : 0.45);
         f.y += f.vy;
 
-        const stage = Math.min(STAGES.length - 1, Math.floor(t * STAGES.length));
+        const stage = Math.min(FLAME_STAGES.length - 1, Math.floor(t * FLAME_STAGES.length));
         const img = sprites[f.spark ? 0 : stage];
         if (!img) continue;
         const size = f.spark ? f.size : f.size * (1 - t * 0.7);

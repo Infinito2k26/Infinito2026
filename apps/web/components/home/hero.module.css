@@ -5,20 +5,33 @@
    away). Everything that moves on scroll reads them through calc().
    ------------------------------------------------------------------------- */
 
+/* The hero is taller than the screen: its scene is pinned (sticky) while the
+   first --hero-run of scroll drives the giant's swing, then scrolls away.
+   Progress (0 → 1) spans the whole section, so the pinned stretch is roughly
+   the first half of it. */
 .hero {
+  --hero-h: min(max(100svh, 640px), 1180px);
+  --hero-run: 90vh;
   position: relative;
-  height: max(100svh, 640px);
-  max-height: 1180px;
+  height: calc(var(--hero-h) + var(--hero-run));
+  background: var(--abyss-950);
+}
+
+.pin {
+  position: sticky;
+  top: 0;
+  height: var(--hero-h);
   overflow: hidden;
   isolation: isolate;
-  /* Smoke-red sky behind the title, where the art has been masked away. */
+  /* Smoke-red sky behind the battlefield. */
   background:
     radial-gradient(ellipse 70% 45% at 50% 30%, rgba(139, 26, 26, 0.55), rgba(94, 15, 17, 0) 70%),
     var(--abyss-950);
 }
 
-.underNav {
-  padding-top: var(--navbar-h);
+/* Pages with a solid navbar above the hero (the dashboard): pin below it. */
+.belowNav .pin {
+  top: var(--navbar-h);
 }
 
 .defs {
@@ -29,24 +42,22 @@
 
 /* --- Stage --------------------------------------------------------------
    The art keeps its own aspect ratio and is placed by one focal point — the
-   giant's feet (--fx, --fy, as fractions of the art) land at (--at-x, --at-y)
-   in the hero — at --stage-h times the hero's height. The foreground stage
-   shares the exact geometry, so the sword and eyes stay on the painted giant.
-   Per-art coordinates are measured from the image files.                   */
+   art's anchor (--fx, --fy, as fractions of the art) lands at (--at-x,
+   --at-y) in the hero — at --stage-h times the hero's height.               */
 
 .hero {
-  /* Desktop art, hero-ragnarok-desktop.jpg (2592×1080). */
+  /* Desktop art, hero-ragnarok-desktop.jpg (2592×1080): the whole
+     battlefield, anchored at its bottom edge. */
   --ratio: 2.4;
-  --stage-h: 2.1;
-  --fx: 0.482;
-  --fy: 0.83;
-  --at-x: 50%;
-  --at-y: 98%;
-  --hand-x: 0.523; /* the giant's fist */
-  --hand-y: 0.69;
-  --eye-x: 0.5;
-  --eye-y: 0.562;
-  --sword: 0.288; /* sword height as a fraction of the stage height */
+  --stage-h: 1.3;
+  --fx: 0.482; /* the painted giant, hidden behind the new one */
+  --fy: 1;
+  --at-x: var(--giant-x);
+  --at-y: 100%;
+  /* Where the giant stands (see fire-giant.module.css). */
+  --giant-x: 50%;
+  --giant-top: 20%;
+  --giant-h: 88%;
 }
 
 .artWrap {
@@ -57,14 +68,6 @@
   mask-image: linear-gradient(to bottom, transparent 2%, #000 26%);
 }
 
-.foreground {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
 .stage {
   position: absolute;
   left: var(--at-x);
@@ -73,8 +76,8 @@
   aspect-ratio: var(--ratio);
   translate: calc(var(--fx) * -100%) calc(var(--fy) * -100%);
   transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
-  /* The giant looms closer as the hero scrolls away. */
-  transform: scale(calc(1 + var(--progress-ease, 0) * 0.16));
+  /* The battlefield sinks a little as the hero scrolls away. */
+  transform: translateY(calc(var(--progress, 0) * 12%));
   animation: approach 14s var(--ease) both;
   will-change: transform;
 }
@@ -82,10 +85,6 @@
 @keyframes approach {
   from { scale: 1.1; }
   to { scale: 1; }
-}
-
-.foreStage {
-  container-type: size;
 }
 
 .picture {
@@ -98,8 +97,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  /* The art is upscaled around the giant; extra contrast keeps it crisp. */
-  filter: contrast(1.22) saturate(1.15);
+  filter: contrast(1.12) saturate(1.1);
 }
 
 /* Bone sky × this = a crimson dusk; the giant stays lit by its own fire. */
@@ -108,14 +106,14 @@
   inset: 0;
   mix-blend-mode: multiply;
   background:
-    radial-gradient(ellipse 30% 48% at var(--at-x) 62%, #ffe2c2 0%, #eea06a 34%, transparent 74%),
+    radial-gradient(ellipse 30% 48% at var(--giant-x) 70%, #ffe2c2 0%, #eea06a 34%, transparent 74%),
     linear-gradient(to bottom, #0e0605 0%, #2a0c09 18%, #7a2418 42%, #b0502f 64%, #4a1a12 100%);
   pointer-events: none;
 }
 
 .fireGlow {
   position: absolute;
-  left: var(--at-x);
+  left: var(--giant-x);
   bottom: 2%;
   width: min(80vw, 1000px);
   height: 70%;
@@ -142,34 +140,26 @@
   pointer-events: none;
 }
 
-/* The giant's eyes, burning over the grade; they flare as the sword falls. */
-.eyes {
-  position: absolute;
-  left: calc(var(--eye-x) * 100%);
-  top: calc(var(--eye-y) * 100%);
-  width: 2.6cqh;
-  height: 1.2cqh;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #fff1dc, #f08a4a 45%, rgba(212, 98, 47, 0));
-  mix-blend-mode: screen;
-  opacity: calc(0.55 + var(--progress, 0) * 1.6);
-  scale: calc(1 + var(--progress, 0) * 1.4);
-  filter: blur(1px) drop-shadow(0 0 6px #d4622f);
-  animation: eyes 2.2s ease-in-out infinite;
+/* --- Giant --------------------------------------------------------------- */
+
+.giant {
+  z-index: 1;
 }
 
-@keyframes eyes {
-  0%, 100% { filter: blur(1px) drop-shadow(0 0 4px #d4622f); }
-  50% { filter: blur(1px) drop-shadow(0 0 12px #f08a4a); }
+/* The strike lands: the ground shakes. FireGiant sets data-impact. */
+.hero[data-impact] .artWrap,
+.hero[data-impact] .giant {
+  animation: quake 480ms cubic-bezier(0.3, 0.6, 0.4, 1);
 }
 
-/* --- Sword --------------------------------------------------------------- */
-
-.sword {
-  left: calc(var(--hand-x) * 100%);
-  top: calc(var(--hand-y) * 100%);
-  --len: calc(var(--sword) * 100cqh);
+@keyframes quake {
+  0% { translate: 0 0; }
+  12% { translate: -14px 10px; }
+  26% { translate: 12px -8px; }
+  40% { translate: -8px 6px; }
+  56% { translate: 5px -3px; }
+  74% { translate: -2px 2px; }
+  100% { translate: 0 0; }
 }
 
 /* --- Title --------------------------------------------------------------- */
@@ -186,8 +176,9 @@
   align-items: center;
   justify-content: space-between;
   pointer-events: none;
-  transform: translateY(calc(var(--progress-ease, 0) * -12vh));
-  opacity: calc(1 - var(--progress, 0) * 1.8);
+  transform: translateY(calc(var(--progress-ease, 0) * -10vh));
+  /* Gone by the time the blade lands. */
+  opacity: calc(1 - var(--progress, 0) * 3.2);
   will-change: transform, opacity;
 }
 
@@ -457,7 +448,7 @@
   letter-spacing: var(--track-micro);
   text-transform: uppercase;
   color: var(--mist-400);
-  opacity: calc(1 - var(--progress, 0) * 6);
+  opacity: calc(1 - var(--progress, 0) * 12);
 }
 
 .cue i {
@@ -478,7 +469,8 @@
 
 @media (min-width: 769px) and (max-width: 1023px) {
   .hero {
-    --stage-h: 1.8;
+    --giant-top: 30%;
+    --giant-h: 78%;
   }
 }
 
@@ -486,7 +478,9 @@
 
 @media (min-width: 1024px) {
   .hero {
-    --at-x: 62%;
+    --giant-x: 66%;
+    --giant-top: 6%;
+    --giant-h: 104%;
   }
 
   .copy {
@@ -518,19 +512,16 @@
 
 @media (max-width: 768px) {
   .hero {
-    height: max(100svh, 620px);
+    --hero-h: max(100svh, 620px);
+    --hero-run: 75vh;
     /* Mobile art, hero-ragnarok-mobile.jpg (1080×1350). */
     --ratio: 0.8;
-    --stage-h: 1.9;
+    --stage-h: 1.15;
     --fx: 0.51;
-    --fy: 0.82;
-    --at-x: 50%;
-    --at-y: 97%;
-    --hand-x: 0.581;
-    --hand-y: 0.676;
-    --eye-x: 0.511;
-    --eye-y: 0.556;
-    --sword: 0.25;
+    /* Left of centre, so the raised sword stays on screen. */
+    --giant-x: 42%;
+    --giant-top: 34%;
+    --giant-h: 70%;
   }
 
   .copy {
