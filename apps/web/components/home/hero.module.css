@@ -27,65 +27,101 @@
   height: 0;
 }
 
-/* --- Art ----------------------------------------------------------------- */
+/* --- Stage --------------------------------------------------------------
+   The art keeps its own aspect ratio and is placed by one focal point — the
+   giant's feet (--fx, --fy, as fractions of the art) land at (--at-x, --at-y)
+   in the hero — at --stage-h times the hero's height. The foreground stage
+   shares the exact geometry, so the sword and eyes stay on the painted giant.
+   Per-art coordinates are measured from the image files.                   */
+
+.hero {
+  /* Desktop art, hero-ragnarok-desktop.jpg (2592×1080). */
+  --ratio: 2.4;
+  --stage-h: 2.1;
+  --fx: 0.482;
+  --fy: 0.83;
+  --at-x: 50%;
+  --at-y: 98%;
+  --hand-x: 0.523; /* the giant's fist */
+  --hand-y: 0.69;
+  --eye-x: 0.5;
+  --eye-y: 0.562;
+  --sword: 0.288; /* sword height as a fraction of the stage height */
+}
 
 .artWrap {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  /* The art's baked-in title lives in its upper band. Fade that band into the
-     abyss so only the live title reads, whatever the viewport's shape. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 54%);
-  mask-image: linear-gradient(to bottom, transparent 0%, transparent 24%, #000 54%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 2%, #000 26%);
+  mask-image: linear-gradient(to bottom, transparent 2%, #000 26%);
 }
 
-.underNav .artWrap {
-  top: var(--navbar-h);
+.foreground {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stage {
+  position: absolute;
+  left: var(--at-x);
+  top: var(--at-y);
+  height: calc(var(--stage-h) * 100%);
+  aspect-ratio: var(--ratio);
+  translate: calc(var(--fx) * -100%) calc(var(--fy) * -100%);
+  transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
+  /* The giant looms closer as the hero scrolls away. */
+  transform: scale(calc(1 + var(--progress-ease, 0) * 0.16));
+  animation: approach 14s var(--ease) both;
+  will-change: transform;
+}
+
+@keyframes approach {
+  from { scale: 1.1; }
+  to { scale: 1; }
+}
+
+.foreStage {
+  container-type: size;
 }
 
 .picture {
   display: block;
-  height: 100%;
-  transform: translateY(calc(var(--progress, 0) * 22%));
-  will-change: transform;
-}
-
-/* Scaled up from the bottom edge so the art's own baked-in title leaves the
-   frame — the live title replaces it — while the battlefield stays. */
-.art {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center bottom;
-  transform-origin: center bottom;
-  animation: kenburns 16s var(--ease) forwards;
 }
 
-@keyframes kenburns {
-  from { transform: scale(1.5); }
-  to { transform: scale(1.38); }
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The art is upscaled around the giant; extra contrast keeps it crisp. */
+  filter: contrast(1.22) saturate(1.15);
 }
 
-/* Bone sky × this = a crimson dusk, brightest where the fire giant burns. */
+/* Bone sky × this = a crimson dusk; the giant stays lit by its own fire. */
 .grade {
   position: absolute;
   inset: 0;
   mix-blend-mode: multiply;
   background:
-    radial-gradient(ellipse 55% 55% at 50% 72%, #ffcf9e 0%, #d8743e 24%, transparent 60%),
-    linear-gradient(to bottom, #0e0605 0%, #1c0907 22%, #5a1611 44%, #8e3522 66%, #3a1510 100%);
+    radial-gradient(ellipse 30% 48% at var(--at-x) 62%, #ffe2c2 0%, #eea06a 34%, transparent 74%),
+    linear-gradient(to bottom, #0e0605 0%, #2a0c09 18%, #7a2418 42%, #b0502f 64%, #4a1a12 100%);
   pointer-events: none;
 }
 
 .fireGlow {
   position: absolute;
-  left: 50%;
-  bottom: 6%;
-  width: min(70vw, 900px);
-  height: 60%;
+  left: var(--at-x);
+  bottom: 2%;
+  width: min(80vw, 1000px);
+  height: 70%;
   transform: translateX(-50%);
   mix-blend-mode: screen;
-  background: radial-gradient(closest-side, rgba(212, 98, 47, 0.55), rgba(163, 39, 42, 0.25) 55%, rgba(163, 39, 42, 0));
+  background: radial-gradient(closest-side, rgba(212, 98, 47, 0.5), rgba(163, 39, 42, 0.22) 55%, rgba(163, 39, 42, 0));
   filter: blur(30px);
   pointer-events: none;
   animation: flicker 2.8s ease-in-out infinite;
@@ -101,35 +137,69 @@
 .fade {
   position: absolute;
   inset: auto 0 0 0;
-  height: 30%;
+  height: 22%;
   background: linear-gradient(to bottom, rgba(14, 12, 11, 0), var(--abyss-950));
   pointer-events: none;
+}
+
+/* The giant's eyes, burning over the grade; they flare as the sword falls. */
+.eyes {
+  position: absolute;
+  left: calc(var(--eye-x) * 100%);
+  top: calc(var(--eye-y) * 100%);
+  width: 2.6cqh;
+  height: 1.2cqh;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff1dc, #f08a4a 45%, rgba(212, 98, 47, 0));
+  mix-blend-mode: screen;
+  opacity: calc(0.55 + var(--progress, 0) * 1.6);
+  scale: calc(1 + var(--progress, 0) * 1.4);
+  filter: blur(1px) drop-shadow(0 0 6px #d4622f);
+  animation: eyes 2.2s ease-in-out infinite;
+}
+
+@keyframes eyes {
+  0%, 100% { filter: blur(1px) drop-shadow(0 0 4px #d4622f); }
+  50% { filter: blur(1px) drop-shadow(0 0 12px #f08a4a); }
 }
 
 /* --- Sword --------------------------------------------------------------- */
 
 .sword {
-  z-index: 1;
-  right: 24vw;
-  bottom: 16%;
+  left: calc(var(--hand-x) * 100%);
+  top: calc(var(--hand-y) * 100%);
+  --len: calc(var(--sword) * 100cqh);
 }
 
 /* --- Title --------------------------------------------------------------- */
 
-.titleBlock {
+/* The copy column. Narrow screens: title at the top, actions at the bottom,
+   the giant between them. Desktop: one column on the left, the giant right. */
+.copy {
   position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: calc(var(--navbar-h) + clamp(2.5rem, 9vh, 6rem));
-  width: 100%;
+  z-index: 4;
+  inset: calc(var(--navbar-h) + clamp(1.75rem, 6vh, 4rem)) var(--spacing-container)
+    clamp(4.5rem, 11vh, 7rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  transform: translateY(calc(var(--progress-ease, 0) * -12vh));
+  opacity: calc(1 - var(--progress, 0) * 1.8);
+  will-change: transform, opacity;
+}
+
+.copy > * {
+  pointer-events: auto;
+}
+
+.titleBlock {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transform: translate(-50%, calc(var(--progress-ease, 0) * -12vh))
-    scale(calc(1 + var(--progress-ease, 0) * 0.32));
-  opacity: calc(1 - var(--progress, 0) * 1.7);
-  will-change: transform, opacity;
 }
 
 .kicker {
@@ -165,7 +235,7 @@
 
 .titleOf {
   font-family: var(--f-display);
-  font-size: clamp(1.75rem, 4.4vw, 4rem);
+  font-size: clamp(1.25rem, 3vw, 2.75rem);
   font-weight: 700;
   line-height: 1;
   color: var(--bone-100);
@@ -174,13 +244,13 @@
   animation: rise-in 900ms var(--ease) 350ms forwards;
 }
 
-/* RAGNARÖK: as wide as the screen, filled with a moving flame gradient and
+/* RAGNARÖK: filled with a moving flame gradient and
    shimmering in its own heat. The ::before is the fire behind the letters. */
 .titleMain {
   position: relative;
   display: block;
   font-family: var(--f-display);
-  font-size: clamp(5rem, 21vw, 22rem);
+  font-size: clamp(3.5rem, 11vw, 10rem);
   font-weight: 900;
   line-height: 0.82;
   letter-spacing: -0.01em;
@@ -287,16 +357,10 @@
 /* --- Actions ------------------------------------------------------------- */
 
 .actions {
-  position: absolute;
-  z-index: 4;
-  left: 0;
-  right: 0;
-  bottom: clamp(5.5rem, 13vh, 8.5rem);
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
-  padding-inline: var(--spacing-container);
 }
 
 .primary,
@@ -410,29 +474,68 @@
   100% { transform: scaleY(1); opacity: 0; }
 }
 
+/* --- Tablets: centred copy, so the giant sits a little lower ------------ */
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  .hero {
+    --stage-h: 1.8;
+  }
+}
+
+/* --- Desktop: copy left, giant right ------------------------------------ */
+
+@media (min-width: 1024px) {
+  .hero {
+    --at-x: 62%;
+  }
+
+  .copy {
+    right: auto;
+    width: min(46vw, 680px);
+    padding-left: 0;
+    justify-content: center;
+    align-items: flex-start;
+    gap: clamp(1.75rem, 5vh, 3rem);
+  }
+
+  .titleBlock,
+  .title {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .titleMain {
+    font-size: clamp(5rem, 9.5vw, 11rem);
+    margin-left: -0.04em;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+}
+
 /* --- Phones -------------------------------------------------------------- */
 
 @media (max-width: 768px) {
   .hero {
     height: max(100svh, 620px);
+    /* Mobile art, hero-ragnarok-mobile.jpg (1080×1350). */
+    --ratio: 0.8;
+    --stage-h: 1.9;
+    --fx: 0.51;
+    --fy: 0.82;
+    --at-x: 50%;
+    --at-y: 97%;
+    --hand-x: 0.581;
+    --hand-y: 0.676;
+    --eye-x: 0.511;
+    --eye-y: 0.556;
+    --sword: 0.25;
   }
 
-  .art {
-    animation-name: kenburns-mobile;
-  }
-
-  @keyframes kenburns-mobile {
-    from { transform: scale(1.62); }
-    to { transform: scale(1.55); }
-  }
-
-  .sword {
-    right: 30vw;
-    bottom: 30%;
-  }
-
-  .titleBlock {
-    top: calc(var(--navbar-h) + 7vh);
+  .copy {
+    top: calc(var(--navbar-h) + 4vh);
+    bottom: 4rem;
   }
 
   .kicker {
@@ -441,13 +544,13 @@
   }
 
   .titleMain {
-    font-size: 20.5vw;
+    font-size: 17vw;
   }
 
   .actions {
-    bottom: 4.5rem;
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
 
   .cue {

@@ -1,10 +1,18 @@
-/* The rig is a zero-size point at the sword's grip; everything is laid out
-   around it, so the sword and its trail share one pivot. The parent sets
-   --progress-ease; --swing turns it into an angle. */
+/* The rig is a zero-size point at the giant's fist; the sword and its trail
+   are laid out around it, so they share one pivot. The parent sets --len (the
+   sword's full height) and --progress.
+
+   The swing, driven by --progress (0 → 1 as the hero scrolls away):
+     rest    +10°  — as painted, raised at the giant's side
+     wind   → +26° — drawn back over the first sliver of scroll
+     strike → −120° — driven down across the battlefield (smoothstepped),
+                      done by ~40% so it lands while the giant is on screen */
 
 .rig {
-  --len: min(108vh, 1080px);
-  --swing: calc(12deg - var(--progress-ease, 0) * 137deg);
+  --wind: clamp(0, calc(var(--progress, 0) * 20), 1);
+  --s: clamp(0, calc((var(--progress, 0) - 0.05) * 2.9), 1);
+  --strike: calc(var(--s) * var(--s) * (3 - 2 * var(--s)));
+  --swing: calc(10deg + var(--wind) * 16deg - var(--strike) * 146deg);
   position: absolute;
   width: 0;
   height: 0;
@@ -20,59 +28,47 @@
 .sword {
   position: absolute;
   height: var(--len);
-  width: calc(var(--len) / 10);
-  left: calc(var(--len) / -20);
+  width: calc(var(--len) * 0.22);
+  left: calc(var(--len) * -0.11);
   top: calc(var(--len) * -0.875);
   transform-origin: 50% 87.5%;
   transform: rotate(var(--swing));
-  filter: drop-shadow(0 0 2px #0e0c0b) drop-shadow(0 0 22px rgba(212, 98, 47, 0.65))
-    drop-shadow(0 30px 40px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 0 10px rgba(240, 138, 74, 0.8)) drop-shadow(0 0 36px rgba(212, 98, 47, 0.55));
   overflow: visible;
-  animation: sword-idle 5s ease-in-out infinite;
 }
 
-/* At rest the blade breathes — a slow sway, so the hero is never still. */
-@keyframes sword-idle {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -8px; }
-}
-
-.heat {
-  opacity: calc(0.35 + var(--progress-ease, 0) * 0.65);
+.fire {
   mix-blend-mode: screen;
 }
 
-.edge {
-  fill: none;
-  stroke: #d4622f;
-  stroke-width: 2.4;
-  filter: drop-shadow(0 0 6px #d4622f);
+/* Each tongue flickers from its base. */
+.flick {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flick 0.9s ease-in-out infinite alternate;
 }
 
-.edgeFaint {
-  fill: none;
-  stroke: #a3272a;
-  stroke-width: 1;
-  opacity: 0.7;
+@keyframes flick {
+  0% { transform: scale(0.8, 0.85) skewX(-4deg); opacity: 0.75; }
+  50% { transform: scale(1.05, 1.12) skewX(3deg); opacity: 1; }
+  100% { transform: scale(0.9, 1.25) skewX(-2deg); opacity: 0.85; }
 }
 
-.runes {
+.core {
   fill: none;
-  stroke: #f0a06a;
-  stroke-width: 1.6;
-  stroke-linecap: square;
-  opacity: calc(0.35 + var(--progress-ease, 0) * 0.65);
-  filter: drop-shadow(0 0 3px #d4622f);
-  animation: rune-flicker 2.4s ease-in-out infinite;
+  stroke: #fffaf0;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px #fff1dc);
+  animation: core-pulse 1.6s ease-in-out infinite;
 }
 
-@keyframes rune-flicker {
-  0%, 100% { stroke: #f0a06a; }
-  50% { stroke: #f7d9b8; }
+@keyframes core-pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
 }
 
 .guard {
-  fill: #8b1a1a;
+  fill: #2a211d;
   stroke: #0e0c0b;
   stroke-width: 2;
 }
@@ -81,11 +77,10 @@
   fill: #d4622f;
   stroke: #0e0c0b;
   stroke-width: 2;
-  filter: drop-shadow(0 0 8px #d4622f);
 }
 
-/* The trail: an arc swept by the tip, drawn in as the blade passes and burnt
-   off again at the end of the swing. */
+/* The trail: an arc swept by the tip, burning in with the strike, holding a
+   moment, then burnt off as the hero leaves. */
 .trail {
   position: absolute;
   width: calc(var(--len) * 1.9);
@@ -93,7 +88,9 @@
   left: calc(var(--len) * -0.95);
   top: calc(var(--len) * -0.95);
   overflow: visible;
-  opacity: min(calc(var(--progress-ease, 0) * 5), calc((1 - var(--progress-ease, 0)) * 2.2));
+  opacity: calc(
+    min(var(--strike) * 6, 1) * clamp(0, calc((0.8 - var(--progress, 0)) * 4), 1)
+  );
 }
 
 .trailWide,
@@ -101,24 +98,25 @@
   fill: none;
   stroke-linecap: butt;
   stroke-dasharray: 1;
-  stroke-dashoffset: calc(1 - var(--progress-ease, 0));
+  stroke-dashoffset: calc(1 - var(--strike));
 }
 
 .trailWide {
   stroke: url(#trail-burn);
-  stroke-width: 0.075;
+  stroke-width: 0.09;
   opacity: 0.55;
-  filter: blur(6px);
+  filter: blur(8px);
 }
 
 .trailCore {
   stroke: url(#trail-burn);
-  stroke-width: 0.018;
-  filter: drop-shadow(0 0 6px #a3272a);
+  stroke-width: 0.022;
+  filter: drop-shadow(0 0 8px #d4622f);
 }
 
-@media (max-width: 768px) {
-  .rig {
-    --len: min(78vh, 640px);
+@media (prefers-reduced-motion: reduce) {
+  .flick,
+  .core {
+    animation: none;
   }
 }
