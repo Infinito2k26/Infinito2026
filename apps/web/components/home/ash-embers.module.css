@@ -1,0 +1,15 @@
+/* Fixed over the whole page, under the navbar, never in the way of a click. */
+.embers {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-nav) - 1);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .embers {
+    display: none;
+  }
+}
