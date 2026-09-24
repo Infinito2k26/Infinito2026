@@ -3,12 +3,10 @@ import Hero from "@/components/home/hero";
 import Countdown from "@/components/home/countdown";
 import SportSlab from "@/components/home/sport-slab";
 import WarTape from "@/components/home/war-tape";
-import FireCanvas from "@/components/home/fire-canvas";
-import ScrollScene from "@/components/ui/scroll-scene";
 import Ornament from "@/components/ui/ornament";
 import Reveal from "@/components/ui/reveal";
-import CountUp from "@/components/ui/count-up";
 import { FEATURED_SPORTS } from "@/lib/sports";
+import buttons from "./buttons.module.css";
 import styles from "./home-content.module.css";
 
 const STATS = [
@@ -42,9 +40,6 @@ const DAYS = [
   },
 ];
 
-// Bento: the first and last featured sports take a double-width slab on desktop.
-const WIDE = new Set([0, 5]);
-
 export type FestDates = {
   start: string;
   label: string;
@@ -70,10 +65,7 @@ export default function HomeContent({
         <div className={styles.statsInner}>
           {STATS.map(({ value, label }, i) => (
             <Reveal key={label} index={i} className={styles.stat}>
-              <span className={styles.statValue}>
-                <CountUp value={value} />
-              </span>
-              <span className={styles.statRule} aria-hidden="true" />
+              <span className={styles.statValue}>{value}</span>
               <span className={styles.statLabel}>{label}</span>
             </Reveal>
           ))}
@@ -81,10 +73,7 @@ export default function HomeContent({
         <Countdown target={festDates.start} />
       </section>
 
-      <ScrollScene className={styles.sports}>
-        <span className={styles.ghost} aria-hidden="true">
-          Battlefield
-        </span>
+      <section className={styles.sports}>
         <div className={styles.inner}>
           <div className={styles.sectionHeadRow}>
             <Reveal className={styles.sectionHead}>
@@ -100,24 +89,17 @@ export default function HomeContent({
             </Link>
           </div>
 
-          <div className={styles.bento}>
+          <div className={styles.bills}>
             {FEATURED_SPORTS.map((sport, i) => (
-              <Reveal
-                key={sport.id}
-                index={i}
-                className={`${styles.bentoCell} ${WIDE.has(i) ? styles.bentoWide : ""}`}
-              >
-                <SportSlab sport={sport} wide={WIDE.has(i)} eager={i < 2} />
+              <Reveal key={sport.id} index={i} className={styles.bill}>
+                <SportSlab sport={sport} eager={i < 2} />
               </Reveal>
             ))}
           </div>
         </div>
-      </ScrollScene>
+      </section>
 
-      <ScrollScene className={styles.schedule}>
-        <span className={styles.ghost} aria-hidden="true">
-          Days of war
-        </span>
+      <section className={styles.schedule}>
         <div className={styles.inner}>
           <Reveal className={styles.sectionHead}>
             <p className={styles.eyebrow}>{festDates.label}</p>
@@ -129,7 +111,6 @@ export default function HomeContent({
               <li
                 key={day}
                 className={`${styles.dayItem} ${i === DAYS.length - 1 ? styles.climax : ""}`}
-                style={{ "--i": i } as React.CSSProperties}
               >
                 <span className={styles.node} aria-hidden="true" />
                 <Reveal index={i} className={styles.day}>
@@ -146,15 +127,10 @@ export default function HomeContent({
             ))}
           </ol>
         </div>
-      </ScrollScene>
+      </section>
 
-      <ScrollScene className={styles.legacyBand}>
+      <section className={styles.legacyBand}>
         <Ornament variant="ridge" fill="var(--abyss-950)" className={styles.legacyRidge} />
-        <span className={`${styles.ghost} ${styles.ghostRise}`} aria-hidden="true">
-          Rise
-        </span>
-        <div className={styles.legacyGlow} aria-hidden="true" />
-        <FireCanvas className={styles.legacyFire} density={1.3} />
         <Reveal className={styles.legacy}>
           <Ornament variant="valknut" className={styles.legacyMark} />
           <h2 className={styles.legacyTitle}>From the ruins, we rise</h2>
@@ -162,11 +138,11 @@ export default function HomeContent({
             One fest. Countless battles. One legacy still to be written. The ruins
             remain — what stands on them next is yours to decide.
           </p>
-          <Link href="/signup" className={styles.legacyCta}>
+          <Link href="/signup" className={`${buttons.primary} ${styles.legacyCta}`}>
             Write your legacy <span aria-hidden="true">→</span>
           </Link>
         </Reveal>
-      </ScrollScene>
+      </section>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { getImageProps } from "next/image";
 import Link from "next/link";
 import ScrollScene from "@/components/ui/scroll-scene";
 import FireCanvas from "@/components/home/fire-canvas";
+import buttons from "./buttons.module.css";
 import styles from "./hero.module.css";
 
 /**
@@ -43,21 +44,6 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
       className={`${styles.hero} ${underNav ? "" : styles.belowNav}`}
     >
       <div className={styles.pin}>
-        {/* Heat shimmer for the title. Kept tiny — displacement of a few px. */}
-        <svg className={styles.defs} aria-hidden="true" focusable="false">
-          <filter id="ragnarok-heat" x="-5%" y="-20%" width="110%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="3">
-              <animate
-                attributeName="baseFrequency"
-                dur="7s"
-                values="0.012 0.06; 0.016 0.09; 0.012 0.06"
-                repeatCount="indefinite"
-              />
-            </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" scale="7" />
-          </filter>
-        </svg>
-
         <div className={styles.artWrap}>
           <div className={styles.stage}>
             {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
@@ -81,9 +67,7 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
             </p>
             <h1 className={styles.title}>
               <span className={styles.titleOf}>Ruins of</span>
-              <span className={styles.titleMain} data-text="Ragnarök">
-                Ragnarök
-              </span>
+              <span className={styles.titleMain}>Ragnarök</span>
               <span className="srOnly"> — Infinito 2026, IIT Patna, 9–11 October 2026</span>
             </h1>
             <p className={styles.dates}>
@@ -92,10 +76,10 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
           </div>
 
           <div className={styles.actions}>
-            <Link href="/signup" className={styles.primary}>
+            <Link href="/signup" className={buttons.primary}>
               Enter the battlefield <span aria-hidden="true">→</span>
             </Link>
-            <Link href="/sports" className={styles.secondary}>
+            <Link href="/sports" className={buttons.secondary}>
               Choose your sport <span aria-hidden="true">→</span>
             </Link>
           </div>

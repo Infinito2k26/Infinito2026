@@ -46,12 +46,6 @@
   top: var(--navbar-h);
 }
 
-.defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
 /* --- Painting ------------------------------------------------------------ */
 
 .artWrap {
@@ -153,7 +147,7 @@
   pointer-events: none;
 }
 
-/* --- Title --------------------------------------------------------------- */
+/* --- Title ---------------------------------------------------------------- */
 
 /* The copy column. Narrow screens: title at the top, actions at the bottom,
    the giant between them. Desktop: one column on the left, the giant right. */
@@ -177,6 +171,24 @@
   pointer-events: auto;
 }
 
+/* One quiet entrance: the words, then the actions. `backwards` so the scroll
+   exit above takes over again once it has played. */
+.titleBlock,
+.actions {
+  animation: copy-in 700ms var(--ease) 120ms backwards;
+}
+
+.actions {
+  animation-delay: 320ms;
+}
+
+@keyframes copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 .titleBlock {
   display: flex;
   flex-direction: column;
@@ -187,21 +199,19 @@
 .kicker {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.75rem;
   max-width: none;
   font-family: var(--f-caps);
-  font-size: clamp(0.625rem, 1vw, 0.8125rem);
+  font-size: clamp(0.625rem, 0.9vw, 0.75rem);
   font-weight: 700;
-  letter-spacing: 0.28em;
+  letter-spacing: var(--track-micro);
   text-transform: uppercase;
   color: var(--bone-200);
-  opacity: 0;
-  animation: rise-in 900ms var(--ease) 200ms forwards;
 }
 
 .kicker i {
-  width: 7px;
-  height: 7px;
+  width: 5px;
+  height: 5px;
   background: var(--crimson-600);
   transform: rotate(45deg);
 }
@@ -210,117 +220,67 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: clamp(0.5rem, 2vh, 1.25rem);
+  margin-top: clamp(0.875rem, 2.4vh, 1.5rem);
   line-height: 1;
   color: inherit;
+  /* Dark halo, not a glow: keeps the words off the fire behind them. */
+  text-shadow: 0 1px 2px rgba(14, 12, 11, 0.6), 0 0 36px rgba(14, 12, 11, 0.55);
 }
 
 .titleOf {
   font-family: var(--f-display);
-  font-size: clamp(1.25rem, 3vw, 2.75rem);
+  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
   font-weight: 700;
   line-height: 1;
-  color: var(--bone-100);
-  text-shadow: 0 0 24px rgba(212, 98, 47, 0.6), 0 3px 0 #0e0c0b;
-  opacity: 0;
-  animation: rise-in 900ms var(--ease) 350ms forwards;
+  color: var(--ember-300);
 }
 
-/* RAGNARÖK: filled with a moving flame gradient and
-   shimmering in its own heat. The ::before is the fire behind the letters. */
 .titleMain {
-  position: relative;
   display: block;
   font-family: var(--f-display);
-  font-size: clamp(3.5rem, 11vw, 10rem);
-  font-weight: 900;
-  line-height: 0.82;
-  letter-spacing: -0.01em;
-  padding: 0 0.05em 0.08em;
-  color: transparent;
-  background: linear-gradient(
-    to top,
-    #ffd9a8 0%,
-    #f08a4a 9%,
-    #d4622f 20%,
-    #b52a20 36%,
-    #8b1a1a 56%,
-    #5e0f11 80%,
-    #2a0707 100%
-  );
-  background-size: 100% 170%;
-  background-position: 0 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: url(#ragnarok-heat) drop-shadow(0 0 28px rgba(212, 98, 47, 0.5))
-    drop-shadow(0 8px 0 #0e0c0b);
-  animation: burn-in 1.4s var(--ease) 450ms both, flame-shift 2.6s ease-in-out 1.9s infinite alternate;
+  font-size: clamp(3.5rem, 12vw, 7.5rem);
+  font-weight: 700;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  /* Blackletter descenders are shallow; a little room keeps the ö's dots
+     and the k's spur clear of the date line. */
+  padding-bottom: 0.06em;
+  color: var(--bone-50);
 }
 
-.titleMain::before {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  padding: inherit;
-  color: #a3272a;
-  filter: blur(30px);
-  opacity: 0.5;
-  animation: flicker 1.9s ease-in-out infinite;
-}
-
-@keyframes burn-in {
-  from {
-    opacity: 0;
-    background-position: 0 0%;
-    transform: translateY(30px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    background-position: 0 100%;
-    transform: none;
-  }
-}
-
-@keyframes flame-shift {
-  from { background-position: 0 100%; }
-  to { background-position: 0 78%; }
-}
-
-/* Brutal date slab — hard crimson block, hard black shadow, knocked askew. */
+/* The date, set as a line of type rather than a badge. */
 .dates {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   max-width: none;
-  margin-top: clamp(0.75rem, 2.4vh, 1.5rem);
-  padding: 0.35rem 1rem 0.2rem;
+  margin-top: clamp(1rem, 2.6vh, 1.5rem);
   font-family: var(--f-sport);
-  font-size: clamp(1.125rem, 2vw, 1.75rem);
+  font-size: clamp(1.25rem, 1.9vw, 1.625rem);
+  line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--bone-100);
-  background: var(--crimson-700);
-  border: 2px solid var(--abyss-950);
-  box-shadow: 6px 6px 0 var(--abyss-950);
-  transform: rotate(-2deg);
-  opacity: 0;
-  animation: slam-in 500ms cubic-bezier(0.3, 1.6, 0.5, 1) 1.2s forwards;
+  color: var(--bone-200);
+}
+
+.dates::before,
+.dates::after {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: var(--crimson-600);
+}
+
+/* Centred (below desktop), the rule is mirrored so the line stays centred;
+   left-aligned on desktop, one rule leads into it. */
+@media (min-width: 1024px) {
+  .dates::after {
+    content: none;
+  }
 }
 
 .dates span {
-  font-size: 1.35em;
-  color: var(--glow-200);
-}
-
-@keyframes slam-in {
-  from { opacity: 0; transform: rotate(-8deg) scale(1.6); }
-  to { opacity: 1; transform: rotate(-2deg) scale(1); }
-}
-
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
+  color: var(--bone-50);
 }
 
 /* --- Flames -------------------------------------------------------------- */
@@ -331,98 +291,22 @@
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 58%;
+  height: 42%;
   mix-blend-mode: screen;
   pointer-events: none;
-  opacity: calc(0.3 + var(--lit) * 0.8);
+  opacity: calc(0.2 + var(--lit) * 0.55);
 }
 
-/* --- Actions ------------------------------------------------------------- */
+/* --- Actions -------------------------------------------------------------- */
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.primary,
-.secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.75rem;
-  min-height: 52px;
-  padding: 1rem 1.875rem;
-  font-family: var(--f-caps);
-  font-size: var(--fs-small);
-  font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  color: var(--bone-100);
-  border: 2px solid var(--abyss-950);
-  border-radius: 0;
-  box-shadow: 6px 6px 0 var(--abyss-950);
-  opacity: 0;
-  animation: cta-enter 600ms var(--ease) forwards;
-  transition: transform 90ms linear, box-shadow 90ms linear, background var(--t-state) var(--ease);
+  justify-content: center;
 }
 
-.primary {
-  background: var(--crimson-700);
-  animation-delay: 1.4s;
-}
-
-.secondary {
-  background: var(--bone-100);
-  color: var(--abyss-950);
-  animation-delay: 1.55s;
-}
-
-.primary span {
-  color: var(--glow-200);
-}
-
-.secondary span {
-  color: var(--crimson-700);
-}
-
-@keyframes cta-enter {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: none; }
-}
-
-/* Brutal press: lifts off its shadow on hover, slams flat on click. */
-.primary:hover,
-.secondary:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 9px 9px 0 var(--abyss-950);
-}
-
-.primary:hover {
-  color: var(--bone-50);
-  background: var(--crimson-600);
-  box-shadow: 9px 9px 0 var(--abyss-950), 0 0 40px rgba(212, 98, 47, 0.45);
-}
-
-.secondary:hover {
-  color: var(--abyss-950);
-  background: var(--glow-200);
-}
-
-.primary:active,
-.secondary:active {
-  transform: translate(6px, 6px);
-  box-shadow: 0 0 0 var(--abyss-950);
-}
-
-.primary:focus-visible,
-.secondary:focus-visible {
-  outline: 3px solid var(--ember-300);
-  outline-offset: 4px;
-}
-
-/* --- Scroll cue ---------------------------------------------------------- */
+/* --- Scroll cue ----------------------------------------------------------- */
 
 .cue {
   position: absolute;
@@ -444,17 +328,9 @@
 }
 
 .cue i {
-  width: 2px;
-  height: 36px;
-  background: linear-gradient(var(--crimson-600), transparent);
-  transform-origin: top;
-  animation: cue-drop 2s var(--ease) infinite;
-}
-
-@keyframes cue-drop {
-  0% { transform: scaleY(0); opacity: 1; }
-  70% { transform: scaleY(1); opacity: 1; }
-  100% { transform: scaleY(1); opacity: 0; }
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(var(--mist-400), transparent);
 }
 
 /* --- Tablets and phones: copy over the top, the giant below ------------ */
@@ -495,7 +371,7 @@
     padding-left: 0;
     justify-content: center;
     align-items: flex-start;
-    gap: clamp(1.75rem, 5vh, 3rem);
+    gap: clamp(2rem, 5.5vh, 3rem);
   }
 
   .titleBlock,
@@ -505,7 +381,7 @@
   }
 
   .titleMain {
-    font-size: clamp(5rem, 9.5vw, 11rem);
+    font-size: clamp(4.5rem, 7.4vw, 7.5rem);
     margin-left: -0.04em;
   }
 
@@ -532,11 +408,11 @@
 
   .kicker {
     gap: 0.5rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
   }
 
   .titleMain {
-    font-size: 17vw;
+    font-size: 16vw;
   }
 
   .actions {
@@ -553,5 +429,12 @@
 @media (prefers-reduced-motion: reduce) {
   .hero {
     --lit: 1;
+  }
+
+  .stage,
+  .core,
+  .titleBlock,
+  .actions {
+    animation: none;
   }
 }

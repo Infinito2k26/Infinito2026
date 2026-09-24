@@ -588,9 +588,9 @@
   border-bottom-color: var(--char-700);
 }
 
+/* Near-opaque, so a blur behind it would be invisible work. */
 .navbarDarkSolid .navbar_inner {
-  background: rgba(14, 12, 11, 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(14, 12, 11, 0.96);
 }
 
 .navbarDark .brand {
@@ -621,8 +621,11 @@
   border: 1px solid var(--crimson-600);
 }
 
-.navbarDark .navbar_signup:hover {
-  box-shadow: 0 0 22px rgba(139, 26, 26, 0.6);
+.navbarDark .navbar_item:focus-visible,
+.navbarDark .navbar_signup:focus-visible,
+.navbarDark .brand:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 4px;
 }
 
 .navbarDark .hamburger span {
@@ -659,6 +662,8 @@
   border-top-color: var(--char-700);
 }
 
+/* The sign-off: a line of caps like the rest of the bar, one step lighter
+   than the links rather than a crimson that fails contrast at this size. */
 .footerDark .footer_bottom_text:last-child {
-  color: var(--crimson-600);
+  color: var(--mist-400);
 }

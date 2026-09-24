@@ -1,0 +1,78 @@
+/* ---------------------------------------------------------------------------
+   The landing page's two buttons, shared by the hero and the closing band.
+
+   Square-cut like everything else carved here. Crimson is spent on the one
+   primary action per view; the secondary is an outline so the two never
+   compete. Hover changes colour and nudges the arrow — nothing jumps.
+   ------------------------------------------------------------------------- */
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: 48px;
+  /* Cinzel's caps sit high in the line box: 1px more on top centres them. */
+  padding: 0.8125rem 1.5rem 0.75rem;
+  font-family: var(--f-caps);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-state) var(--ease),
+    border-color var(--t-state) var(--ease), color var(--t-state) var(--ease);
+}
+
+.primary {
+  color: var(--bone-50);
+  background: var(--crimson-700);
+  border-color: var(--crimson-600);
+}
+
+.primary:hover {
+  color: var(--bone-50);
+  background: var(--crimson-600);
+}
+
+/* Over the hero art it needs a little ground of its own to stay legible. */
+.secondary {
+  color: var(--bone-100);
+  background: rgba(14, 12, 11, 0.4);
+  border-color: rgba(245, 237, 226, 0.45);
+}
+
+.secondary:hover {
+  color: var(--bone-50);
+  background: rgba(14, 12, 11, 0.65);
+  border-color: var(--bone-100);
+}
+
+.primary:active,
+.secondary:active {
+  transform: translateY(1px);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 3px;
+}
+
+.primary > span,
+.secondary > span {
+  display: inline-block;
+  transition: transform var(--t-state) var(--ease);
+}
+
+.primary > span {
+  color: var(--glow-200);
+}
+
+.primary:hover > span,
+.secondary:hover > span {
+  transform: translateX(3px);
+}

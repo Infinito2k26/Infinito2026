@@ -13,15 +13,12 @@ import styles from "./sport-slab.module.css";
  * On hover the bill burns away from the middle (<PaperBurn>), uncovering the
  * slab beneath with the sport's details carved into it. The slab's text is the
  * link's real content; the bill's printed text is decorative (aria-hidden).
- * `wide` slabs span two grid columns on desktop.
  */
 export default function SportSlab({
   sport,
-  wide = false,
   eager = false,
 }: {
   sport: Sport;
-  wide?: boolean;
   eager?: boolean;
 }) {
   const deckle = { clipPath: PAPER_DECKLE };
@@ -30,7 +27,7 @@ export default function SportSlab({
   return (
     <Link
       href={`/events?sport=${sport.id}`}
-      className={`${styles.slab} ${wide ? styles.wide : ""}`}
+      className={styles.slab}
     >
       {/* The slab, uncovered as the bill burns */}
       <span className={styles.under}>
@@ -54,7 +51,7 @@ export default function SportSlab({
           alt=""
           width={1600}
           height={2000}
-          sizes={wide ? "(max-width: 1023px) 46vw, 600px" : "(max-width: 1023px) 46vw, 300px"}
+          sizes="(max-width: 639px) 46vw, (max-width: 1240px) 31vw, 390px"
           quality={75}
           loading={eager ? "eager" : "lazy"}
           className={styles.poster}

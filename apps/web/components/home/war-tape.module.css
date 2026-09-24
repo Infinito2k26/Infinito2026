@@ -1,32 +1,14 @@
-.tapes {
-  position: relative;
-  z-index: 5;
-  height: clamp(5rem, 9vw, 8rem);
-  margin-top: calc(clamp(5rem, 9vw, 8rem) / -2);
-  margin-bottom: calc(clamp(5rem, 9vw, 8rem) / -2);
-  pointer-events: none;
-  overflow: hidden;
-}
+/* A straight band between the hero and the numbers. Stone on the abyss, the
+   names in the broadcast face, crimson only in the small separators. It moves
+   with the scroll and not otherwise. */
 
 .tape {
-  position: absolute;
-  left: -10%;
-  width: 120%;
-  top: 50%;
-  padding: 0.55rem 0 0.35rem;
-  border-block: 3px solid var(--abyss-950);
+  position: relative;
   overflow: hidden;
-}
-
-.front {
-  background: var(--crimson-700);
-  transform: translateY(-50%) rotate(-2.4deg);
-  box-shadow: 0 8px 0 var(--abyss-950);
-}
-
-.back {
-  background: var(--char-750);
-  transform: translateY(-50%) rotate(2.2deg);
+  padding: 0.9375rem 0 0.8125rem;
+  background: var(--char-800);
+  border-block: 1px solid var(--char-700);
+  pointer-events: none;
 }
 
 .run {
@@ -34,37 +16,26 @@
   width: max-content;
   white-space: nowrap;
   font-family: var(--f-sport);
-  font-size: clamp(1.375rem, 2.6vw, 2.25rem);
+  font-size: clamp(1.125rem, 1.7vw, 1.4375rem);
   line-height: 1;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.front .run {
-  color: var(--bone-100);
-  transform: translateX(calc(-8% - var(--progress, 0) * 22%));
-}
-
-.back .run {
-  color: var(--stone-600);
-  transform: translateX(calc(-30% + var(--progress, 0) * 22%));
+  color: var(--mist-400);
+  transform: translateX(calc(-6% - var(--progress, 0) * 16%));
 }
 
 .run span {
   display: inline-flex;
   align-items: center;
-  gap: 1.25rem;
-  padding-right: 1.25rem;
+  gap: 1.375rem;
+  padding-right: 1.375rem;
 }
 
+/* Sits on the cap height's midline, not the baseline. */
 .run i {
-  width: 0.55em;
-  height: 0.55em;
-  background: currentColor;
+  width: 5px;
+  height: 5px;
+  margin-top: -0.12em;
+  background: var(--crimson-600);
   transform: rotate(45deg);
-  opacity: 0.7;
-}
-
-.front .run i {
-  background: var(--glow-200);
 }
