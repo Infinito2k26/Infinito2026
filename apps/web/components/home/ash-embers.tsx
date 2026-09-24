@@ -6,61 +6,181 @@ import { SPARK_EVENT, type SparkDetail } from "@/components/home/sparks";
 import styles from "./ash-embers.module.css";
 
 /**
- * Embers and ash in the air over the whole landing page — moving like the
- * real thing, and moving with the reader.
+ * Burning ash in the air over the whole landing page — moving like the real
+ * thing, and moving with the reader.
  *
- * The air: every mote rides a slowly turning field of eddies (the curl of 3D
- * value noise, so the flow swirls without ever bunching up) plus a drifting
- * wind. Nothing is on rails: each mote has momentum and is dragged towards
- * the air around it — small ones follow it closely, big ones lag. Embers are
- * buoyant while hot, so they climb fast, then slow, wander and go out as they
- * cool; ash is heavy and flutters down.
+ * What's in the air:
+ *  - Flakes: torn scraps of burnt paper. Black char with a ragged rim that is
+ *    still alight in places, a few live embers in the char. They tumble over
+ *    as they go (a scrap seen edge-on is a sliver), ride the heat up while
+ *    they burn, flicker, burn out to pale grey and settle back down. Some are
+ *    already cold ash, drifting down from above.
+ *  - Embers: small glowing bits, buoyant while hot, cooling from gold to
+ *    crimson; fast ones draw as thin streaks along their path.
+ *  - A few big soft embers right in front of the lens, out of focus.
+ *
+ * The air: everything rides a slowly turning field of eddies (the curl of 3D
+ * value noise, so the flow swirls without bunching up) plus a drifting wind,
+ * with momentum and drag — small bits follow the air closely, big ones lag,
+ * and flat scraps catch it and glide sideways as they tip.
  *
  * The reader stirs it:
  *  - the pointer pushes the air it moves through and leaves a swirl behind;
- *    embers it fans flare up and burn a little longer;
- *  - scrolling gusts the air, and drags near motes further than far ones;
+ *    whatever it fans flares up — a dying scrap can catch again;
+ *  - scrolling gusts the air, and drags near things further than far ones;
  *  - a click throws a small shower of sparks;
- *  - burning fight bills send sparks up from their burning edge (PaperBurn,
- *    through the `embers:spark` event in ./sparks).
+ *  - burning fight bills shed sparks and burning scraps from their burning
+ *    edge (PaperBurn, through the `embers:spark` event in ./sparks).
  *
- * Depth: far motes are small, slow and dim; the nearest are large and soft,
- * as if out of focus, and shift against the pointer a little for parallax.
- * Fast sparks are drawn as short streaks along their path.
- *
- * Cost: one fixed canvas, pre-rendered sprites, around a thousand noise
- * lookups and a hundred-odd drawImage calls a frame; pixel ratio capped at
- * 1.5; paused while the tab is hidden; nothing at all under reduced motion.
+ * Cost: one fixed canvas, sprites pre-rendered once (flames from
+ * flame-sprites, a dozen torn scraps here), a few hundred drawImage calls a
+ * frame at most; pixel ratio capped at 1.5; paused while the tab is hidden;
+ * nothing at all under reduced motion.
  *
  * Switched on and off with ASH_EMBERS in app/page.tsx.
  */
 
+type Kind = "ember" | "flake" | "bokeh";
+
 type Mote = {
+  kind: Kind;
   x: number;
   y: number;
   vx: number;
   vy: number;
   life: number;
   max: number;
+  /** Radius, px. */
   size: number;
   /** 0 far … 1 near */
   depth: number;
   seed: number;
-  ash: boolean;
-  /** Ash only: still glowing at the edge as it starts to fall. */
-  alight: boolean;
   /** 0…1: how hard the pointer has just fanned it. */
   fan: number;
+  /** 0…1. Embers cool as they age; flakes burn out by `burn` seconds. */
+  heat: number;
+  /** Flakes: heat at the start — 0 for a scrap that's already cold ash. */
+  heat0: number;
+  burn: number;
+  /** Flakes: which scrap, its spin, and its tumble (turning over in 3D). */
+  scrap: number;
+  rot: number;
+  spin: number;
+  tum: number;
+  tumble: number;
 };
 
-const ASH = "rgb(128, 116, 106)";
 /** Eddy sizes: broad currents and smaller swirls inside them (1 / px). */
 const BROAD = 1 / 320;
 const FINE = 1 / 130;
 /** How far the pointer's wake reaches, px. */
 const WAKE = 170;
-/** Sparks alive at once, from clicks and burning bills. */
-const MAX_SPARKS = 90;
+/** Short-lived bits alive at once, from clicks and burning bills. */
+const MAX_SPARKS = 110;
+
+/** Scrap sprites: canvas size, and the scrap's own radius inside it (the
+ *  rest is room for the glow). */
+const SCRAP = 64;
+const SCRAP_R = 17;
+const SCRAPS = 12;
+
+type Scrap = { char: HTMLCanvasElement; ash: HTMLCanvasElement; glow: HTMLCanvasElement };
+
+/** One torn scrap of burnt paper, three ways: charred, burnt out, and its
+ *  burning rim. */
+function makeScrap(): Scrap {
+  const canvas = () => {
+    const c = document.createElement("canvas");
+    c.width = c.height = SCRAP;
+    return [c, c.getContext("2d")!] as const;
+  };
+  const mid = SCRAP / 2;
+  // A ragged outline, a little longer one way than the other.
+  const n = 8 + Math.floor(Math.random() * 6);
+  const squash = 0.55 + Math.random() * 0.5;
+  const pts: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.55;
+    const r = SCRAP_R * (0.5 + Math.random() * 0.55);
+    pts.push([mid + Math.cos(a) * r, mid + Math.sin(a) * r * squash]);
+  }
+  const outline = (ctx: CanvasRenderingContext2D) => {
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+  };
+  const speckle = (ctx: CanvasRenderingContext2D, rgb: string, count: number) => {
+    ctx.save();
+    outline(ctx);
+    ctx.clip();
+    for (let i = 0; i < count; i++) {
+      ctx.fillStyle = `rgba(${rgb}, ${0.2 + Math.random() * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(
+        mid + (Math.random() - 0.5) * SCRAP_R * 1.8,
+        mid + (Math.random() - 0.5) * SCRAP_R * 1.8 * squash,
+        0.8 + Math.random() * 3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+
+  // Char: near-black, a grain of grey ash on it.
+  const [char, c1] = canvas();
+  outline(c1);
+  c1.fillStyle = "#1d1412";
+  c1.fill();
+  speckle(c1, "96, 82, 74", 7);
+
+  // Burnt out: the same scrap gone pale grey, darker where it was thicker.
+  const [ash, c2] = canvas();
+  outline(c2);
+  c2.fillStyle = "#8b8078";
+  c2.fill();
+  speckle(c2, "58, 50, 46", 6);
+  speckle(c2, "196, 188, 180", 4);
+
+  // The burning rim: stretches of the edge alight, bloomed — a deep red band
+  // where the char meets the fire, a bright line at the very edge, hottest in
+  // spots — and a few live embers left in the char.
+  const [glow, c3] = canvas();
+  c3.lineJoin = "round";
+  c3.lineCap = "round";
+  c3.shadowColor = "rgba(255, 106, 28, 1)";
+  c3.shadowBlur = 10;
+  for (let i = 0; i < n; i++) {
+    if (Math.random() < 0.25) continue;
+    const [x0, y0] = pts[i]!;
+    const [x1, y1] = pts[(i + 1) % n]!;
+    const hot = Math.random();
+    const width = 1.5 + hot * 1.9;
+    c3.beginPath();
+    c3.moveTo(x0, y0);
+    c3.lineTo(x1, y1);
+    c3.strokeStyle = "rgba(150, 30, 14, 0.8)";
+    c3.lineWidth = width + 2.2;
+    c3.stroke();
+    c3.strokeStyle = hot > 0.75 ? "#ffe2a6" : hot > 0.3 ? "#ff8a3a" : "#d9451f";
+    c3.lineWidth = width;
+    c3.stroke();
+  }
+  c3.fillStyle = "#ff9d4d";
+  for (let i = 0; i < 4; i++) {
+    c3.beginPath();
+    c3.arc(
+      mid + (Math.random() - 0.5) * SCRAP_R,
+      mid + (Math.random() - 0.5) * SCRAP_R * squash,
+      0.7 + Math.random() * 1.3,
+      0,
+      Math.PI * 2,
+    );
+    c3.fill();
+  }
+  return { char, ash, glow };
+}
 
 /** 3D value noise in −1…1 over a seeded permutation. */
 function valueNoise3() {
@@ -106,10 +226,32 @@ function valueNoise3() {
   };
 }
 
+const blank = (): Mote => ({
+  kind: "ember",
+  x: 0,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  life: 0,
+  max: 1,
+  size: 1,
+  depth: 0,
+  seed: 0,
+  fan: 0,
+  heat: 1,
+  heat0: 1,
+  burn: 1,
+  scrap: 0,
+  rot: 0,
+  spin: 0,
+  tum: 0,
+  tumble: 0,
+});
+
 export default function AshEmbers({
   density = 1,
 }: {
-  /** Multiplier on the count. 1 ≈ 70 motes on a 1440 × 900 screen. */
+  /** Multiplier on the count. 1 ≈ 110 pieces on a 1440 × 900 screen. */
   density?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -120,7 +262,8 @@ export default function AshEmbers({
     if (!canvas || !ctx) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const sprites = flameSprites();
+    const flames = flameSprites();
+    const scraps = Array.from({ length: SCRAPS }, () => makeScrap());
     const noise = valueNoise3();
     const motes: Mote[] = [];
     const sparks: Mote[] = [];
@@ -155,56 +298,111 @@ export default function AshEmbers({
       out.y = -(noise(x + e, y, z) - noise(x - e, y, z)) / (2 * e);
     };
 
-    const spawn = (m: Mote = {} as Mote, anywhere = false): Mote => {
-      m.ash = Math.random() < 0.22;
-      m.alight = m.ash && Math.random() < 0.5;
-      // Most of the air is far away.
-      m.depth = Math.random() ** 1.7;
+    const tumbling = (m: Mote) => {
+      m.scrap = Math.floor(Math.random() * SCRAPS);
+      m.rot = Math.random() * Math.PI * 2;
+      m.spin = (Math.random() - 0.5) * 1.8;
+      m.tum = Math.random() * Math.PI * 2;
+      m.tumble = 1.2 + Math.random() * 3;
+    };
+
+    const spawn = (m: Mote = blank(), anywhere = false): Mote => {
+      const r = Math.random();
+      // 45% embers, 30% burning scraps, 18% cold ash, 7% out of focus.
+      m.kind = r < 0.45 ? "ember" : r < 0.93 ? "flake" : "bokeh";
+      m.seed = Math.random() * 1000;
+      m.fan = 0;
       m.x = Math.random() * w;
-      if (m.ash) {
-        // Ash settles from above, or is already hanging in the air.
-        m.y = anywhere || Math.random() < 0.6 ? Math.random() * h : -12;
-        m.vx = (Math.random() - 0.5) * 14;
-        m.vy = m.alight ? -(8 + Math.random() * 14) : (Math.random() - 0.5) * 8;
-        m.max = 10 + Math.random() * 8;
-        m.size = 1.2 + 2.2 * m.depth + Math.random();
-      } else {
-        // Embers drift up from below, or kindle where they are.
-        m.y = anywhere || Math.random() < 0.5 ? Math.random() * h : h + 20;
+      // Low on the screen is nearer the fire: more of everything starts there.
+      const low = h * Math.sqrt(Math.random());
+      if (m.kind === "ember") {
+        m.depth = 0.9 * Math.random() ** 1.7;
+        m.y = anywhere || Math.random() < 0.5 ? low : h + 20;
         m.vx = (Math.random() - 0.5) * 18;
         m.vy = -(10 + Math.random() * 30);
         m.max = 5 + Math.random() * 6;
         m.size = 1.2 + 2.6 * m.depth + Math.random() * 0.8;
+        m.heat0 = m.heat = 1;
+      } else if (m.kind === "flake") {
+        tumbling(m);
+        m.depth = Math.random() ** 1.1;
+        m.vx = (Math.random() - 0.5) * 14;
+        if (r < 0.75) {
+          // A burning scrap, carried up on the heat until it burns out.
+          m.y = anywhere || Math.random() < 0.45 ? low : h + 24;
+          m.vy = -(12 + Math.random() * 24);
+          m.max = 8 + Math.random() * 6;
+          m.burn = m.max * (0.55 + Math.random() * 0.3);
+          m.heat0 = 0.75 + Math.random() * 0.25;
+          m.size = 5 + 9 * m.depth + Math.random() * 3;
+        } else {
+          // Burnt-out ash settling from above.
+          m.y = anywhere || Math.random() < 0.6 ? Math.random() * h : -16;
+          m.vy = (Math.random() - 0.3) * 8;
+          m.max = 11 + Math.random() * 8;
+          m.burn = 1;
+          m.heat0 = 0;
+          m.size = 2 + 4.5 * m.depth + Math.random() * 1.5;
+        }
+        m.heat = m.heat0;
+      } else {
+        // Out of focus, right in front of the lens.
+        m.depth = 1;
+        m.y = Math.random() * h;
+        m.vx = (Math.random() - 0.5) * 8;
+        m.vy = -(4 + Math.random() * 10);
+        m.max = 7 + Math.random() * 7;
+        m.size = 10 + Math.random() * 18;
+        m.heat0 = m.heat = 1;
       }
       m.life = anywhere ? Math.random() * m.max * 0.8 : 0;
-      m.seed = Math.random() * 1000;
-      m.fan = 0;
       return m;
     };
 
-    const throwAt = (x: number, y: number, n: number, power: number, spread: number) => {
+    /** Short-lived bits thrown from (x, y): sparks, and a share of burning
+     *  scraps. Mostly upward, fanned out by `spread` radians either side. */
+    const throwAt = (
+      x: number,
+      y: number,
+      n: number,
+      power: number,
+      spread: number,
+      scrapShare: number,
+    ) => {
       for (let i = 0; i < n && sparks.length < MAX_SPARKS; i++) {
-        // Mostly upward, fanned out by `spread` (radians either side).
+        const m = blank();
         const a = -Math.PI / 2 + (Math.random() - 0.5) * 2 * spread;
-        const speed = (70 + Math.random() * 190) * power;
-        sparks.push({
-          x,
-          y,
-          vx: Math.cos(a) * speed,
-          vy: Math.sin(a) * speed,
-          life: 0,
-          max: 0.8 + Math.random() * 1.4,
-          size: 0.8 + Math.random() * 1.2,
-          depth: 0.45 + Math.random() * 0.35,
-          seed: Math.random() * 1000,
-          ash: false,
-          alight: false,
-          fan: 0.4,
-        });
+        m.x = x;
+        m.y = y;
+        m.seed = Math.random() * 1000;
+        if (Math.random() < scrapShare) {
+          const speed = (40 + Math.random() * 90) * power;
+          m.kind = "flake";
+          tumbling(m);
+          m.spin *= 1.8;
+          m.tumble *= 1.4;
+          m.vx = Math.cos(a) * speed;
+          m.vy = Math.sin(a) * speed;
+          m.depth = 0.5 + Math.random() * 0.3;
+          m.max = 2.5 + Math.random() * 2.5;
+          m.burn = m.max * (0.5 + Math.random() * 0.3);
+          m.heat0 = m.heat = 1;
+          m.size = 3.5 + Math.random() * 4;
+        } else {
+          const speed = (70 + Math.random() * 190) * power;
+          m.kind = "ember";
+          m.vx = Math.cos(a) * speed;
+          m.vy = Math.sin(a) * speed;
+          m.depth = 0.45 + Math.random() * 0.35;
+          m.max = 0.8 + Math.random() * 1.4;
+          m.size = 0.8 + Math.random() * 1.2;
+          m.fan = 0.4;
+        }
+        sparks.push(m);
       }
     };
 
-    /** Moves a mote on through the air; false once it's out or gone. */
+    /** Moves a piece on through the air; false once it's out or gone. */
     const advance = (
       m: Mote,
       dt: number,
@@ -242,44 +440,56 @@ export default function AshEmbers({
       }
       m.fan *= Math.exp(-dt * 1.4);
 
-      // Dragged towards the air: small motes follow it closely, big ones lag.
-      const blend = 1 - Math.exp(-((m.ash ? 2.4 : 1.8) / Math.sqrt(m.size)) * dt);
-      m.vx += (ax - m.vx) * blend;
-      m.vy += (ay - m.vy) * blend;
-      if (m.ash) {
-        // Heavy: it settles, fluttering.
-        m.vy += (12 + 10 * m.depth) * dt;
-      } else {
+      if (m.kind === "flake") {
+        m.heat = m.heat0 * Math.max(0, 1 - m.life / m.burn) ** 0.8;
+        // Fanned, a scrap that was still alight catches again.
+        if (m.heat0 > 0) m.heat = Math.min(1, m.heat + m.fan * 0.7);
+        m.tum += m.tumble * dt;
+        m.rot += m.spin * dt;
+        // Flat: it glides sideways as it tips, the more so once it's cold.
+        ax += Math.sin(m.tum) * (16 + 16 * (1 - m.heat));
+        const blend = 1 - Math.exp(-(3 / Math.sqrt(m.size)) * dt);
+        m.vx += (ax - m.vx) * blend;
+        m.vy += (ay - m.vy) * blend;
+        // Carried up while it burns; settles once it's ash.
+        m.vy += ((9 + 8 * m.depth) * (1 - m.heat) - (26 + 30 * m.depth) * m.heat) * dt;
+      } else if (m.kind === "ember") {
+        const blend = 1 - Math.exp(-(1.8 / Math.sqrt(m.size)) * dt);
+        m.vx += (ax - m.vx) * blend;
+        m.vy += (ay - m.vy) * blend;
         // Buoyant while hot, more so when fanned — which also keeps it alight.
-        const heat = 1 - t;
-        m.vy -= (30 + 46 * m.depth) * heat * heat * (1 + m.fan) * dt;
+        m.heat = 1 - t;
+        m.vy -= (30 + 46 * m.depth) * m.heat * m.heat * (1 + m.fan) * dt;
         m.life = Math.max(0, m.life - m.fan * dt * 0.5);
+      } else {
+        const blend = 1 - Math.exp(-1.2 * dt);
+        m.vx += (ax * 0.5 - m.vx) * blend;
+        m.vy += (ay * 0.5 - m.vy) * blend;
+        m.vy -= 6 * dt;
       }
 
-      // Near motes cross the screen faster; scrolling drags them further.
+      // Near things cross the screen faster; scrolling drags them further.
       const pace = 0.6 + 0.8 * m.depth;
       m.x += m.vx * pace * dt;
       m.y += m.vy * pace * dt - dScroll * (0.08 + 0.32 * m.depth);
-      return m.y > -30 && m.y < h + 50 && m.x > -40 && m.x < w + 40;
+      return m.y > -40 && m.y < h + 60 && m.x > -60 && m.x < w + 60;
     };
 
     const drawEmber = (m: Mote, spark: boolean) => {
       const t = m.life / m.max;
       const flicker = 0.7 + 0.3 * Math.sin(m.life * (8 + (m.seed % 1) * 7) + m.seed);
       const envelope = Math.min(1, m.life / (spark ? 0.04 : 0.5)) * (1 - t * t);
-      const near = !spark && m.depth > 0.86;
       const x = m.x + parX * m.depth;
       const y = m.y + parY * m.depth;
       const flare = 1 + m.fan * 0.9;
-      const alpha = Math.min(1, envelope * flicker * (near ? 0.34 : 0.6 + 0.4 * m.depth) * flare);
       // The glow, in the colour it has cooled to (ember → crimson → ash-red).
-      const glow = sprites[Math.min(sprites.length - 1, 1 + Math.floor(t * 3.4))]!;
-      const r = (near ? m.size * 5 : m.size * 3.4) * (1 + m.fan * 0.35);
+      const glow = flames[Math.min(flames.length - 1, 1 + Math.floor(t * 3.4))]!;
+      const r = m.size * 3.6 * (1 + m.fan * 0.35);
       const v = Math.hypot(m.vx, m.vy);
       const speed = v * (0.6 + 0.8 * m.depth);
 
-      ctx.globalAlpha = alpha;
-      if (!near && speed > 12) {
+      ctx.globalAlpha = Math.min(1, envelope * flicker * (0.65 + 0.35 * m.depth) * flare);
+      if (speed > 12) {
         // A streak along its path: local +y turned onto the direction of
         // travel, the glow trailing behind the head and thinning as it
         // stretches, so a fast spark is a line rather than a smear.
@@ -295,33 +505,51 @@ export default function AshEmbers({
       }
 
       // A hot heart while it's young: white-hot at first, then gold.
-      if (!near && t < 0.6) {
+      if (t < 0.6) {
         const c = m.size * 1.15 * (1 + m.fan * 0.3);
         ctx.globalAlpha = Math.min(1, envelope * flicker * (1 - t / 0.6) * 0.9 * flare);
-        ctx.drawImage(sprites[t < 0.2 ? 0 : 1]!, x - c, y - c, c * 2, c * 2);
+        ctx.drawImage(flames[t < 0.2 ? 0 : 1]!, x - c, y - c, c * 2, c * 2);
       }
     };
 
-    const drawAsh = (m: Mote) => {
+    const drawFlake = (m: Mote) => {
       const t = m.life / m.max;
-      const envelope = Math.min(1, m.life / 1.2) * (1 - t);
-      // A tumbling flake: a sliver that turns, widening and narrowing.
-      const turn = m.life * (0.8 + (m.seed % 1) * 1.6) + m.seed;
-      const s = m.size;
+      const envelope = Math.min(1, m.life / 0.6) * Math.min(1, (1 - t) / 0.25);
+      if (envelope <= 0) return;
+      const scrap = scraps[m.scrap]!;
+      const s = (SCRAP * m.size) / SCRAP_R;
       ctx.save();
       ctx.translate(m.x + parX * m.depth, m.y + parY * m.depth);
-      ctx.rotate(turn);
-      ctx.scale(1, 0.35 + 0.65 * Math.abs(Math.cos(turn * 1.3)));
-      if (m.alight && t < 0.5) {
+      ctx.rotate(m.rot);
+      // Turning over: edge-on, a scrap is a sliver.
+      ctx.scale(1, 0.18 + 0.82 * Math.abs(Math.cos(m.tum)));
+      // Ash underneath, the char over it while it's burning, then the fire.
+      ctx.globalAlpha = envelope * (0.55 + 0.35 * m.depth);
+      ctx.drawImage(scrap.ash, -s / 2, -s / 2, s, s);
+      if (m.heat > 0.02) {
+        ctx.globalAlpha = envelope * Math.min(1, m.heat * 1.4);
+        ctx.drawImage(scrap.char, -s / 2, -s / 2, s, s);
+        // Crackling: two flickers beating against each other.
+        const crackle =
+          0.55 + 0.45 * (0.5 + 0.5 * Math.sin(m.life * 11 + m.seed)) * (0.5 + 0.5 * Math.sin(m.life * 4.3 + m.seed * 2));
         ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = envelope * (1 - t * 2) * 0.55;
-        ctx.drawImage(sprites[1]!, -s * 2.2, -s * 2.2, s * 4.4, s * 4.4);
-        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = Math.min(1, envelope * m.heat * crackle * (1 + m.fan * 0.8));
+        ctx.drawImage(scrap.glow, -s / 2, -s / 2, s, s);
       }
-      ctx.globalAlpha = envelope * (0.35 + 0.35 * m.depth);
-      ctx.fillStyle = ASH;
-      ctx.fillRect(-s, -s * 0.6, s * 2, s * 1.2);
       ctx.restore();
+    };
+
+    const drawBokeh = (m: Mote) => {
+      const t = m.life / m.max;
+      const r = m.size;
+      ctx.globalAlpha = Math.sin(Math.PI * t) * (0.1 + 0.06 * Math.sin(m.life * 1.7 + m.seed)) * (1 + m.fan);
+      ctx.drawImage(
+        flames[m.seed % 1 < 0.5 ? 1 : 2]!,
+        m.x + parX - r,
+        m.y + parY - r,
+        2 * r,
+        2 * r,
+      );
     };
 
     const frame = (now: number) => {
@@ -363,11 +591,14 @@ export default function AshEmbers({
 
       ctx.globalCompositeOperation = "source-over";
       ctx.clearRect(0, 0, w, h);
-      // Ash painted as ash; embers and sparks added as light on top.
-      for (const m of motes) if (m.ash) drawAsh(m);
+      // Scraps first (painted, then lit), embers and sparks added as light,
+      // the out-of-focus ones last since they're nearest.
+      for (const m of motes) if (m.kind === "flake") drawFlake(m);
+      for (const m of sparks) if (m.kind === "flake") drawFlake(m);
       ctx.globalCompositeOperation = "lighter";
-      for (const m of motes) if (!m.ash) drawEmber(m, false);
-      for (const m of sparks) drawEmber(m, true);
+      for (const m of motes) if (m.kind === "ember") drawEmber(m, false);
+      for (const m of sparks) if (m.kind === "ember") drawEmber(m, true);
+      for (const m of motes) if (m.kind === "bokeh") drawBokeh(m);
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(frame);
     };
@@ -379,7 +610,7 @@ export default function AshEmbers({
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const target = Math.round(Math.min(120, Math.max(30, (w * h) / 18000)) * density);
+      const target = Math.round(Math.min(150, Math.max(40, (w * h) / 12000)) * density);
       while (motes.length < target) motes.push(spawn(undefined, true));
       motes.length = target;
     };
@@ -400,7 +631,7 @@ export default function AshEmbers({
     const onPointerMove = (e: PointerEvent) => {
       if (e.pointerType === "touch") return;
       track(e.clientX, e.clientY, e.timeStamp);
-      // Near motes drift against the pointer: a little depth.
+      // Near things drift against the pointer: a little depth.
       parTX = -(e.clientX / w - 0.5) * 30;
       parTY = -(e.clientY / h - 0.5) * 18;
     };
@@ -412,10 +643,10 @@ export default function AshEmbers({
       pt = 0;
       px = py = -1e4;
     };
-    const onClick = (e: MouseEvent) => throwAt(e.clientX, e.clientY, 14, 1.15, 1.4);
+    const onClick = (e: MouseEvent) => throwAt(e.clientX, e.clientY, 14, 1.15, 1.4, 0);
     const onSpark = (e: Event) => {
       const d = (e as CustomEvent<SparkDetail>).detail;
-      throwAt(d.x, d.y, d.n ?? 1, d.power ?? 0.7, 0.9);
+      throwAt(d.x, d.y, d.n ?? 1, d.power ?? 0.7, 0.9, d.scraps ?? 0);
     };
 
     const start = () => {

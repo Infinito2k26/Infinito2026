@@ -25,9 +25,9 @@ import { throwSparks } from "@/components/home/sparks";
  * 3. Burn. Per frame, a tiny fragment shader compares that map with the
  *    advancing front — two texture reads and a little arithmetic per pixel.
  *
- * While it spreads, the burning edge throws sparks into the page's ember
- * layer (AshEmbers, if it's on): each one leaves from a texel of the map
- * that is catching right now.
+ * While it spreads, the burning edge throws sparks and burning scraps into
+ * the page's ember layer (AshEmbers, if it's on): each one leaves from a
+ * texel of the map that is catching right now.
  *
  * The loop only runs while the burn moves (or flickers on a burnt card). No
  * hover-capable pointer, no WebGL or reduced motion: it never starts, and the
@@ -470,6 +470,7 @@ export default function PaperBurn({
           throwSparks({
             x: r.left + ((k % mw) / (mw - 1)) * r.width,
             y: r.top + (Math.floor(k / mw) / (mh - 1)) * r.height,
+            scraps: 0.3,
           });
           return;
         }
@@ -514,7 +515,7 @@ export default function PaperBurn({
         if (ready) light(origin);
         // A puff of sparks where it catches.
         if (ready && e instanceof PointerEvent) {
-          throwSparks({ x: e.clientX, y: e.clientY, n: 5, power: 0.55 });
+          throwSparks({ x: e.clientX, y: e.clientY, n: 6, power: 0.55, scraps: 0.25 });
         }
       }
       if (ready) kick();
