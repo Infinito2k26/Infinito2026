@@ -4,10 +4,10 @@ import { useEffect, useRef } from "react";
 import { PAPER_COLOR, PAPER_GRAIN } from "@/components/home/paper";
 
 /**
- * Burns a paper card from the middle outward on hover, the way paper really
- * burns: it browns ahead of the fire, chars black, burns along a thin, broken,
- * flickering ember edge, and then is simply gone — showing whatever sits
- * beneath it in the card.
+ * Burns a paper card on hover, outward from the point where the pointer came
+ * in, the way paper really burns: it browns ahead of the fire, chars black,
+ * burns along a thin, broken, flickering ember edge, and then is simply gone —
+ * showing whatever sits beneath it in the card.
  *
  * How it works:
  * 1. Compose. The paper is painted once into an offscreen 2D canvas from the
@@ -15,9 +15,12 @@ import { PAPER_COLOR, PAPER_GRAIN } from "@/components/home/paper";
  *    poster (`img`) and every `[data-print]` element's text, drawn with its own
  *    computed font, colour, border and transform. The DOM paper is then hidden
  *    and this canvas takes its place, so the swap is invisible.
- * 2. Burn map. When each point of the sheet catches is precomputed once on the
- *    CPU (distance from an ignition point near the middle, domain-warped by
- *    fractal noise so the fire runs unevenly) into a small texture.
+ * 2. Burn map. When each point of the sheet catches: its distance from the
+ *    ignition point, domain-warped by fractal noise so the fire runs unevenly,
+ *    in a small texture. The noise — the expensive part — is computed once per
+ *    sheet; each fresh hover re-derives the map from where the pointer entered
+ *    (one square root per texel) and re-uploads it. Keyboard focus lights it
+ *    near the middle.
  * 3. Burn. Per frame, a tiny fragment shader compares that map with the
  *    advancing front — two texture reads and a little arithmetic per pixel.
  *
@@ -42,6 +45,10 @@ uniform sampler2D map;
 uniform float front;
 uniform float t;
 uniform vec2 res;
+// The map runs 0 → 1 over however far the fire has to go. k rescales it so
+// the toasting, char and ember bands keep the same width on the sheet whether
+// the fire starts in the middle or in a corner.
+uniform float k;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
@@ -59,7 +66,7 @@ void main() {
 
   // Pixel-scale roughness on the front, so the edge is fibrous, not smooth.
   float fine = noise(px / 5.0) * 0.6 + noise(px / 2.2) * 0.4;
-  float e = b - front + (fine - 0.5) * 0.028;
+  float e = (b - front) * k + (fine - 0.5) * 0.028;
   if (e < -0.004) { gl_FragColor = vec4(0.0); return; }
 
   vec3 c = P.rgb;
@@ -125,35 +132,65 @@ function makeNoise(seed: number) {
   };
 }
 
-/** When each point catches, 0 (first) → 1 (last), as 8-bit luminance. */
-function burnMap(w: number, h: number) {
+type Field = {
+  mw: number;
+  mh: number;
+  aspect: number;
+  wx: Float32Array;
+  wy: Float32Array;
+  delay: Float32Array;
+  raw: Float32Array;
+  out: Uint8Array;
+};
+
+/**
+ * The part of the burn map that doesn't depend on where the fire starts: each
+ * texel's position after domain warping (the fire runs faster along some
+ * fibres than others) and a patchy extra delay. Units: x across 0…aspect,
+ * y down 0…1. Computed once per sheet — this is where the noise cost is.
+ */
+function burnField(w: number, h: number): Field {
   const mw = 128;
   const mh = Math.max(16, Math.round((mw * h) / w));
   const aspect = w / h;
-  const seed = Math.random() * 100;
-  const fbm = makeNoise(seed);
-  const cx = (0.5 + (Math.random() - 0.5) * 0.12) * aspect;
-  const cy = 0.46 + (Math.random() - 0.5) * 0.12;
-  const raw = new Float32Array(mw * mh);
-  let lo = Infinity;
-  let hi = -Infinity;
+  const fbm = makeNoise(Math.random() * 100);
+  const n = mw * mh;
+  const wx = new Float32Array(n);
+  const wy = new Float32Array(n);
+  const delay = new Float32Array(n);
   for (let j = 0; j < mh; j++) {
     for (let i = 0; i < mw; i++) {
       const x = (i / (mw - 1)) * aspect;
       const y = j / (mh - 1);
-      // Domain warp: the fire runs faster along some fibres than others.
-      const wx = x + 0.32 * (fbm(x * 2.2, y * 2.2) - 0.5);
-      const wy = y + 0.32 * (fbm(x * 2.2 + 9.1, y * 2.2 + 3.7) - 0.5);
-      const d = Math.hypot(wx - cx, wy - cy);
-      const v = d + 0.22 * fbm(x * 4.5 + 3.3, y * 4.5 + 7.1);
-      raw[j * mw + i] = v;
-      if (v < lo) lo = v;
-      if (v > hi) hi = v;
+      const k = j * mw + i;
+      wx[k] = x + 0.32 * (fbm(x * 2.2, y * 2.2) - 0.5);
+      wy[k] = y + 0.32 * (fbm(x * 2.2 + 9.1, y * 2.2 + 3.7) - 0.5);
+      delay[k] = 0.22 * fbm(x * 4.5 + 3.3, y * 4.5 + 7.1);
     }
   }
-  const out = new Uint8Array(mw * mh);
-  for (let k = 0; k < raw.length; k++) out[k] = Math.round(((raw[k]! - lo) / (hi - lo)) * 255);
-  return { data: out, mw, mh };
+  return { mw, mh, aspect, wx, wy, delay, raw: new Float32Array(n), out: new Uint8Array(n) };
+}
+
+/**
+ * When each point catches for a fire lit at (ox, oy) in field units, into
+ * `f.out` as 8-bit luminance: 0 first, 255 last. Returns the span of catch
+ * distances — how far the fire has to run.
+ */
+function ignite(f: Field, ox: number, oy: number) {
+  const { wx, wy, delay, raw, out } = f;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (let k = 0; k < raw.length; k++) {
+    const dx = wx[k]! - ox;
+    const dy = wy[k]! - oy;
+    const v = Math.sqrt(dx * dx + dy * dy) + delay[k]!;
+    raw[k] = v;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  const to8 = 255 / (hi - lo);
+  for (let k = 0; k < raw.length; k++) out[k] = Math.round((raw[k]! - lo) * to8);
+  return hi - lo;
 }
 
 // --- Compose the paper from the DOM ----------------------------------------
@@ -296,6 +333,13 @@ export default function PaperBurn({
     let raf = 0;
     let s = 0;
     let hot = false;
+    let field: Field | null = null;
+    // Where the current fire was lit, as fractions of the sheet (null: near
+    // the middle). spanRef is a middle fire's span; `dur` is this fire's burn
+    // time, stretched a little when it has further to go.
+    let origin: [number, number] | null = null;
+    let spanRef = 1;
+    let dur = IN;
     let last = 0;
     let ready = false;
     let building = false;
@@ -322,7 +366,7 @@ export default function PaperBurn({
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       u = Object.fromEntries(
-        ["paper", "map", "front", "t", "res"].map((n) => [n, gl!.getUniformLocation(prog, n)]),
+        ["paper", "map", "front", "t", "res", "k"].map((n) => [n, gl!.getUniformLocation(prog, n)]),
       );
       gl.uniform1i(u.paper!, 0);
       gl.uniform1i(u.map!, 1);
@@ -349,6 +393,21 @@ export default function PaperBurn({
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
+    // Lights the map at `at` (fractions of the sheet), or near the middle.
+    const light = (at: [number, number] | null) => {
+      if (!gl || !field) return;
+      const ox = at ? at[0] * field.aspect : (0.5 + (Math.random() - 0.5) * 0.12) * field.aspect;
+      const oy = at ? at[1] : 0.46 + (Math.random() - 0.5) * 0.12;
+      const span = ignite(field, ox, oy);
+      gl.uniform1f(u.k!, spanRef / span);
+      // From a corner the fire has about twice as far to go: give it a bit
+      // longer, so it doesn't look like it's racing.
+      dur = IN * Math.sqrt(span / spanRef);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, mapTex);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, field.mw, field.mh, gl.LUMINANCE, gl.UNSIGNED_BYTE, field.out);
+    };
+
     const build = async () => {
       if (building || disposed) return;
       building = true;
@@ -368,8 +427,10 @@ export default function PaperBurn({
         return;
       }
       const sheet = await compose(paperEl, scale);
-      const { data, mw, mh } = burnMap(w, h);
+      const f = burnField(w, h);
+      spanRef = ignite(f, 0.5 * f.aspect, 0.46);
       if (disposed || !gl) return;
+      field = f;
       const g = gl as WebGLRenderingContext;
       canvas.width = sheet.width;
       canvas.height = sheet.height;
@@ -380,7 +441,8 @@ export default function PaperBurn({
       g.pixelStorei(g.UNPACK_ALIGNMENT, 1);
       g.activeTexture(g.TEXTURE1);
       g.bindTexture(g.TEXTURE_2D, mapTex);
-      g.texImage2D(g.TEXTURE_2D, 0, g.LUMINANCE, mw, mh, 0, g.LUMINANCE, g.UNSIGNED_BYTE, data);
+      g.texImage2D(g.TEXTURE_2D, 0, g.LUMINANCE, f.mw, f.mh, 0, g.LUMINANCE, g.UNSIGNED_BYTE, f.out);
+      light(origin);
       draw(performance.now(), IDLE);
       ready = true;
       building = false;
@@ -391,7 +453,7 @@ export default function PaperBurn({
     const frame = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      s = hot ? Math.min(1, s + dt / IN) : Math.max(0, s - dt / OUT);
+      s = hot ? Math.min(1, s + dt / dur) : Math.max(0, s - dt / OUT);
       // Catches at once, then slows as it runs out of paper.
       const eased = 1 - (1 - s) ** 1.6;
       draw(now, s === 0 ? IDLE : FROM + (TO - FROM) * eased);
@@ -403,8 +465,23 @@ export default function PaperBurn({
         raf = requestAnimationFrame(frame);
       }
     };
-    const enter = () => {
+    // Where the pointer crossed into the sheet, as fractions of it — nudged
+    // just inside, since it comes in over the stone frame.
+    const entryPoint = (e: PointerEvent): [number, number] | null => {
+      const r = canvas.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      const f = (v: number) => Math.min(0.98, Math.max(0.02, v));
+      return [f((e.clientX - r.left) / r.width), f((e.clientY - r.top) / r.height)];
+    };
+
+    const enter = (e: Event) => {
       hot = true;
+      // A fresh fire starts where the pointer came in. One still burning, or
+      // still restoring, carries on from where it was lit.
+      if (s === 0) {
+        origin = e instanceof PointerEvent ? entryPoint(e) : null;
+        if (ready) light(origin);
+      }
       if (ready) kick();
       else void build();
     };

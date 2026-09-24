@@ -10,8 +10,8 @@ import styles from "./sport-slab.module.css";
  * pinned to a stone slab. Landing only; every list page keeps the plain
  * PosterCard.
  *
- * On hover the bill burns away from the middle (<PaperBurn>), uncovering the
- * slab beneath with the sport's details carved into it. The slab's text is the
+ * On hover the bill burns away from where the pointer came in (<PaperBurn>),
+ * uncovering the slab beneath with the sport's details carved into it. The slab's text is the
  * link's real content; the bill's printed text is decorative (aria-hidden).
  */
 export default function SportSlab({
