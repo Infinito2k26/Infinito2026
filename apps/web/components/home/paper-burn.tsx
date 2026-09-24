@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { PAPER_COLOR, PAPER_GRAIN } from "@/components/home/paper";
+import { throwSparks } from "@/components/home/sparks";
 
 /**
  * Burns a paper card on hover, outward from the point where the pointer came
@@ -23,6 +24,10 @@ import { PAPER_COLOR, PAPER_GRAIN } from "@/components/home/paper";
  *    near the middle.
  * 3. Burn. Per frame, a tiny fragment shader compares that map with the
  *    advancing front — two texture reads and a little arithmetic per pixel.
+ *
+ * While it spreads, the burning edge throws sparks into the page's ember
+ * layer (AshEmbers, if it's on): each one leaves from a texel of the map
+ * that is catching right now.
  *
  * The loop only runs while the burn moves (or flickers on a burnt card). No
  * hover-capable pointer, no WebGL or reduced motion: it never starts, and the
@@ -98,6 +103,7 @@ const FROM = -0.01;
 const TO = 1.03; // burns out to a few charred fibres at the very edges
 const IN = 1.4; // seconds to burn through
 const OUT = 0.55; // seconds to restore
+const SPARKS = 24; // per second, from the edge while it spreads
 
 // --- CPU noise for the burn map -------------------------------------------
 
@@ -340,6 +346,7 @@ export default function PaperBurn({
     let origin: [number, number] | null = null;
     let spanRef = 1;
     let dur = IN;
+    let sparkDue = 0;
     let last = 0;
     let ready = false;
     let building = false;
@@ -450,13 +457,37 @@ export default function PaperBurn({
       if (hot) kick();
     };
 
+    // A spark from the burning edge: a random texel of the map whose catch
+    // time is about now.
+    const sparkFromEdge = (front: number) => {
+      if (!field) return;
+      const { out, mw, mh } = field;
+      const target = front * 255;
+      for (let tries = 0; tries < 40; tries++) {
+        const k = (Math.random() * out.length) | 0;
+        if (Math.abs(out[k]! - target) < 7) {
+          const r = canvas.getBoundingClientRect();
+          throwSparks({
+            x: r.left + ((k % mw) / (mw - 1)) * r.width,
+            y: r.top + (Math.floor(k / mw) / (mh - 1)) * r.height,
+          });
+          return;
+        }
+      }
+    };
+
     const frame = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       s = hot ? Math.min(1, s + dt / dur) : Math.max(0, s - dt / OUT);
       // Catches at once, then slows as it runs out of paper.
       const eased = 1 - (1 - s) ** 1.6;
-      draw(now, s === 0 ? IDLE : FROM + (TO - FROM) * eased);
+      const front = s === 0 ? IDLE : FROM + (TO - FROM) * eased;
+      draw(now, front);
+      if (hot && s < 1) {
+        sparkDue += dt * SPARKS;
+        for (; sparkDue >= 1; sparkDue -= 1) sparkFromEdge(front);
+      }
       raf = hot || s > 0 ? requestAnimationFrame(frame) : 0;
     };
     const kick = () => {
@@ -481,6 +512,10 @@ export default function PaperBurn({
       if (s === 0) {
         origin = e instanceof PointerEvent ? entryPoint(e) : null;
         if (ready) light(origin);
+        // A puff of sparks where it catches.
+        if (ready && e instanceof PointerEvent) {
+          throwSparks({ x: e.clientX, y: e.clientY, n: 5, power: 0.55 });
+        }
       }
       if (ready) kick();
       else void build();
