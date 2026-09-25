@@ -73,3 +73,10 @@
     transparent
   );
 }
+
+/* On the dark ground the line art is drawn in stone. */
+:global(.ruins) .arrowRule,
+:global(.ruins) .valknut,
+:global(.ruins) .pendant {
+  color: var(--stone-600);
+}

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import PosterCard from "@/components/ui/poster-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { Sport, SportCategory, SportType } from "@/lib/sports";
+import page from "@/components/layout/page.module.css";
 import styles from "./sports-grid.module.css";
 
 type TypeFilter = "all" | SportType;
@@ -42,14 +43,14 @@ export default function SportsGrid({ sports }: { sports: Sport[] }) {
     };
 
     return (
-        <section className={styles.wrapper}>
-            <div className={styles.filters}>
-                <div className={styles.filterGroup} role="group" aria-label="Filter by format">
+        <section className={page.body}>
+            <div className={page.toolbar}>
+                <div className={page.chips} role="group" aria-label="Filter by format">
                     {TYPE_FILTERS.map(({ value, label }) => (
                         <button
                             key={value}
                             type="button"
-                            className={`${styles.filter} ${type === value ? styles.filterActive : ""}`}
+                            className={`${page.chip} ${type === value ? page.chipActive : ""}`}
                             aria-pressed={type === value}
                             onClick={() => setType(value)}
                         >
@@ -58,12 +59,12 @@ export default function SportsGrid({ sports }: { sports: Sport[] }) {
                     ))}
                 </div>
 
-                <div className={styles.filterGroup} role="group" aria-label="Filter by category">
+                <div className={page.chips} role="group" aria-label="Filter by category">
                     {CATEGORY_FILTERS.map(({ value, label }) => (
                         <button
                             key={value}
                             type="button"
-                            className={`${styles.filter} ${category === value ? styles.filterActive : ""}`}
+                            className={`${page.chip} ${category === value ? page.chipActive : ""}`}
                             aria-pressed={category === value}
                             onClick={() => setCategory(value)}
                         >
@@ -73,7 +74,7 @@ export default function SportsGrid({ sports }: { sports: Sport[] }) {
                 </div>
             </div>
 
-            <p className={styles.count} aria-live="polite">
+            <p className={page.count} aria-live="polite">
                 {visible.length} {visible.length === 1 ? "sport" : "sports"}
             </p>
 

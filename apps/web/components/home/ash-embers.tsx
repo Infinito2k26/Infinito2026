@@ -6,8 +6,8 @@ import { SPARK_EVENT, type SparkDetail } from "@/components/home/sparks";
 import styles from "./ash-embers.module.css";
 
 /**
- * Burning ash in the air over the whole landing page — moving like the real
- * thing, and moving with the reader.
+ * Burning ash in the air over every public page — moving like the real thing,
+ * and moving with the reader.
  *
  * What's in the air:
  *  - Flakes: torn scraps of burnt paper. Black char with a ragged rim that is
@@ -37,7 +37,7 @@ import styles from "./ash-embers.module.css";
  * frame at most; pixel ratio capped at 1.5; paused while the tab is hidden;
  * nothing at all under reduced motion.
  *
- * Switched on and off with ASH_EMBERS in app/page.tsx.
+ * Switched on and off with ASH_EMBERS in components/layout/effects.ts.
  */
 
 type Kind = "ember" | "flake" | "bokeh";

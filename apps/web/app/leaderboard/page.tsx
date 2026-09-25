@@ -1,6 +1,8 @@
 import React from 'react';
 import PublicLayout from '@/components/layout/public-layout';
+import PageHead from '@/components/layout/page-head';
 import Card from '@/components/ui/card';
+import page from '@/components/layout/page.module.css';
 import { Trophy, MousePointerClick, UserCheck } from 'lucide-react';
 import styles from './leaderboard.module.css';
 
@@ -43,16 +45,15 @@ export default async function PublicLeaderboardPage() {
 
     return (
         <PublicLayout>
-            <div className={styles.pageWrapper}>
+            <PageHead eyebrow="The champions' column" title="Leaderboard">
+                <p className={page.lede}>
+                    The top Campus Ambassadors driving Infinito 2026. Rankings update every 15
+                    minutes.
+                </p>
+            </PageHead>
+
+            <div className={page.body}>
                 <div className={styles.container}>
-                    <header className={styles.header}>
-                        <p className="eyebrow">The champions&apos; column</p>
-                        <h1 className={`${styles.title} glow`}>Leaderboard</h1>
-                        <p className={styles.subtitle}>
-                            The top Campus Ambassadors driving Infinito 2026. Rankings update every 15
-                            minutes.
-                        </p>
-                    </header>
 
                     {data.length === 0 ? (
                         <Card className={styles.tableCard}>

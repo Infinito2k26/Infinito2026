@@ -109,3 +109,45 @@
   color: var(--mist-400);
   text-decoration: line-through;
 }
+
+/* --- On the dark ground (`.ruins`) ----------------------------------------
+   The card is already a poster on a charcoal strip; on stone it drops the
+   lift, scale and glow for a quieter hover — the ember edge and a slow push
+   into the art — that says "this opens" without the card jumping. */
+
+/* The card's ground matches the strip, so a strip one line shorter than its
+   neighbour's still reaches the foot of the row. */
+:global(.ruins) .card {
+  background: var(--abyss-950);
+  border-color: var(--char-700);
+}
+
+:global(.ruins) .art {
+  background: var(--abyss-950);
+}
+
+:global(.ruins) .strip {
+  background: var(--abyss-950);
+  border-top: 1px solid var(--char-700);
+}
+
+:global(.ruins) .card:hover {
+  box-shadow: 0 0 0 1px var(--ember-500);
+  transform: none;
+}
+
+:global(.ruins) .card:hover .image {
+  transform: scale(1.04);
+}
+
+:global(.ruins) .card:hover .strip {
+  border-top-color: var(--ember-500);
+}
+
+:global(.ruins) .card:focus-visible {
+  outline-color: var(--ember-300);
+}
+
+:global(.ruins) .category {
+  border-radius: var(--radius-sm);
+}

@@ -1,29 +1,33 @@
 import React from 'react';
+import AshEmbers from '@/components/home/ash-embers';
+import { ASH_EMBERS } from './effects';
 import styles from './layout.module.css';
 import Navbar from './navbar';
 import Footer from './footer';
 
 /**
- * `tone="dark"` is the landing page only: the hero runs up under a transparent
- * navbar and the page ends on the abyss instead of the bone ridge. Every other
- * public page keeps the light shell.
+ * The public site's shell: dark, inside the `.ruins` token scope (see
+ * globals.css), so shared components come out on stone.
+ *
+ * `landing` is the home page only: its hero runs up under a transparent
+ * navbar, and it ends on its own battlements, so the footer drops its ridge.
+ * Every other page gets a solid navbar and the ridge above the footer.
  */
 export default function PublicLayout({
   children,
-  tone = 'light',
+  landing = false,
 }: {
   children: React.ReactNode;
-  tone?: 'light' | 'dark';
+  landing?: boolean;
 }) {
-  const dark = tone === 'dark';
-
   return (
-    <div className={`${styles.publicShell} ${dark ? styles.publicShellDark : ''}`}>
-      <Navbar tone={tone} />
-      <main className={`${styles.publicMain} ${dark ? styles.publicMainDark : ''}`}>
+    <div className={`${styles.publicShell} ${styles.publicShellDark} ruins`}>
+      <Navbar tone="dark" overHero={landing} />
+      <main className={`${styles.publicMain} ${landing ? styles.publicMainLanding : ''}`}>
         {children}
       </main>
-      <Footer tone={tone} />
+      <Footer tone="dark" ridge={!landing} />
+      {ASH_EMBERS && <AshEmbers />}
     </div>
   );
 }

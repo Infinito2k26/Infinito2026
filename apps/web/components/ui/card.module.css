@@ -20,3 +20,9 @@
 .lg {
   padding: var(--space-6);
 }
+
+/* On the public site's dark ground (`.ruins`, globals.css): a stone slab.
+   The hairline and shadow already come from the scope's tokens. */
+:global(.ruins) .card {
+  background: var(--char-800);
+}

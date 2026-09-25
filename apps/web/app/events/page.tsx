@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { CalendarDays, MapPin, Search } from "lucide-react";
 
 import PublicLayout from "@/components/layout/public-layout";
+import PageHead from "@/components/layout/page-head";
 import PosterCard from "@/components/ui/poster-card";
 import SportIcon from "@/components/ui/sport-icon";
 import Input from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { formatFeeSummary } from "@/lib/format-event-fee";
 import { findSportForEventName, SPORTS } from "@/lib/sports";
 import type { EventSummary } from "@/lib/types/event";
 
+import page from "@/components/layout/page.module.css";
 import styles from "./events.module.css";
 
 interface EventsListResponse {
@@ -85,112 +87,112 @@ export default function EventsPage() {
 
     return (
         <PublicLayout>
-            <header className={styles.header}>
-                <p className="eyebrow">9–11 October, IIT Patna</p>
-                <h1 className={`${styles.title} glow`}>Events</h1>
-                <p className={styles.description}>
+            <PageHead eyebrow="9–11 October, IIT Patna" title="Events">
+                <p className={page.lede}>
                     Every event open for entry this edition. Pick one, check the fee and slots, and
                     log in to register.
                 </p>
-                <p className={styles.description}>
+                <p className={page.lede}>
                     Before you register, please read the{" "}
                     <a href="/registration-guidelines">Registration Guidelines</a>.
                 </p>
-            </header>
+            </PageHead>
 
-            <div className={styles.controls}>
-                <div className={styles.search}>
-                    <Search size={16} className={styles.searchIcon} aria-hidden="true" />
-                    <Input
-                        aria-label="Search events"
-                        placeholder="Search events..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                </div>
+            <div className={page.body}>
+                <div className={page.toolbar}>
+                    <div className={styles.search}>
+                        <Search size={16} className={styles.searchIcon} aria-hidden="true" />
+                        <Input
+                            aria-label="Search events"
+                            placeholder="Search events..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </div>
 
-                <div className={styles.filterGroup} role="group" aria-label="Filter by registration status">
-                    {STATUS_FILTERS.map(({ value, label }) => (
-                        <button
-                            key={value}
-                            type="button"
-                            className={`${styles.filter} ${status === value ? styles.filterActive : ""}`}
-                            aria-pressed={status === value}
-                            onClick={() => setStatus(value)}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {isLoading ? (
-                <SectionSpinner message="Loading events..." />
-            ) : error ? (
-                <ErrorState description={error} onRetry={fetchEvents} />
-            ) : visible.length === 0 ? (
-                <EmptyState
-                    title="These ruins are empty"
-                    description={
-                        events.length === 0
-                            ? "Check back soon — the event schedule will be published shortly."
-                            : "Nothing matches those filters. Try widening them."
-                    }
-                    action={events.length > 0 ? { label: "Clear filters", onClick: resetFilters } : undefined}
-                />
-            ) : (
-                <div className={styles.grid}>
-                    {visible.map((event, i) => {
-                        const matched = findSportForEventName(event.name);
-                        const date = new Date(event.startDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                        });
-
-                        if (matched) {
-                            return (
-                                <PosterCard
-                                    key={event.id}
-                                    slug={matched.poster}
-                                    name={event.name}
-                                    category={event.sportCategory}
-                                    format={formatFeeSummary(event)}
-                                    date={date}
-                                    href={`/dashboard/events/${event.slug}`}
-                                    priority={i < 4}
-                                />
-                            );
-                        }
-
-                        return (
-                            <a
-                                key={event.id}
-                                href={`/dashboard/events/${event.slug}`}
-                                className={styles.fallbackCard}
+                    <div className={page.chips} role="group" aria-label="Filter by registration status">
+                        {STATUS_FILTERS.map(({ value, label }) => (
+                            <button
+                                key={value}
+                                type="button"
+                                className={`${page.chip} ${status === value ? page.chipActive : ""}`}
+                                aria-pressed={status === value}
+                                onClick={() => setStatus(value)}
                             >
-                                <div className={styles.fallbackArt}>
-                                    <SportIcon sport={event.name} size={40} />
-                                </div>
-                                <div className={styles.strip}>
-                                    <span className={styles.fallbackName}>{event.name}</span>
-                                    <div className={styles.fallbackMeta}>
-                                        <span className={styles.fallbackDetail}>
-                                            <CalendarDays size={13} /> {date}
-                                        </span>
-                                        {event.venue && (
-                                            <span className={styles.fallbackDetail}>
-                                                <MapPin size={13} /> {event.venue}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className={styles.fallbackFee}>{formatFeeSummary(event)}</span>
-                                </div>
-                            </a>
-                        );
-                    })}
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            )}
+
+                {isLoading ? (
+                    <SectionSpinner message="Loading events..." />
+                ) : error ? (
+                    <ErrorState description={error} onRetry={fetchEvents} />
+                ) : visible.length === 0 ? (
+                    <EmptyState
+                        title="These ruins are empty"
+                        description={
+                            events.length === 0
+                                ? "Check back soon — the event schedule will be published shortly."
+                                : "Nothing matches those filters. Try widening them."
+                        }
+                        action={events.length > 0 ? { label: "Clear filters", onClick: resetFilters } : undefined}
+                    />
+                ) : (
+                    <div className={styles.grid}>
+                        {visible.map((event, i) => {
+                            const matched = findSportForEventName(event.name);
+                            const date = new Date(event.startDate).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                            });
+
+                            if (matched) {
+                                return (
+                                    <PosterCard
+                                        key={event.id}
+                                        slug={matched.poster}
+                                        name={event.name}
+                                        category={event.sportCategory}
+                                        format={formatFeeSummary(event)}
+                                        date={date}
+                                        href={`/dashboard/events/${event.slug}`}
+                                        priority={i < 4}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <a
+                                    key={event.id}
+                                    href={`/dashboard/events/${event.slug}`}
+                                    className={styles.fallbackCard}
+                                >
+                                    <div className={styles.fallbackArt}>
+                                        <SportIcon sport={event.name} size={40} />
+                                    </div>
+                                    <div className={styles.strip}>
+                                        <span className={styles.fallbackName}>{event.name}</span>
+                                        <div className={styles.fallbackMeta}>
+                                            <span className={styles.fallbackDetail}>
+                                                <CalendarDays size={13} /> {date}
+                                            </span>
+                                            {event.venue && (
+                                                <span className={styles.fallbackDetail}>
+                                                    <MapPin size={13} /> {event.venue}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className={styles.fallbackFee}>{formatFeeSummary(event)}</span>
+                                    </div>
+                                </a>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </PublicLayout>
     );
 }

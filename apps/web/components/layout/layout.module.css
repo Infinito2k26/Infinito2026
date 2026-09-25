@@ -559,15 +559,16 @@
   color: var(--char-500);
 }
 
-/* ------------------------------------------------------ Dark tone (home) -- */
-/* The landing page only. The hero art runs up under a transparent navbar,
-   which turns to solid stone once the reader scrolls. */
+/* ------------------------------------------------ Dark tone (public site) -- */
+/* Every public page. On the landing page the hero runs up under a transparent
+   navbar, which turns to solid stone once the reader scrolls; elsewhere the
+   navbar is solid from the start. */
 
 .publicShellDark {
   background: var(--char-900);
 }
 
-.publicMainDark {
+.publicMainLanding {
   padding-top: 0;
 }
 
@@ -656,6 +657,16 @@
 .footerDark {
   background: var(--abyss-950);
   border-top: 1px solid var(--char-700);
+}
+
+/* On a dark page the skyline is the footer's own abyss rising into the page;
+   it replaces the footer's top rule rather than sitting on it. */
+.footerRidgeDark {
+  color: var(--abyss-950);
+}
+
+.footerDark:has(.footerRidgeDark) {
+  border-top-color: transparent;
 }
 
 .footerDark .footer_bottom {
