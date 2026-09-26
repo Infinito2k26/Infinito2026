@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import PosterCard from "@/components/ui/poster-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { QUIET_AIR } from "@/components/layout/effects";
 import type { Sport, SportCategory, SportType } from "@/lib/sports";
 import page from "@/components/layout/page.module.css";
 import styles from "./sports-grid.module.css";
@@ -85,7 +86,7 @@ export default function SportsGrid({ sports }: { sports: Sport[] }) {
                     action={{ label: "Clear filters", onClick: reset }}
                 />
             ) : (
-                <div className={styles.grid}>
+                <div className={styles.grid} {...QUIET_AIR}>
                     {visible.map((sport, i) => (
                         <PosterCard
                             key={sport.id}

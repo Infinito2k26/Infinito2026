@@ -18,8 +18,12 @@ import styles from "./hero.module.css";
  * canvas flames → copy.
  *
  * `hero-ragnarok.jpg` was generated for Infinito with ChatGPT (September
- * 2026): the giant stands right of centre, hands on his planted sword, with
- * dark smoke on the left for the copy.
+ * 2026): the giant stands right of centre, hands on his planted sword.
+ *
+ * Over it, centred, the fest's lockup from the Infinito_ui Figma file: the
+ * dragon-infinity crest (`infinito-logo.png`) and the INFINITO 26 lettering
+ * (`infinito-wordmark.png`, just the letters: the small print that sits
+ * around them in the file is set below as real text).
  */
 
 const ALT =
@@ -35,6 +39,26 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
     // giant), 1.6× on tablets, full-bleed on desktop.
     sizes: "(max-width: 768px) 360vw, (max-width: 1023px) 160vw, 110vw",
     preload: true,
+    quality: 75,
+  });
+  // The lettering is ~8.6 × --t1 wide (see hero.module.css): the column on
+  // phones, about half the screen on desktop.
+  const { props: wordmark } = getImageProps({
+    src: "/infinito-wordmark.png",
+    alt: "Infinito 2026",
+    width: 3399,
+    height: 513,
+    sizes: "(max-width: 768px) 92vw, (max-width: 1023px) 64vw, 54vw",
+    preload: true,
+    quality: 75,
+  });
+  const { props: crest } = getImageProps({
+    src: "/infinito-logo.png",
+    alt: "",
+    width: 909,
+    height: 501,
+    sizes: "(max-width: 768px) 32vw, 18vw",
+    loading: "eager",
     quality: 75,
   });
 
@@ -58,20 +82,20 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
         <FireCanvas className={styles.flames} density={1.1} />
         <div className={styles.copy}>
           <div className={styles.titleBlock}>
-            <p className={styles.kicker}>
-              <span>Infinito 2026</span>
-              <i aria-hidden="true" />
-              <span>11th edition</span>
-              <i aria-hidden="true" />
-              <span>IIT Patna</span>
-            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+            <img {...crest} alt="" aria-hidden="true" className={styles.crest} />
             <h1 className={styles.title}>
-              <span className={styles.titleOf}>Ruins of</span>
-              <span className={styles.titleMain}>Ragnarök</span>
-              <span className="srOnly"> — Infinito 2026, IIT Patna, 9–11 October 2026</span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+              <img {...wordmark} alt="Infinito 2026" className={styles.wordmark} />
+              <span className={styles.theme}>Ruins of Ragnarök</span>
             </h1>
             <p className={styles.dates}>
               <span>9–11</span> October 2026
+            </p>
+            <p className={styles.kicker}>
+              <span>IIT Patna</span>
+              <i aria-hidden="true" />
+              <span>11th edition</span>
             </p>
           </div>
 

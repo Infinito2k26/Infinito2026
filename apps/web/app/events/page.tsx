@@ -6,6 +6,7 @@ import { CalendarDays, MapPin, Search } from "lucide-react";
 
 import PublicLayout from "@/components/layout/public-layout";
 import PageHead from "@/components/layout/page-head";
+import { QUIET_AIR } from "@/components/layout/effects";
 import PosterCard from "@/components/ui/poster-card";
 import SportIcon from "@/components/ui/sport-icon";
 import Input from "@/components/ui/input";
@@ -141,7 +142,7 @@ export default function EventsPage() {
                         action={events.length > 0 ? { label: "Clear filters", onClick: resetFilters } : undefined}
                     />
                 ) : (
-                    <div className={styles.grid}>
+                    <div className={styles.grid} {...QUIET_AIR}>
                         {visible.map((event, i) => {
                             const matched = findSportForEventName(event.name);
                             const date = new Date(event.startDate).toLocaleDateString("en-IN", {

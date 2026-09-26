@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { flameSprites } from "@/components/home/flame-sprites";
 import { SPARK_EVENT, type SparkDetail } from "@/components/home/sparks";
+import { QUIET_AIR } from "@/components/layout/effects";
 import styles from "./ash-embers.module.css";
 
 /**
@@ -31,6 +32,11 @@ import styles from "./ash-embers.module.css";
  *  - a click throws a small shower of sparks;
  *  - burning fight bills shed sparks and burning scraps from their burning
  *    edge (PaperBurn, through the `embers:spark` event in ./sparks).
+ *
+ * Over card grids (anything marked with QUIET_AIR from
+ * components/layout/effects) the air goes quiet: the drifting ash fades to a
+ * fifth, feathered in across the grid's edge, and the pointer stops stirring
+ * it. Sparks thrown by a click or a burning card still show in full.
  *
  * Cost: one fixed canvas, sprites pre-rendered once (flames from
  * flame-sprites, a dozen torn scraps here), a few hundred drawImage calls a
@@ -68,6 +74,8 @@ type Mote = {
   spin: number;
   tum: number;
   tumble: number;
+  /** How much of it shows: under 1 over a quiet zone. */
+  dim: number;
 };
 
 /** Eddy sizes: broad currents and smaller swirls inside them (1 / px). */
@@ -77,6 +85,11 @@ const FINE = 1 / 130;
 const WAKE = 170;
 /** Short-lived bits alive at once, from clicks and burning bills. */
 const MAX_SPARKS = 110;
+/** Quiet zones: how much of the ash fades out deep inside one, and how wide
+ *  (px) the fade is, straddling the zone's edge. */
+const HUSH = 0.8;
+const HUSH_EDGE = 140;
+const QUIET_SELECTOR = `[${Object.keys(QUIET_AIR)[0]}]`;
 
 /** Scrap sprites: canvas size, and the scrap's own radius inside it (the
  *  rest is room for the glow). */
@@ -246,6 +259,7 @@ const blank = (): Mote => ({
   spin: 0,
   tum: 0,
   tumble: 0,
+  dim: 1,
 });
 
 export default function AshEmbers({
@@ -288,6 +302,36 @@ export default function AshEmbers({
     let parY = 0;
     let parTX = 0;
     let parTY = 0;
+
+    // Quiet zones: the elements (looked up again every half second, since
+    // grids arrive with their data) and their boxes this frame.
+    let quietEls: Element[] = [];
+    let quietRects: DOMRect[] = [];
+    let quietSeen = -1e4;
+    const findQuiet = (now: number) => {
+      if (now - quietSeen > 500) {
+        quietSeen = now;
+        quietEls = [...document.querySelectorAll(QUIET_SELECTOR)];
+      }
+      quietRects = [];
+      for (const el of quietEls) {
+        const r = el.getBoundingClientRect();
+        if (r.width && r.bottom > -HUSH_EDGE && r.top < h + HUSH_EDGE) quietRects.push(r);
+      }
+    };
+    // 0 out in the open … 1 well inside a quiet zone, eased across its edge.
+    const quietAt = (x: number, y: number) => {
+      let q = 0;
+      for (const r of quietRects) {
+        const dx = Math.max(r.left - x, x - r.right);
+        const dy = Math.max(r.top - y, y - r.bottom);
+        // Distance to the box's edge: positive outside, negative inside.
+        const d = dx > 0 || dy > 0 ? Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) : Math.max(dx, dy);
+        const v = Math.min(1, Math.max(0, 0.5 - d / HUSH_EDGE));
+        q = Math.max(q, v * v * (3 - 2 * v));
+      }
+      return q;
+    };
 
     const curlA = { x: 0, y: 0 };
     const curlB = { x: 0, y: 0 };
@@ -412,6 +456,7 @@ export default function AshEmbers({
       lift: number,
       pSpeed: number,
       dScroll: number,
+      calm: number,
     ) => {
       m.life += dt;
       const t = m.life / m.max;
@@ -424,14 +469,15 @@ export default function AshEmbers({
       let ax = (curlA.x + 0.5 * curlB.x) * turb + wind;
       let ay = (curlA.y + 0.5 * curlB.y) * turb + lift;
 
-      // The pointer's wake: air dragged along with it, curling either side.
-      if (pSpeed > 30) {
+      // The pointer's wake: air dragged along with it, curling either side —
+      // all but stilled while the pointer is over a quiet zone.
+      if (pSpeed > 30 && calm > 0.05) {
         const dx = m.x + parX * m.depth - px;
         const dy = m.y + parY * m.depth - py;
         const d2 = dx * dx + dy * dy;
         if (d2 < WAKE * WAKE) {
           const d = Math.sqrt(d2) || 1;
-          const f = (1 - d / WAKE) ** 2;
+          const f = (1 - d / WAKE) ** 2 * calm;
           const side = dx * pvy - dy * pvx > 0 ? 1 : -1;
           ax += pvx * f * 0.6 + (-dy / d) * pSpeed * f * 0.25 * side;
           ay += pvy * f * 0.6 + (dx / d) * pSpeed * f * 0.25 * side;
@@ -488,7 +534,7 @@ export default function AshEmbers({
       const v = Math.hypot(m.vx, m.vy);
       const speed = v * (0.6 + 0.8 * m.depth);
 
-      ctx.globalAlpha = Math.min(1, envelope * flicker * (0.65 + 0.35 * m.depth) * flare);
+      ctx.globalAlpha = Math.min(1, envelope * flicker * (0.65 + 0.35 * m.depth) * flare) * m.dim;
       if (speed > 12) {
         // A streak along its path: local +y turned onto the direction of
         // travel, the glow trailing behind the head and thinning as it
@@ -507,14 +553,14 @@ export default function AshEmbers({
       // A hot heart while it's young: white-hot at first, then gold.
       if (t < 0.6) {
         const c = m.size * 1.15 * (1 + m.fan * 0.3);
-        ctx.globalAlpha = Math.min(1, envelope * flicker * (1 - t / 0.6) * 0.9 * flare);
+        ctx.globalAlpha = Math.min(1, envelope * flicker * (1 - t / 0.6) * 0.9 * flare) * m.dim;
         ctx.drawImage(flames[t < 0.2 ? 0 : 1]!, x - c, y - c, c * 2, c * 2);
       }
     };
 
     const drawFlake = (m: Mote) => {
       const t = m.life / m.max;
-      const envelope = Math.min(1, m.life / 0.6) * Math.min(1, (1 - t) / 0.25);
+      const envelope = Math.min(1, m.life / 0.6) * Math.min(1, (1 - t) / 0.25) * m.dim;
       if (envelope <= 0) return;
       const scrap = scraps[m.scrap]!;
       const s = (SCRAP * m.size) / SCRAP_R;
@@ -542,7 +588,8 @@ export default function AshEmbers({
     const drawBokeh = (m: Mote) => {
       const t = m.life / m.max;
       const r = m.size;
-      ctx.globalAlpha = Math.sin(Math.PI * t) * (0.1 + 0.06 * Math.sin(m.life * 1.7 + m.seed)) * (1 + m.fan);
+      ctx.globalAlpha =
+        Math.sin(Math.PI * t) * (0.1 + 0.06 * Math.sin(m.life * 1.7 + m.seed)) * (1 + m.fan) * m.dim;
       ctx.drawImage(
         flames[m.seed % 1 < 0.5 ? 1 : 2]!,
         m.x + parX - r,
@@ -579,11 +626,15 @@ export default function AshEmbers({
       const wind = Math.sin(clock * 0.07) * 10 + Math.sin(clock * 0.023 + 1.7) * 7;
       const z = clock * 0.06;
 
+      findQuiet(now);
+      const calm = quietRects.length ? 1 - quietAt(px, py) : 1;
+
       for (const m of motes) {
-        if (!advance(m, dt, z, turb, wind, lift, pSpeed, dScroll)) spawn(m);
+        if (!advance(m, dt, z, turb, wind, lift, pSpeed, dScroll, calm)) spawn(m);
+        m.dim = quietRects.length ? 1 - HUSH * quietAt(m.x + parX * m.depth, m.y + parY * m.depth) : 1;
       }
       for (let i = sparks.length - 1; i >= 0; i--) {
-        if (!advance(sparks[i]!, dt, z, turb, wind, lift, pSpeed, dScroll)) {
+        if (!advance(sparks[i]!, dt, z, turb, wind, lift, pSpeed, dScroll, calm)) {
           sparks[i] = sparks[sparks.length - 1]!;
           sparks.pop();
         }

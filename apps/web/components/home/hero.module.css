@@ -149,9 +149,27 @@
 
 /* --- Title ---------------------------------------------------------------- */
 
-/* The copy column. Narrow screens: title at the top, actions at the bottom,
-   the giant between them. Desktop: one column on the left, the giant right. */
+/* The copy. Narrow screens: the lockup at the top, the actions at the bottom,
+   the giant between them. Desktop: all of it centred over the painting.
+
+   The lockup is tiered by the golden ratio. Tier 1 is the INFINITO letters,
+   and each line under them has capitals 1/φ the height of the line above: the
+   theme (tier 2), the dates (3), the credits (4). --t1 is the letters' height;
+   each face's font-size is its tier over that face's cap height (Grenze
+   Gotisch 0.62em, Bebas Neue 0.716em, Cinzel 0.7em), so it's the capitals
+   that step by φ, not the em boxes. The crest stands one step above tier 1,
+   the gaps step down with the type, and the buttons keep their own size:
+   they're controls, not titling.
+
+   Phones fit the lettering (8.6 × --t1 wide) to the column; wider screens
+   size it by the viewport, capped by its height so the lockup always fits. */
 .copy {
+  --phi: 1.618;
+  --t1: min(calc((100vw - 2 * var(--spacing-container)) / 8.605), 10.5svh);
+  --t2: calc(var(--t1) / var(--phi));
+  --t3: calc(var(--t2) / var(--phi));
+  --t4: calc(var(--t3) / var(--phi));
+  --t5: calc(var(--t4) / var(--phi));
   position: absolute;
   z-index: 4;
   inset: calc(var(--navbar-h) + clamp(1.75rem, 6vh, 4rem)) var(--spacing-container)
@@ -196,67 +214,59 @@
   text-align: center;
 }
 
-.kicker {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  max-width: none;
-  font-family: var(--f-caps);
-  font-size: clamp(0.625rem, 0.9vw, 0.75rem);
-  font-weight: 700;
-  letter-spacing: var(--track-micro);
-  text-transform: uppercase;
-  color: var(--bone-200);
+/* Dark halos, not glows: they keep the lockup off the fire behind it. */
+.crest,
+.wordmark {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1px 2px rgba(14, 12, 11, 0.6)) drop-shadow(0 0 28px rgba(14, 12, 11, 0.6));
 }
 
-.kicker i {
-  width: 5px;
-  height: 5px;
-  background: var(--crimson-600);
-  transform: rotate(45deg);
+/* The dragon-infinity crest: one step above tier 1 (1.814 is its aspect). */
+.crest {
+  width: calc(var(--t1) * var(--phi) * 1.814);
+  margin-bottom: var(--t4);
 }
 
 .title {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: clamp(0.875rem, 2.4vh, 1.5rem);
   line-height: 1;
   color: inherit;
-  /* Dark halo, not a glow: keeps the words off the fire behind them. */
   text-shadow: 0 1px 2px rgba(14, 12, 11, 0.6), 0 0 36px rgba(14, 12, 11, 0.55);
 }
 
-.titleOf {
+/* Tier 1. The letters fill 77% of the image's height (the torch, the raven
+   and the dragons rise above them) and it's 6.626 times as wide as it is
+   tall: 8.605 × --t1 wide makes the letters themselves --t1 tall. */
+.wordmark {
+  width: calc(var(--t1) * 8.605);
+}
+
+/* Tier 2. Trimmed to its capitals on top, so the gap above it is the gap
+   the tiers set, not the gap plus the face's leading. */
+.theme {
+  display: block;
+  margin-top: var(--t3);
+  text-box: trim-start cap alphabetic;
   font-family: var(--f-display);
-  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+  font-size: calc(var(--t2) / 0.62);
   font-weight: 700;
   line-height: 1;
   color: var(--ember-300);
 }
 
-.titleMain {
-  display: block;
-  font-family: var(--f-display);
-  font-size: clamp(3.5rem, 12vw, 7.5rem);
-  font-weight: 700;
-  line-height: 0.88;
-  letter-spacing: -0.005em;
-  /* Blackletter descenders are shallow; a little room keeps the ö's dots
-     and the k's spur clear of the date line. */
-  padding-bottom: 0.06em;
-  color: var(--bone-50);
-}
-
-/* The date, set as a line of type rather than a badge. */
+/* Tier 3: the date, set as a line of type between two rules. */
 .dates {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: calc(var(--t3) * 0.5);
   max-width: none;
-  margin-top: clamp(1rem, 2.6vh, 1.5rem);
+  margin-top: var(--t4);
   font-family: var(--f-sport);
-  font-size: clamp(1.25rem, 1.9vw, 1.625rem);
+  font-size: calc(var(--t3) / 0.716);
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -266,21 +276,36 @@
 .dates::before,
 .dates::after {
   content: "";
-  width: 28px;
-  height: 2px;
+  width: calc(var(--t3) * 1.2);
+  height: max(2px, calc(var(--t3) * 0.06));
   background: var(--crimson-600);
-}
-
-/* Centred (below desktop), the rule is mirrored so the line stays centred;
-   left-aligned on desktop, one rule leads into it. */
-@media (min-width: 1024px) {
-  .dates::after {
-    content: none;
-  }
 }
 
 .dates span {
   color: var(--bone-50);
+}
+
+/* Tier 4: who hosts it, and which edition it is. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t4) * 0.75);
+  max-width: none;
+  margin-top: var(--t5);
+  font-family: var(--f-caps);
+  font-size: calc(var(--t4) / 0.7);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist-400);
+}
+
+.kicker i {
+  width: calc(var(--t4) * 0.32);
+  aspect-ratio: 1;
+  background: var(--crimson-600);
+  transform: rotate(45deg);
 }
 
 /* --- Flames -------------------------------------------------------------- */
@@ -333,7 +358,7 @@
   background: linear-gradient(var(--mist-400), transparent);
 }
 
-/* --- Tablets and phones: copy over the top, the giant below ------------ */
+/* --- Tablets and phones: the lockup over the top, the giant below ------- */
 
 @media (max-width: 1023px) {
   .scrim {
@@ -343,7 +368,13 @@
   }
 }
 
-/* --- Desktop: copy left, giant right ------------------------------------ */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .copy {
+    --t1: min(7.2vw, 10.5svh);
+  }
+}
+
+/* --- Desktop: the lockup centred over the giant ------------------------- */
 
 @media (min-width: 1024px) {
   .hero {
@@ -359,34 +390,17 @@
     mask-image: linear-gradient(to bottom, transparent 0%, #000 12%);
   }
 
+  /* The dark gathers behind the lockup rather than coming in from a side. */
   .scrim {
     background:
-      linear-gradient(to right, rgba(14, 12, 11, 0.88) 0%, rgba(14, 12, 11, 0.55) 32%, rgba(14, 12, 11, 0) 56%),
+      radial-gradient(ellipse 44% 50% at 50% 50%, rgba(14, 12, 11, 0.66), rgba(14, 12, 11, 0.3) 58%, rgba(14, 12, 11, 0) 100%),
       linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%);
   }
 
   .copy {
-    right: auto;
-    width: min(46vw, 680px);
-    padding-left: 0;
+    --t1: clamp(2.5rem, min(6vw, 10.5svh), 5.75rem);
     justify-content: center;
-    align-items: flex-start;
-    gap: clamp(2rem, 5.5vh, 3rem);
-  }
-
-  .titleBlock,
-  .title {
-    align-items: flex-start;
-    text-align: left;
-  }
-
-  .titleMain {
-    font-size: clamp(4.5rem, 7.4vw, 7.5rem);
-    margin-left: -0.04em;
-  }
-
-  .actions {
-    justify-content: flex-start;
+    gap: var(--t2);
   }
 }
 
@@ -404,15 +418,6 @@
   .copy {
     top: calc(var(--navbar-h) + 4vh);
     bottom: 4rem;
-  }
-
-  .kicker {
-    gap: 0.5rem;
-    letter-spacing: 0.16em;
-  }
-
-  .titleMain {
-    font-size: 16vw;
   }
 
   .actions {

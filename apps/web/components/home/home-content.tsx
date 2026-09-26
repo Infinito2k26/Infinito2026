@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Hero from "@/components/home/hero";
 import Countdown from "@/components/home/countdown";
-import SportSlab from "@/components/home/sport-slab";
 import WarTape from "@/components/home/war-tape";
 import Ornament from "@/components/ui/ornament";
+import PosterCard from "@/components/ui/poster-card";
 import Reveal from "@/components/ui/reveal";
+import { QUIET_AIR } from "@/components/layout/effects";
 import { FEATURED_SPORTS } from "@/lib/sports";
 import buttons from "./buttons.module.css";
 import styles from "./home-content.module.css";
@@ -73,7 +74,7 @@ export default function HomeContent({
         <Countdown target={festDates.start} />
       </section>
 
-      <section className={styles.sports}>
+      <section className={styles.sports} {...QUIET_AIR}>
         <div className={styles.inner}>
           <div className={styles.sectionHeadRow}>
             <Reveal className={styles.sectionHead}>
@@ -92,7 +93,15 @@ export default function HomeContent({
           <div className={styles.bills}>
             {FEATURED_SPORTS.map((sport, i) => (
               <Reveal key={sport.id} index={i} className={styles.bill}>
-                <SportSlab sport={sport} eager={i < 2} />
+                <PosterCard
+                  slug={sport.poster}
+                  name={sport.name}
+                  category={sport.category}
+                  format={sport.format}
+                  href={`/events?sport=${sport.id}`}
+                  priority={i < 2}
+                  sizes="(max-width: 639px) 46vw, (max-width: 1240px) 31vw, 390px"
+                />
               </Reveal>
             ))}
           </div>

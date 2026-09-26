@@ -19,11 +19,18 @@ import { throwSparks } from "@/components/home/sparks";
  * 2. Burn map. When each point of the sheet catches: its distance from the
  *    ignition point, domain-warped by fractal noise so the fire runs unevenly,
  *    in a small texture. The noise — the expensive part — is computed once per
- *    sheet; each fresh hover re-derives the map from where the pointer entered
- *    (one square root per texel) and re-uploads it. Keyboard focus lights it
- *    near the middle.
+ *    sheet, in an idle moment; each fresh hover re-derives the map from where
+ *    the pointer entered (one square root per texel). Keyboard focus lights
+ *    it near the middle.
  * 3. Burn. Per frame, a tiny fragment shader compares that map with the
  *    advancing front — two texture reads and a little arithmetic per pixel.
+ *
+ * One WebGL context burns every card on the page. Browsers keep only about
+ * sixteen alive at once (open another and the oldest is lost), and a wall of
+ * bills can hold more cards than that. So each card's own canvas is a plain
+ * 2D one: at rest it shows the composed sheet; while the card burns or
+ * restores, the shared context renders the frame and the card copies it
+ * across. A card only takes textures in that context once it's first hovered.
  *
  * While it spreads, the burning edge throws sparks and burning scraps into
  * the page's ember layer (AshEmbers, if it's on): each one leaves from a
@@ -98,7 +105,6 @@ void main() {
   gl_FragColor = vec4(c * a, a);
 }`;
 
-const IDLE = -0.2;
 const FROM = -0.01;
 const TO = 1.03; // burns out to a few charred fibres at the very edges
 const IN = 1.4; // seconds to burn through
@@ -212,6 +218,27 @@ function loadGrain() {
   return grain;
 }
 
+/** The lines the browser broke an element's text into: each line's words,
+ *  and where its first word's box sits in the viewport. */
+function printedLines(el: HTMLElement, upper: boolean) {
+  const lines: { text: string; left: number; top: number }[] = [];
+  const range = document.createRange();
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    for (const word of (node.nodeValue ?? "").matchAll(/\S+/g)) {
+      range.setStart(node, word.index);
+      range.setEnd(node, word.index + word[0].length);
+      const r = range.getBoundingClientRect();
+      if (!r.width) continue;
+      const text = upper ? word[0].toUpperCase() : word[0];
+      const line = lines.find((l) => Math.abs(l.top - r.top) < r.height / 2);
+      if (line) line.text += ` ${text}`;
+      else lines.push({ text, left: r.left, top: r.top });
+    }
+  }
+  return lines;
+}
+
 async function compose(paperEl: HTMLElement, scale: number) {
   const box = paperEl.getBoundingClientRect();
   const w = paperEl.offsetWidth;
@@ -278,41 +305,124 @@ async function compose(paperEl: HTMLElement, scale: number) {
   // Printed text, each element drawn with its own computed styles.
   for (const el of paperEl.querySelectorAll<HTMLElement>("[data-print]")) {
     const cs = getComputedStyle(el);
-    const r = el.getBoundingClientRect();
-    const cxp = (r.left + r.width / 2 - box.left) * sx;
-    const cyp = (r.top + r.height / 2 - box.top) * sx;
-    const ew = el.offsetWidth;
-    const eh = el.offsetHeight;
+    const upper = cs.textTransform === "uppercase";
     ctx.save();
-    ctx.translate(cxp, cyp);
-    if (cs.transform && cs.transform !== "none") {
-      const m = new DOMMatrix(cs.transform);
-      ctx.transform(m.a, m.b, m.c, m.d, 0, 0);
-    }
-    ctx.translate(-ew / 2, -eh / 2);
-    const bw = parseFloat(cs.borderTopWidth) || 0;
-    if (bw) {
-      ctx.strokeStyle = cs.borderTopColor;
-      ctx.lineWidth = bw;
-      ctx.strokeRect(bw / 2, bw / 2, ew - bw, eh - bw);
-    }
-    const text = cs.textTransform === "uppercase" ? el.textContent!.toUpperCase() : el.textContent!;
     ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     if ("letterSpacing" in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
     ctx.fillStyle = cs.color;
     ctx.globalAlpha = parseFloat(cs.opacity) || 1;
     ctx.textBaseline = "alphabetic";
-    const m = ctx.measureText(text);
-    const asc = m.fontBoundingBoxAscent;
-    const desc = m.fontBoundingBoxDescent;
-    const padL = parseFloat(cs.paddingLeft) + bw;
-    const padT = parseFloat(cs.paddingTop) + bw;
-    const padB = parseFloat(cs.paddingBottom) + bw;
-    const inner = eh - padT - padB;
-    ctx.fillText(text, padL, padT + (inner - (asc + desc)) / 2 + asc);
+
+    if (cs.transform && cs.transform !== "none") {
+      // A stamp, set at an angle: one word in a ruled box, drawn in its own
+      // turned frame about its centre.
+      const r = el.getBoundingClientRect();
+      const ew = el.offsetWidth;
+      const eh = el.offsetHeight;
+      const m = new DOMMatrix(cs.transform);
+      ctx.translate((r.left + r.width / 2 - box.left) * sx, (r.top + r.height / 2 - box.top) * sx);
+      ctx.transform(m.a, m.b, m.c, m.d, 0, 0);
+      ctx.translate(-ew / 2, -eh / 2);
+      const bw = parseFloat(cs.borderTopWidth) || 0;
+      if (bw) {
+        ctx.strokeStyle = cs.borderTopColor;
+        ctx.lineWidth = bw;
+        ctx.strokeRect(bw / 2, bw / 2, ew - bw, eh - bw);
+      }
+      const text = upper ? el.textContent!.toUpperCase() : el.textContent!;
+      const tm = ctx.measureText(text);
+      const asc = tm.fontBoundingBoxAscent;
+      const padT = parseFloat(cs.paddingTop) + bw;
+      const inner = eh - padT - parseFloat(cs.paddingBottom) - bw;
+      ctx.fillText(text, parseFloat(cs.paddingLeft) + bw, padT + (inner - (asc + tm.fontBoundingBoxDescent)) / 2 + asc);
+    } else {
+      // Set straight: line by line, wherever the browser broke it.
+      const asc = ctx.measureText("H").fontBoundingBoxAscent;
+      for (const line of printedLines(el, upper)) {
+        ctx.fillText(line.text, (line.left - box.left) * sx, (line.top - box.top) * sx + asc);
+      }
+    }
     ctx.restore();
   }
   return c;
+}
+
+// --- The shared context -----------------------------------------------------
+
+type Burner = {
+  gl: WebGLRenderingContext;
+  canvas: HTMLCanvasElement;
+  u: Record<"paper" | "map" | "front" | "t" | "res" | "k", WebGLUniformLocation | null>;
+  /** Which context this is: a lost one is replaced, and the textures made in
+   *  it are gone with it. */
+  gen: number;
+};
+
+let shared: Burner | null = null;
+let generation = 0;
+let unsupported = false;
+
+/** The page's one burning context, made on first use (null: no WebGL). */
+function burner(): Burner | null {
+  if (shared || unsupported) return shared;
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: false, alpha: true });
+  if (!gl) {
+    unsupported = true;
+    return null;
+  }
+  const sh = (type: number, src: string) => {
+    const x = gl.createShader(type)!;
+    gl.shaderSource(x, src);
+    gl.compileShader(x);
+    return x;
+  };
+  const prog = gl.createProgram()!;
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    unsupported = true;
+    return null;
+  }
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const u = Object.fromEntries(
+    ["paper", "map", "front", "t", "res", "k"].map((n) => [n, gl.getUniformLocation(prog, n)]),
+  ) as Burner["u"];
+  gl.uniform1i(u.paper, 0);
+  gl.uniform1i(u.map, 1);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  canvas.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    shared = null;
+  });
+  shared = { gl, canvas, u, gen: ++generation };
+  return shared;
+}
+
+function texture(gl: WebGLRenderingContext) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+
+/** Resolves in an idle moment (or after `timeout` ms at the latest), so a
+ *  wall of cards coming into view builds its sheets between frames. */
+function idle(timeout = 250) {
+  return new Promise<void>((resolve) => {
+    if ("requestIdleCallback" in window) requestIdleCallback(() => resolve(), { timeout });
+    else setTimeout(resolve, 16);
+  });
 }
 
 export default function PaperBurn({
@@ -328,133 +438,135 @@ export default function PaperBurn({
     const canvas = ref.current;
     const host = canvas?.parentElement;
     const paperEl = host?.querySelector<HTMLElement>("[data-paper]");
-    if (!canvas || !host || !paperEl) return;
+    const view = canvas?.getContext("2d");
+    if (!canvas || !host || !paperEl || !view) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!window.matchMedia("(hover: hover)").matches) return;
 
-    let gl: WebGLRenderingContext | null = null;
-    let u: Record<string, WebGLUniformLocation | null> = {};
+    // This card's sheet and burn map, and its textures in the shared context
+    // (made on first burn; `texGen` says which context they belong to).
+    let sheet: HTMLCanvasElement | null = null;
+    let field: Field | null = null;
     let paperTex: WebGLTexture | null = null;
     let mapTex: WebGLTexture | null = null;
+    let texGen = 0;
+    let paperDirty = true;
+    let mapDirty = true;
     let raf = 0;
     let s = 0;
     let hot = false;
-    let field: Field | null = null;
     // Where the current fire was lit, as fractions of the sheet (null: near
     // the middle). spanRef is a middle fire's span; `dur` is this fire's burn
-    // time, stretched a little when it has further to go.
+    // time, stretched a little when it has further to go; `k` keeps its
+    // bands the same width on the sheet (see the shader).
     let origin: [number, number] | null = null;
     let spanRef = 1;
     let dur = IN;
+    let k = 1;
     let sparkDue = 0;
     let last = 0;
     let ready = false;
     let building = false;
     let disposed = false;
 
-    const setup = () => {
-      gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: false, alpha: true });
-      if (!gl) return false;
-      const sh = (type: number, src: string) => {
-        const x = gl!.createShader(type)!;
-        gl!.shaderSource(x, src);
-        gl!.compileShader(x);
-        return x;
-      };
-      const prog = gl.createProgram()!;
-      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
-      gl.useProgram(prog);
-      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-      const loc = gl.getAttribLocation(prog, "p");
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-      u = Object.fromEntries(
-        ["paper", "map", "front", "t", "res", "k"].map((n) => [n, gl!.getUniformLocation(prog, n)]),
-      );
-      gl.uniform1i(u.paper!, 0);
-      gl.uniform1i(u.map!, 1);
-      paperTex = gl.createTexture();
-      mapTex = gl.createTexture();
-      for (const tex of [paperTex, mapTex]) {
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      }
-      return true;
+    // The sheet at rest, exactly as composed.
+    const rest = () => {
+      if (!sheet) return;
+      view.clearRect(0, 0, canvas.width, canvas.height);
+      view.drawImage(sheet, 0, 0);
     };
 
-    const draw = (now: number, front: number) => {
-      if (!gl) return;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.uniform1f(u.front!, front);
-      gl.uniform1f(u.t!, now / 1000);
-      gl.uniform2f(u.res!, canvas.width, canvas.height);
+    // One frame of the fire, rendered in the shared context and copied here.
+    const render = (now: number, front: number) => {
+      const b = burner();
+      if (!b || !sheet || !field) return;
+      const { gl, canvas: out, u } = b;
+      if (texGen !== b.gen) {
+        paperTex = texture(gl);
+        mapTex = texture(gl);
+        texGen = b.gen;
+        paperDirty = mapDirty = true;
+      }
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, paperTex);
+      if (paperDirty) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sheet);
+        paperDirty = false;
+      }
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, mapTex);
+      if (mapDirty) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, field.mw, field.mh, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, field.out);
+        mapDirty = false;
+      }
+      const w = sheet.width;
+      const h = sheet.height;
+      // Grown to the largest card it has drawn; each draws in its corner.
+      if (out.width < w || out.height < h) {
+        out.width = Math.max(out.width, w);
+        out.height = Math.max(out.height, h);
+      }
+      gl.viewport(0, 0, w, h);
+      gl.uniform1f(u.front, front);
+      gl.uniform1f(u.t, now / 1000);
+      gl.uniform2f(u.res, w, h);
+      gl.uniform1f(u.k, k);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      // The viewport is the bottom-left of the drawing buffer, which is the
+      // bottom-left of the canvas as an image.
+      view.clearRect(0, 0, w, h);
+      view.drawImage(out, 0, out.height - h, w, h, 0, 0, w, h);
     };
 
     // Lights the map at `at` (fractions of the sheet), or near the middle.
     const light = (at: [number, number] | null) => {
-      if (!gl || !field) return;
+      if (!field) return;
       const ox = at ? at[0] * field.aspect : (0.5 + (Math.random() - 0.5) * 0.12) * field.aspect;
       const oy = at ? at[1] : 0.46 + (Math.random() - 0.5) * 0.12;
       const span = ignite(field, ox, oy);
-      gl.uniform1f(u.k!, spanRef / span);
+      k = spanRef / span;
       // From a corner the fire has about twice as far to go: give it a bit
       // longer, so it doesn't look like it's racing.
       dur = IN * Math.sqrt(span / spanRef);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, mapTex);
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, field.mw, field.mh, gl.LUMINANCE, gl.UNSIGNED_BYTE, field.out);
+      mapDirty = true;
     };
 
-    const build = async () => {
+    const build = async (urgent = false) => {
       if (building || disposed) return;
       building = true;
       await document.fonts.ready;
       const img = paperEl.querySelector("img");
-      if (img && !img.complete) await new Promise((r) => img.addEventListener("load", r, { once: true }));
-      if (disposed) return;
-      if (!gl && !setup()) {
+      if (img && !img.complete) {
+        await new Promise((r) => {
+          img.addEventListener("load", r, { once: true });
+          img.addEventListener("error", r, { once: true });
+        });
+      }
+      if (!urgent) await idle();
+      const w = paperEl.offsetWidth;
+      const h = paperEl.offsetHeight;
+      if (disposed || !w || !h || !burner()) {
         building = false;
         return;
       }
       const scale = Math.min(window.devicePixelRatio || 1, 1.5);
-      const w = paperEl.offsetWidth;
-      const h = paperEl.offsetHeight;
-      if (!w || !h) {
-        building = false;
-        return;
-      }
-      const sheet = await compose(paperEl, scale);
+      const composed = await compose(paperEl, scale);
       const f = burnField(w, h);
       spanRef = ignite(f, 0.5 * f.aspect, 0.46);
-      if (disposed || !gl) return;
+      if (disposed) return;
+      sheet = composed;
       field = f;
-      const g = gl as WebGLRenderingContext;
+      paperDirty = true;
+      light(origin);
       canvas.width = sheet.width;
       canvas.height = sheet.height;
-      g.pixelStorei(g.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      g.activeTexture(g.TEXTURE0);
-      g.bindTexture(g.TEXTURE_2D, paperTex);
-      g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, sheet);
-      g.pixelStorei(g.UNPACK_ALIGNMENT, 1);
-      g.activeTexture(g.TEXTURE1);
-      g.bindTexture(g.TEXTURE_2D, mapTex);
-      g.texImage2D(g.TEXTURE_2D, 0, g.LUMINANCE, f.mw, f.mh, 0, g.LUMINANCE, g.UNSIGNED_BYTE, f.out);
-      light(origin);
-      draw(performance.now(), IDLE);
+      rest();
       ready = true;
       building = false;
       host.setAttribute("data-paper-ready", "");
-      if (hot) kick();
+      if (hot || s > 0) kick();
     };
 
     // A spark from the burning edge: a random texel of the map whose catch
@@ -464,12 +576,12 @@ export default function PaperBurn({
       const { out, mw, mh } = field;
       const target = front * 255;
       for (let tries = 0; tries < 40; tries++) {
-        const k = (Math.random() * out.length) | 0;
-        if (Math.abs(out[k]! - target) < 7) {
+        const i = (Math.random() * out.length) | 0;
+        if (Math.abs(out[i]! - target) < 7) {
           const r = canvas.getBoundingClientRect();
           throwSparks({
-            x: r.left + ((k % mw) / (mw - 1)) * r.width,
-            y: r.top + (Math.floor(k / mw) / (mh - 1)) * r.height,
+            x: r.left + ((i % mw) / (mw - 1)) * r.width,
+            y: r.top + (Math.floor(i / mw) / (mh - 1)) * r.height,
             scraps: 0.3,
           });
           return;
@@ -481,15 +593,21 @@ export default function PaperBurn({
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       s = hot ? Math.min(1, s + dt / dur) : Math.max(0, s - dt / OUT);
+      if (s === 0) {
+        // Restored: back to the plain sheet, and the loop rests.
+        rest();
+        raf = 0;
+        return;
+      }
       // Catches at once, then slows as it runs out of paper.
       const eased = 1 - (1 - s) ** 1.6;
-      const front = s === 0 ? IDLE : FROM + (TO - FROM) * eased;
-      draw(now, front);
+      const front = FROM + (TO - FROM) * eased;
+      render(now, front);
       if (hot && s < 1) {
         sparkDue += dt * SPARKS;
         for (; sparkDue >= 1; sparkDue -= 1) sparkFromEdge(front);
       }
-      raf = hot || s > 0 ? requestAnimationFrame(frame) : 0;
+      raf = requestAnimationFrame(frame);
     };
     const kick = () => {
       if (!raf && ready) {
@@ -519,7 +637,7 @@ export default function PaperBurn({
         }
       }
       if (ready) kick();
-      else void build();
+      else void build(true);
     };
     const leave = () => {
       hot = false;
@@ -538,16 +656,21 @@ export default function PaperBurn({
     );
     io.observe(host);
 
-    let resizeTimer = 0;
-    const ro = new ResizeObserver(() => {
+    // A new size, or a new poster (a fallback, or a sharper srcset pick),
+    // means a new sheet.
+    let rebuildTimer = 0;
+    const rebuild = () => {
       if (!ready) return;
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
+      window.clearTimeout(rebuildTimer);
+      rebuildTimer = window.setTimeout(() => {
         ready = false;
         void build();
       }, 200);
-    });
+    };
+    const ro = new ResizeObserver(rebuild);
     ro.observe(paperEl);
+    const poster = paperEl.querySelector("img");
+    poster?.addEventListener("load", rebuild);
 
     host.addEventListener("pointerenter", enter);
     host.addEventListener("pointerleave", leave);
@@ -556,15 +679,19 @@ export default function PaperBurn({
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
-      window.clearTimeout(resizeTimer);
+      window.clearTimeout(rebuildTimer);
       io.disconnect();
       ro.disconnect();
+      poster?.removeEventListener("load", rebuild);
       host.removeEventListener("pointerenter", enter);
       host.removeEventListener("pointerleave", leave);
       host.removeEventListener("focus", enter);
       host.removeEventListener("blur", leave);
       host.removeAttribute("data-paper-ready");
-      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+      if (shared && texGen === shared.gen) {
+        shared.gl.deleteTexture(paperTex);
+        shared.gl.deleteTexture(mapTex);
+      }
     };
   }, []);
 

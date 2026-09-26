@@ -1,39 +1,47 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import SportIcon from "./sport-icon";
+import { useEffect, useState } from "react";
+import PaperBurn from "@/components/home/paper-burn";
+import { PAPER_DECKLE, PAPER_GRAIN } from "@/components/home/paper";
 import styles from "./poster-card.module.css";
-import { useState, useEffect } from "react";
 
 /**
- * The event poster card.
+ * A sport or an event as a fight bill: its poster printed on parchment, pinned
+ * to a stone slab. The same card on the landing page, the sports and events
+ * walls, and the dashboard's events.
  *
- * The supplied posters already have the sport name set in crimson blackletter
- * inside the artwork, so nothing is ever drawn on top of the image — printing
- * "KABADDI" over a poster that already says KABADDI is the single easiest way to
- * make this site look unfinished.
+ * On hover the bill burns away from where the pointer came in (<PaperBurn>),
+ * uncovering the slab beneath with the details carved into it. The slab's
+ * text is the link's real content; the bill's printed text is decorative
+ * (aria-hidden). On touch screens, and under reduced motion, the bill stays.
  *
- * Instead every card carries a charcoal base strip. It holds the name and the
- * details the product actually needs to say, and it's what keeps a grid legible:
- * a dozen posters sharing the same bone ground otherwise wash into each other.
+ * The posters already have the sport's name set in blackletter inside the
+ * art, so nothing is printed over them: the bill's own type sits on the
+ * parchment below, where the poster fades out.
  */
 
 export type PosterCardProps = {
-  /** Matches the poster filename and the icon key, e.g. "kabaddi". */
+  /** Matches the poster filename, e.g. "kabaddi". */
   slug: string;
   name: string;
   /** Boys, Girls, Open. */
   category?: string;
-  /** "Team · 7-a-side", "Individual", etc. */
+  /** "Team · 7-a-side", a fee, etc. */
   format?: string;
   date?: string;
   slotsLeft?: number;
   href: string;
   /** Override when the poster filename differs from the slug. */
   image?: string;
-  /** Renders the first row of a grid eagerly; leave false below the fold. */
+  /** The first row of a grid: loads its poster straight away. */
   priority?: boolean;
+  /** The poster's `sizes`, for a grid that isn't 2-up on phones and 3–4-up
+   *  above. */
+  sizes?: string;
 };
+
+const DECKLE = { clipPath: PAPER_DECKLE };
 
 export default function PosterCard({
   slug,
@@ -45,63 +53,85 @@ export default function PosterCard({
   href,
   image,
   priority = false,
+  sizes = "(max-width: 559px) 46vw, (max-width: 1023px) 31vw, 300px",
 }: PosterCardProps) {
-   const isGirls = category?.toLowerCase() === "girls";
+  const isGirls = category?.toLowerCase() === "girls";
+  const boys = category?.toLowerCase() === "boys";
 
-    const defaultSrc = image ?? (isGirls ? `/event-${slug}-girls.jpg` : `/event-${slug}.jpg`);
-    const fallbackSrc = `/event-${slug}.jpg`;
-
-    // Reset the fallback state whenever the computed default source changes
-    // (e.g. different event rendered via the same mounted component/key changes)
-    const [src, setSrc] = useState(defaultSrc);
-
-    // Keep src in sync if props change (covers list re-renders with new slug/category)
-    useEffect(() => {
+  // Girls' events have their own poster where one exists; otherwise the
+  // sport's poster stands in.
+  const defaultSrc = image ?? (isGirls ? `/event-${slug}-girls.jpg` : `/event-${slug}.jpg`);
+  const fallbackSrc = `/event-${slug}.jpg`;
+  const [src, setSrc] = useState(defaultSrc);
+  useEffect(() => {
     setSrc(defaultSrc);
-}, [defaultSrc]);
+  }, [defaultSrc]);
+
+  const hasMeta = Boolean(date) || slotsLeft !== undefined;
 
   return (
     <Link href={href} className={styles.card}>
-      <div className={styles.art}>
-        <Image
-  src={src}
-  alt={`${name} at Infinito 2026 — Ruins of Ragnarok`}
-  width={1600}
-  height={2000}
-  sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 23vw"
-  quality={78}
-  priority={priority}
-  className={styles.image}
-  onError={() => {
-    if (src !== fallbackSrc) setSrc(fallbackSrc);
-  }}
-/>
-      </div>
-
-      <div className={styles.strip}>
-        <div className={styles.heading}>
-          <SportIcon sport={slug} size={18} className={styles.icon} />
-          <span className={styles.name}>{name}</span>
-        </div>
-
-        <div className={styles.meta}>
-          {category ? <span className={styles.category}>{category}</span> : null}
-          {format ? <span className={styles.detail}>{format}</span> : null}
-        </div>
-
-        {(date || slotsLeft !== undefined) && (
-          <div className={styles.meta}>
-            {date ? <span className={styles.detail}>{date}</span> : null}
+      {/* The slab, uncovered as the bill burns */}
+      <span className={styles.under}>
+        {category ? (
+          <span className={`${styles.uTag} ${boys ? styles.uTagCrimson : ""}`}>{category}</span>
+        ) : null}
+        <span className={styles.uName}>{name}</span>
+        {format ? <span className={styles.uFormat}>{format}</span> : null}
+        {hasMeta ? (
+          <span className={styles.uMeta}>
+            {date ? <span>{date}</span> : null}
             {slotsLeft !== undefined ? (
-              <span
-                className={slotsLeft === 0 ? styles.full : styles.slots}
-              >
+              <span className={slotsLeft === 0 ? styles.uFull : styles.uSlots}>
                 {slotsLeft === 0 ? "Entries closed" : `${slotsLeft} slots left`}
               </span>
             ) : null}
-          </div>
-        )}
-      </div>
+          </span>
+        ) : null}
+        <span className={styles.uCta}>
+          Enter the arena <span aria-hidden="true">→</span>
+        </span>
+      </span>
+
+      {/* The bill (the canvas repaints this and burns it) */}
+      <span
+        className={styles.paper}
+        style={{ ...DECKLE, backgroundImage: `url("${PAPER_GRAIN}")` }}
+        data-paper=""
+        aria-hidden="true"
+      >
+        <Image
+          src={src}
+          alt=""
+          width={1600}
+          height={2000}
+          sizes={sizes}
+          quality={75}
+          loading={priority ? "eager" : "lazy"}
+          className={styles.poster}
+          onError={() => {
+            if (src !== fallbackSrc) setSrc(fallbackSrc);
+          }}
+        />
+        <span className={styles.age} />
+        <span className={styles.print}>
+          {category ? (
+            <span className={`${styles.pTag} ${boys ? styles.pTagBoys : ""}`} data-print="">
+              {category}
+            </span>
+          ) : null}
+          <span className={styles.pName} data-print="">
+            {name}
+          </span>
+          {format || date ? (
+            <span className={styles.pFormat} data-print="">
+              {[format, date].filter(Boolean).join(" · ")}
+            </span>
+          ) : null}
+        </span>
+      </span>
+
+      <PaperBurn className={styles.fire} style={DECKLE} />
     </Link>
   );
 }
