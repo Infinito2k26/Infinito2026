@@ -72,3 +72,18 @@
     border-color: var(--err);
     color: var(--err);
 }
+
+.editBtn {
+    margin-top: var(--space-3);
+}
+
+.editForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.editActions {
+    display: flex;
+    gap: var(--space-2);
+}

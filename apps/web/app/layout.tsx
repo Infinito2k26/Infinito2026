@@ -74,6 +74,7 @@ export const viewport = {
 };
 
 export default function RootLayout({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ponytail: unused during the maintenance takeover below, restore {children} to bring the site back
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -84,7 +85,38 @@ export default function RootLayout({
       className={`${display.variable} ${caps.variable} ${ui.variable} ${sport.variable}`}
     >
       <body>
-        {children}
+        {/* ponytail: sitewide maintenance takeover, remove this block + restore {children} to bring the site back */}
+        <main
+          style={{
+            minHeight: "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1.5rem",
+            textAlign: "center",
+            padding: "2rem",
+            background: "#f5ede2",
+          }}
+        >
+          <h1 className="font-display" style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", maxWidth: "40rem" }}>
+            Website is under Maintenance, all operations are shifted to Google Forms
+          </h1>
+          <a
+            href="https://jolly-figolla-671c6f.netlify.app"
+            style={{
+              padding: "0.75rem 2rem",
+              borderRadius: "0.5rem",
+              background: "#1a1a1a",
+              color: "#f5ede2",
+              textDecoration: "none",
+              fontFamily: "var(--font-caps)",
+              letterSpacing: "0.05em",
+            }}
+          >
+            Continue to Google Forms
+          </a>
+        </main>
         <div id="modal-root" />
       </body>
     </html>
