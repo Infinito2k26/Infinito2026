@@ -1,17 +1,18 @@
 import React from 'react';
 
 import PublicLayout from '@/components/layout/public-layout';
+import PageHead from '@/components/layout/page-head';
+import page from '@/components/layout/page.module.css';
 
 import styles from '../privacy-policy/privacy-policy.module.css';
 
 export default function TermsAndConditionsPage() {
     return (
         <PublicLayout>
-            <div className={styles.pageWrapper}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Terms &amp; Registration Policy</h1>
-                    <p className={styles.updated}>Infinito 2K26 — IIT Patna</p>
-                </div>
+            <PageHead title="Terms & Registration Policy">
+                <p className={page.lede}>Infinito 2K26 — IIT Patna</p>
+            </PageHead>
+            <div className={page.body}>
                 <div className={styles.content}>
                     <h2>Registration</h2>
                     <p>

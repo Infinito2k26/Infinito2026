@@ -40,10 +40,15 @@ export default function Countdown({ target }: { target: string }) {
     <div className={styles.countdown}>
       <p className={styles.label}>Until the gates open</p>
       <div className={styles.parts}>
-        {parts.map(({ value, label }) => (
-          <div key={label} className={styles.part}>
-            <span key={value} className={styles.value}>
-              {String(value).padStart(2, "0")}
+        {parts.map(({ value, label }, i) => (
+          <div
+            key={label}
+            className={`${styles.part} ${i === parts.length - 1 ? styles.live : ""}`}
+          >
+            <span className={styles.block}>
+              <span key={value} className={styles.value}>
+                {String(value).padStart(2, "0")}
+              </span>
             </span>
             <span className={styles.unit}>{label}</span>
           </div>

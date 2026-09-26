@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PublicLayout from "@/components/layout/public-layout";
+import PageHead from "@/components/layout/page-head";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import { SectionSpinner } from "@/components/ui/section-spinner";
@@ -10,6 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
 import { useMerchCart } from "@/lib/merch-cart";
+import page from "@/components/layout/page.module.css";
 import styles from "./merch.module.css";
 
 interface Product {
@@ -101,46 +103,49 @@ export default function MerchPage() {
 
     return (
         <PublicLayout>
-            <header className={styles.header}>
-                <div>
-                    <p className="eyebrow">Wear the fest</p>
-                    <h1 className={`${styles.pageTitle} glow`}>Merch</h1>
-                    <p className={styles.pageSubtitle}>Official Infinito 2K26 merchandise.</p>
-                </div>
-                <Button
-                    variant="outline"
-                    onClick={() => router.push("/merch/checkout")}
-                    disabled={cart.items.length === 0}
-                >
-                    Cart ({cart.items.reduce((n, i) => n + i.quantity, 0)}) — ₹{cart.total}
-                </Button>
-            </header>
+            <PageHead
+                eyebrow="Wear the fest"
+                title="Merch"
+                aside={
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push("/merch/checkout")}
+                        disabled={cart.items.length === 0}
+                    >
+                        Cart ({cart.items.reduce((n, i) => n + i.quantity, 0)}) — ₹{cart.total}
+                    </Button>
+                }
+            >
+                <p className={page.lede}>Official Infinito 2K26 merchandise.</p>
+            </PageHead>
 
-            {isLoading ? (
-                <SectionSpinner message="Loading products..." />
-            ) : error ? (
-                <ErrorState description={error} onRetry={fetchProducts} />
-            ) : products.length === 0 ? (
-                <EmptyState title="No products yet" description="Check back soon." />
-            ) : (
-                <div className={styles.grid}>
-                    {products.map((product) => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                            onAdd={(size, quantity) =>
-                                cart.addItem({
-                                    productId: product.id,
-                                    name: product.name,
-                                    price: Number(product.price),
-                                    size,
-                                    quantity,
-                                })
-                            }
-                        />
-                    ))}
-                </div>
-            )}
+            <div className={page.body}>
+                {isLoading ? (
+                    <SectionSpinner message="Loading products..." />
+                ) : error ? (
+                    <ErrorState description={error} onRetry={fetchProducts} />
+                ) : products.length === 0 ? (
+                    <EmptyState title="No products yet" description="Check back soon." />
+                ) : (
+                    <div className={styles.grid}>
+                        {products.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                onAdd={(size, quantity) =>
+                                    cart.addItem({
+                                        productId: product.id,
+                                        name: product.name,
+                                        price: Number(product.price),
+                                        size,
+                                        quantity,
+                                    })
+                                }
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         </PublicLayout>
     );
 }

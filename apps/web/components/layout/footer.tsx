@@ -34,10 +34,27 @@ const CONTACTS = [
   { name: "Ayush", phone: "7979844511" },
 ];
 
-const Footer = () => {
+const Footer = ({
+  tone = "light",
+  ridge = true,
+}: {
+  tone?: "light" | "dark";
+  /** The ruined skyline above it. Off where the page ends on its own. */
+  ridge?: boolean;
+}) => {
+  const dark = tone === "dark";
+
   return (
-    <footer className={styles.footer}>
-      <Ornament variant="ridge" fill="var(--char-900)" className={styles.footerRidge} />
+    <footer className={`${styles.footer} ${dark ? styles.footerDark : ""}`}>
+      {/* The ruined skyline the page ends against. The landing page's closing
+          band carries its own, so there the footer just meets it on a rule. */}
+      {ridge ? (
+        <Ornament
+          variant="ridge"
+          fill={dark ? "var(--abyss-950)" : "var(--char-900)"}
+          className={`${styles.footerRidge} ${dark ? styles.footerRidgeDark : ""}`}
+        />
+      ) : null}
 
       <div className={styles.footer_inner}>
         <div className={styles.footer_column}>

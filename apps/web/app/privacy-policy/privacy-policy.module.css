@@ -1,40 +1,50 @@
-.pageWrapper {
-    width: 100%;
-    max-width: var(--measure);
-    margin: 0 auto;
-    padding: var(--space-8) var(--spacing-container) var(--space-9);
-}
-
-.header {
-    margin-bottom: var(--space-6);
-    border-bottom: 1px solid var(--bone-300);
-    padding-bottom: var(--space-4);
-}
-
-.title {
-    color: var(--crimson-800);
-}
-
-.updated {
-    margin-top: var(--space-2);
-    font-size: var(--fs-small);
-    color: var(--text-muted);
-}
+/* The written pages — privacy policy, terms, registration guidelines. One
+   column at a reading measure on the page's content edge, a touch dimmer than
+   the headings so long text doesn't glare on the dark. The head is PageHead. */
 
 .content {
+    max-width: var(--measure);
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
-    color: var(--char-800);
-    line-height: var(--lh-body);
+    gap: 1.125rem;
+    padding-top: clamp(0.5rem, 2vw, 1.25rem);
+    font-size: clamp(0.9375rem, 1.1vw, 1rem);
+    line-height: 1.75;
+    color: var(--bone-300);
 }
 
 .content h2 {
-    margin-top: var(--space-2);
+    margin-top: 1.5rem;
+    font-size: clamp(1.625rem, 2.8vw, 2.125rem);
+    line-height: 1.05;
+    color: var(--bone-100);
 }
 
-.content ul {
+.content h3 {
+    margin-top: 0.75rem;
+    color: var(--ember-300);
+}
+
+.content ul,
+.content ol {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: 0.625rem;
+    padding-left: 1.25em;
+}
+
+.content li::marker {
+    color: var(--ember-500);
+}
+
+.content strong {
+    font-weight: 600;
+    color: var(--bone-50);
+}
+
+.content a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(240, 160, 106, 0.4);
+    text-underline-offset: 0.22em;
 }

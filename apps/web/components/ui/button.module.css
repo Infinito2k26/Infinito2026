@@ -117,3 +117,49 @@
   display: inline-flex;
   align-items: center;
 }
+
+/* --- On the dark ground (`.ruins`) ---------------------------------------- */
+
+:global(.ruins) .button:focus-visible {
+  outline-color: var(--ember-300);
+  outline-offset: 3px;
+}
+
+:global(.ruins) .primary {
+  border-color: var(--crimson-600);
+}
+
+:global(.ruins) .secondary {
+  color: var(--bone-100);
+  border-color: var(--stone-600);
+}
+
+:global(.ruins) .secondary:hover:not(:disabled) {
+  background: var(--char-750);
+  border-color: var(--bone-200);
+  color: var(--bone-50);
+}
+
+:global(.ruins) .outline {
+  color: var(--ember-300);
+  border-color: var(--char-700);
+}
+
+:global(.ruins) .outline:hover:not(:disabled) {
+  color: var(--glow-200);
+  border-color: var(--ember-500);
+  background: var(--char-800);
+}
+
+:global(.ruins) .ghost {
+  color: var(--mist-400);
+}
+
+:global(.ruins) .ghost:hover:not(:disabled) {
+  background: var(--char-800);
+  color: var(--bone-100);
+}
+
+:global(.ruins) .danger:hover:not(:disabled) {
+  color: var(--abyss-950);
+}

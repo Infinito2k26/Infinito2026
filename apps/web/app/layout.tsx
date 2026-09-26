@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Grenze_Gotisch, Cinzel, Inter } from "next/font/google";
+import { Grenze_Gotisch, Cinzel, Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 
 /**
@@ -12,7 +12,7 @@ import "./globals.css";
  */
 const display = Grenze_Gotisch({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["500", "600", "700", "900"],
   display: "swap",
   variable: "--font-display",
 });
@@ -28,6 +28,13 @@ const ui = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-ui",
+});
+
+const sport = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-sport",
 });
 
 const DESCRIPTION =
@@ -74,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${caps.variable} ${ui.variable}`}
+      className={`${display.variable} ${caps.variable} ${ui.variable} ${sport.variable}`}
     >
       <body>
         {children}

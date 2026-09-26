@@ -1,56 +1,29 @@
-.header {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: var(--space-8) var(--spacing-container) var(--space-5);
-}
-
-.pageTitle {
-    margin-top: var(--space-2);
-}
-
-.pageSubtitle {
-    margin-top: var(--space-3);
-    color: var(--text-muted);
-    max-width: 52ch;
-}
+/* Gallery: one shape for every photo so the wall reads as a set, captions
+   underneath rather than on the picture. */
 
 .grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: 0 var(--spacing-container) var(--space-9);
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: clamp(1.25rem, 2.4vw, 2rem) clamp(0.875rem, 1.6vw, 1.25rem);
 }
 
 .tile {
     margin: 0;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    border: var(--hairline);
-    background: var(--bone-200);
 }
 
 .image {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
     display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--char-800);
+    border: 1px solid var(--char-700);
+    border-radius: var(--radius-sm);
 }
 
 .caption {
-    padding: var(--space-2);
-    font-size: var(--fs-micro);
-    color: var(--text-muted);
-}
-
-@media (min-width: 768px) {
-    .grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: var(--space-4);
-    }
-
-    .image {
-        height: 220px;
-    }
+    margin-top: 0.625rem;
+    font-size: var(--fs-small);
+    line-height: 1.5;
+    color: var(--mist-400);
 }

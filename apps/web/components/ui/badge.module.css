@@ -45,3 +45,11 @@
   color: var(--info);
   border-color: rgba(63, 90, 107, 0.3);
 }
+
+/* On the dark ground. The status variants read the scope's lifted status
+   tokens; only the neutral one needs its own stone. */
+:global(.ruins) .default {
+  background: var(--char-800);
+  color: var(--bone-200);
+  border-color: var(--char-700);
+}

@@ -1,11 +1,21 @@
+/* A short fade and a small rise as a block first scrolls into view. Enough to
+   show the page arriving; not so much that anything seems to fly in. */
+
 .reveal {
   opacity: 0;
-  transform: translateY(28px) scale(0.98);
-  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
-  will-change: opacity, transform;
+  transform: translateY(12px);
+  transition: opacity 500ms var(--ease), transform 500ms var(--ease);
 }
 
 .visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
