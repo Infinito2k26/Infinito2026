@@ -154,7 +154,8 @@
 
    The lockup is tiered by the golden ratio. Tier 1 is the INFINITO letters,
    and each line under them has capitals 1/φ the height of the line above: the
-   theme (tier 2), the dates (3), the credits (4). --t1 is the letters' height;
+   theme (tier 2: RAGNARÖK — its "Ruins of" lead-in sits at tier 4), the dates
+   (3), the credits (4). --t1 is the letters' height;
    each face's font-size is its tier over that face's cap height (Grenze
    Gotisch 0.62em, Bebas Neue 0.716em, Cinzel 0.7em), so it's the capitals
    that step by φ, not the em boxes. The crest stands one step above tier 1,
@@ -165,7 +166,7 @@
    size it by the viewport, capped by its height so the lockup always fits. */
 .copy {
   --phi: 1.618;
-  --t1: min(calc((100vw - 2 * var(--spacing-container)) / 8.605), 10.5svh);
+  --t1: min(calc((100vw - 2 * var(--spacing-container)) / 8.605), 9.8svh);
   --t2: calc(var(--t1) / var(--phi));
   --t3: calc(var(--t2) / var(--phi));
   --t4: calc(var(--t3) / var(--phi));
@@ -245,17 +246,68 @@
   width: calc(var(--t1) * 8.605);
 }
 
-/* Tier 2. Trimmed to its capitals on top, so the gap above it is the gap
-   the tiers set, not the gap plus the face's leading. */
+/* Tier 2: the theme, set the way the Figma lockup sets it — roman capitals,
+   a "Ruins of" lead-in between triple rules, and RAGNARÖK in gilt. The
+   capitals echo the lettering's columns and the gold its crest. */
 .theme {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-top: var(--t3);
-  text-box: trim-start cap alphabetic;
-  font-family: var(--f-display);
-  font-size: calc(var(--t2) / 0.62);
-  font-weight: 700;
+}
+
+.themeLead {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t4) * 0.8);
+  font-family: var(--f-caps);
+  font-size: calc(var(--t4) / 0.7);
+  font-weight: 600;
   line-height: 1;
-  color: var(--ember-300);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #ebd0aa; /* the crest's sand */
+}
+
+/* Tracking trails the last letter too; pulled back so the rules sit evenly. */
+.themeLead > span {
+  margin-right: -0.34em;
+}
+
+.themeLead::before,
+.themeLead::after {
+  content: "";
+  width: calc(var(--t3) * 1.1);
+  height: max(6px, calc(var(--t4) * 0.44));
+  background: repeating-linear-gradient(to bottom, currentColor 0 17%, transparent 17% 41.5%);
+  opacity: 0.8;
+}
+
+.themeMain {
+  display: block;
+  margin-top: var(--t5);
+  /* Mirrors the tracking after the K, so the word sits on the centre line. */
+  padding-left: 0.1em;
+  font-family: var(--f-caps);
+  font-size: calc(var(--t2) / 0.7);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f2d6a2;
+  /* A filter, not text-shadow: a text shadow would paint over the gilt. */
+  text-shadow: none;
+  filter: drop-shadow(0 2px 2px rgba(14, 12, 11, 0.75)) drop-shadow(0 0 26px rgba(14, 12, 11, 0.6));
+}
+
+/* Gilt: pale where the light catches the top, deepening to bronze. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .themeMain {
+    background: linear-gradient(to bottom, #fff3da 0%, #f2d6a2 35%, #deaa62 68%, #b87a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
 /* Tier 3: the date, set as a line of type between two rules. */
@@ -358,6 +410,13 @@
   background: linear-gradient(var(--mist-400), transparent);
 }
 
+/* Short screens: the lockup needs the room, and the page plainly scrolls. */
+@media (max-height: 760px) {
+  .cue {
+    display: none;
+  }
+}
+
 /* --- Tablets and phones: the lockup over the top, the giant below ------- */
 
 @media (max-width: 1023px) {
@@ -370,7 +429,7 @@
 
 @media (min-width: 641px) and (max-width: 1023px) {
   .copy {
-    --t1: min(7.2vw, 10.5svh);
+    --t1: min(7.2vw, 9.8svh);
   }
 }
 
@@ -398,7 +457,7 @@
   }
 
   .copy {
-    --t1: clamp(2.5rem, min(6vw, 10.5svh), 5.75rem);
+    --t1: clamp(2.5rem, min(6vw, 9.8svh), 5.75rem);
     justify-content: center;
     gap: var(--t2);
   }

@@ -87,7 +87,12 @@ export default function Hero({ underNav = false }: { underNav?: boolean }) {
             <h1 className={styles.title}>
               {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
               <img {...wordmark} alt="Infinito 2026" className={styles.wordmark} />
-              <span className={styles.theme}>Ruins of Ragnarök</span>
+              <span className={styles.theme}>
+                <span className={styles.themeLead}>
+                  <span>Ruins of</span>
+                </span>{" "}
+                <span className={styles.themeMain}>Ragnarök</span>
+              </span>
             </h1>
             <p className={styles.dates}>
               <span>9–11</span> October 2026
