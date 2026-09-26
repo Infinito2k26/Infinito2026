@@ -16,9 +16,28 @@ const NAV_ITEMS = [
   { label: "Merch", href: "/merch" },
 ];
 
-const Navbar = () => {
+const Navbar = ({
+  tone = "light",
+  overHero = false,
+}: {
+  tone?: "light" | "dark";
+  /** The landing hero runs up under it: transparent until the reader scrolls. */
+  overHero?: boolean;
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const dark = tone === "dark";
+
+  // Over the landing hero it sits transparent on the art, then turns to solid
+  // stone once the reader scrolls past the top of it.
+  useEffect(() => {
+    if (!dark || !overHero) return;
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [dark, overHero]);
 
   // Close the panel on navigation, otherwise it stays open over the new page.
   useEffect(() => {
@@ -38,7 +57,11 @@ const Navbar = () => {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav className={styles.navbar}>
+    <nav
+      className={`${styles.navbar} ${dark ? styles.navbarDark : ""} ${
+        dark && (!overHero || scrolled || menuOpen) ? styles.navbarDarkSolid : ""
+      }`}
+    >
       <div className={styles.navbar_inner}>
         <Link href="/" className={styles.brand} aria-label="Infinito 2026, home">
           <span className={styles.brandMark}>Infinito</span>

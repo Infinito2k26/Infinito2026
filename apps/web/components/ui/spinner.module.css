@@ -41,3 +41,12 @@
     clip-path: inset(50%);
     white-space: nowrap;
 }
+
+/* On the dark ground: an ember arc on a stone track. */
+:global(.ruins) .spinner {
+  color: var(--ember-500);
+}
+
+:global(.ruins) .track {
+  stroke: var(--char-700);
+}

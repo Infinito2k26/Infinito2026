@@ -1,170 +1,504 @@
+/* ---------------------------------------------------------------------------
+   Landing hero — Surtr, the fire giant, igniting.
+
+   ScrollScene writes --progress (0 → 1 across the whole section). The scene is
+   pinned (.pin is sticky) for the first --hero-run of scroll, and --lit rises
+   0 → 1 over that stretch: the painting starts as smouldering embers and
+   catches fire outward from the giant's burning sword.
+   ------------------------------------------------------------------------- */
+
 .hero {
+  --hero-h: min(max(100svh, 640px), 1180px);
+  --hero-run: 70vh;
+  --lit: clamp(0.1, calc(var(--progress, 0) / 0.34), 1);
+  /* The painting, hero-ragnarok.jpg (1672×941): its anchor (--fx, --fy, as
+     fractions of the art) lands at (--at-x, --at-y) in the hero. The stage is
+     --stage-h × the hero's height, and at least --stage-w × the viewport's
+     width. --fx 0.676 is the giant's middle. --core-x / --core-y: the sword's
+     crossguard, where fire starts. */
+  --ratio: 1.777;
+  --stage-h: 0.9;
+  --stage-w: 1.6;
+  --fx: 0.676;
+  --fy: 0;
+  --at-x: 50%;
+  --at-y: 24%;
+  --core-x: 65%;
+  --core-y: 50%;
   position: relative;
-  background: var(--bone-100);
+  height: calc(var(--hero-h) + var(--hero-run));
+  background: var(--abyss-950);
 }
+
+.pin {
+  position: sticky;
+  top: 0;
+  height: var(--hero-h);
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 60% 45% at 55% 30%, rgba(94, 15, 17, 0.5), rgba(94, 15, 17, 0) 70%),
+    var(--abyss-950);
+}
+
+/* Pages with a solid navbar above the hero (the dashboard): pin below it. */
+.belowNav .pin {
+  top: var(--navbar-h);
+}
+
+/* --- Painting ------------------------------------------------------------ */
 
 .artWrap {
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
-.art {
-  width: 100%;
-  height: auto;
+.stage {
+  position: absolute;
+  left: var(--at-x);
+  top: var(--at-y);
+  height: max(calc(var(--stage-h) * 100%), calc(var(--stage-w) * 100vw / var(--ratio)));
+  aspect-ratio: var(--ratio);
+  translate: calc(var(--fx) * -100%) calc(var(--fy) * -100%);
+  /* Rises and looms a little as it ignites. */
+  transform: translateY(calc(var(--lit) * -2%)) scale(calc(1 + var(--lit) * 0.05));
+  transform-origin: var(--core-x) var(--core-y);
+  /* Narrow screens show a slice of the painting below the title: its edges
+     dissolve into the abyss instead of stopping hard. Desktop is full-bleed
+     and keeps only the top fade (under the navbar). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%),
+    linear-gradient(to right, transparent 0%, #000 20%, #000 82%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 12%),
+    linear-gradient(to right, transparent 0%, #000 20%, #000 82%, transparent 100%);
+  mask-composite: intersect;
+  animation: approach 14s var(--ease) both;
+  will-change: transform;
+}
+
+@keyframes approach {
+  from { scale: 1.08; }
+  to { scale: 1; }
+}
+
+.art,
+.lit {
+  position: absolute;
+  inset: 0;
   display: block;
-  transform: scale(1.06);
-  animation: kenburns 14s var(--ease) forwards;
+  width: 100%;
+  height: 100%;
+  max-width: none;
 }
 
-@keyframes kenburns {
-  0% {
-    transform: scale(1.06) translateY(0);
-  }
-  100% {
-    transform: scale(1) translateY(0);
-  }
+/* Unlit: the same painting as embers — dark, desaturated, faintly warm. */
+.art {
+  filter: brightness(calc(0.38 + var(--lit) * 0.3)) saturate(0.75) contrast(1.1);
 }
 
-/* Embers drifting up out of the art's own ruined-arena band — pure CSS,
-   each span gets its own drift/speed/delay via nth-child so the rise never
-   looks synchronised. Confined to the lower third; never over faces. */
-.embers {
+/* Lit: full fire, revealed outward from the core as --lit rises. */
+.lit {
+  filter: saturate(1.15) contrast(1.06);
+  -webkit-mask-image: radial-gradient(
+    ellipse calc(var(--lit) * 95% + 1%) calc(var(--lit) * 125% + 1%) at var(--core-x) var(--core-y),
+    #000 40%,
+    rgba(0, 0, 0, 0.55) 68%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse calc(var(--lit) * 95% + 1%) calc(var(--lit) * 125% + 1%) at var(--core-x) var(--core-y),
+    #000 40%,
+    rgba(0, 0, 0, 0.55) 68%,
+    transparent 100%
+  );
+}
+
+/* The heart of the fire, breathing at the sword's crossguard. */
+.core {
   position: absolute;
-  inset: auto 0 0 0;
-  height: 42%;
+  left: var(--core-x);
+  top: var(--core-y);
+  width: 22%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 160, 0.75), rgba(240, 138, 74, 0.4) 35%, rgba(163, 39, 42, 0) 100%);
+  mix-blend-mode: screen;
+  opacity: calc(0.25 + var(--lit) * 0.75);
+  scale: calc(0.5 + var(--lit) * 0.7);
+  animation: flicker 2.4s ease-in-out infinite;
   pointer-events: none;
-  overflow: hidden;
 }
 
-.ember {
+@keyframes flicker {
+  0%, 100% { filter: brightness(1); }
+  30% { filter: brightness(1.25); }
+  45% { filter: brightness(0.85); }
+  70% { filter: brightness(1.1); }
+}
+
+/* Keeps the copy legible over the painting. */
+.scrim {
   position: absolute;
-  bottom: -4%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--ember-500);
-  box-shadow: 0 0 6px 1px var(--ember-500);
-  opacity: 0;
-  animation: ember-rise 6s ease-in infinite;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%),
+    radial-gradient(ellipse 90% 80% at 55% 45%, rgba(14, 12, 11, 0) 50%, rgba(14, 12, 11, 0.7) 100%);
+  pointer-events: none;
 }
 
-@keyframes ember-rise {
-  0% {
+/* --- Title ---------------------------------------------------------------- */
+
+/* The copy. Narrow screens: the lockup at the top, the actions at the bottom,
+   the giant between them. Desktop: all of it centred over the painting.
+
+   The lockup is tiered by the golden ratio. Tier 1 is the INFINITO letters,
+   and each line under them has capitals 1/φ the height of the line above: the
+   theme (tier 2: RAGNARÖK — its "Ruins of" lead-in sits at tier 4), the dates
+   (3), the credits (4). --t1 is the letters' height;
+   each face's font-size is its tier over that face's cap height (Grenze
+   Gotisch 0.62em, Bebas Neue 0.716em, Cinzel 0.7em), so it's the capitals
+   that step by φ, not the em boxes. The crest stands one step above tier 1,
+   the gaps step down with the type, and the buttons keep their own size:
+   they're controls, not titling.
+
+   Phones fit the lettering (8.6 × --t1 wide) to the column; wider screens
+   size it by the viewport, capped by its height so the lockup always fits. */
+.copy {
+  --phi: 1.618;
+  --t1: min(calc((100vw - 2 * var(--spacing-container)) / 8.605), 9.8svh);
+  --t2: calc(var(--t1) / var(--phi));
+  --t3: calc(var(--t2) / var(--phi));
+  --t4: calc(var(--t3) / var(--phi));
+  --t5: calc(var(--t4) / var(--phi));
+  position: absolute;
+  z-index: 4;
+  inset: calc(var(--navbar-h) + clamp(1.75rem, 6vh, 4rem)) var(--spacing-container)
+    clamp(4.5rem, 11vh, 7rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  transform: translateY(calc(var(--progress-ease, 0) * -10vh));
+  /* Burnt away as the giant ignites. */
+  opacity: calc(1 - var(--progress, 0) * 2.6);
+  will-change: transform, opacity;
+}
+
+.copy > * {
+  pointer-events: auto;
+}
+
+/* One quiet entrance: the words, then the actions. `backwards` so the scroll
+   exit above takes over again once it has played. */
+.titleBlock,
+.actions {
+  animation: copy-in 700ms var(--ease) 120ms backwards;
+}
+
+.actions {
+  animation-delay: 320ms;
+}
+
+@keyframes copy-in {
+  from {
     opacity: 0;
-    transform: translate(0, 0) scale(0.6);
-  }
-  12% {
-    opacity: 0.9;
-  }
-  85% {
-    opacity: 0.35;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--drift, 12px), -220%) scale(1.1);
+    transform: translateY(10px);
   }
 }
 
-.ember:nth-child(1) { left: 6%;  animation-delay: 0s;   animation-duration: 5.5s; --drift: 10px; }
-.ember:nth-child(2) { left: 18%; animation-delay: 1.1s; animation-duration: 6.8s; --drift: -14px; }
-.ember:nth-child(3) { left: 30%; animation-delay: 2.4s; animation-duration: 5.2s; --drift: 8px; }
-.ember:nth-child(4) { left: 42%; animation-delay: 0.6s; animation-duration: 7.4s; --drift: -6px; }
-.ember:nth-child(5) { left: 58%; animation-delay: 3.1s; animation-duration: 6.1s; --drift: 16px; }
-.ember:nth-child(6) { left: 70%; animation-delay: 1.8s; animation-duration: 5.9s; --drift: -10px; }
-.ember:nth-child(7) { left: 82%; animation-delay: 4s;   animation-duration: 6.6s; --drift: 12px; }
-.ember:nth-child(8) { left: 94%; animation-delay: 0.3s; animation-duration: 7.1s; --drift: -18px; }
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 
-/* The actions sit in the dark ruin band along the bottom of every crop, which is
-   the only region of the art with guaranteed contrast. On phones the mobile crop
-   is 4:5 and tall, so they drop below the image instead of over it. */
+/* Dark halos, not glows: they keep the lockup off the fire behind it. */
+.crest,
+.wordmark {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1px 2px rgba(14, 12, 11, 0.6)) drop-shadow(0 0 28px rgba(14, 12, 11, 0.6));
+}
+
+/* The dragon-infinity crest: one step above tier 1 (1.814 is its aspect). */
+.crest {
+  width: calc(var(--t1) * var(--phi) * 1.814);
+  margin-bottom: var(--t4);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: inherit;
+  text-shadow: 0 1px 2px rgba(14, 12, 11, 0.6), 0 0 36px rgba(14, 12, 11, 0.55);
+}
+
+/* Tier 1. The letters fill 77% of the image's height (the torch, the raven
+   and the dragons rise above them) and it's 6.626 times as wide as it is
+   tall: 8.605 × --t1 wide makes the letters themselves --t1 tall. */
+.wordmark {
+  width: calc(var(--t1) * 8.605);
+}
+
+/* Tier 2: the theme, set the way the Figma lockup sets it — roman capitals,
+   a "Ruins of" lead-in between triple rules, and RAGNARÖK in gilt. The
+   capitals echo the lettering's columns and the gold its crest. */
+.theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: var(--t3);
+}
+
+.themeLead {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t4) * 0.8);
+  font-family: var(--f-caps);
+  font-size: calc(var(--t4) / 0.7);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #ebd0aa; /* the crest's sand */
+}
+
+/* Tracking trails the last letter too; pulled back so the rules sit evenly. */
+.themeLead > span {
+  margin-right: -0.34em;
+}
+
+.themeLead::before,
+.themeLead::after {
+  content: "";
+  width: calc(var(--t3) * 1.1);
+  height: max(6px, calc(var(--t4) * 0.44));
+  background: repeating-linear-gradient(to bottom, currentColor 0 17%, transparent 17% 41.5%);
+  opacity: 0.8;
+}
+
+.themeMain {
+  display: block;
+  margin-top: var(--t5);
+  /* Mirrors the tracking after the K, so the word sits on the centre line. */
+  padding-left: 0.1em;
+  font-family: var(--f-caps);
+  font-size: calc(var(--t2) / 0.7);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f2d6a2;
+  /* A filter, not text-shadow: a text shadow would paint over the gilt. */
+  text-shadow: none;
+  filter: drop-shadow(0 2px 2px rgba(14, 12, 11, 0.75)) drop-shadow(0 0 26px rgba(14, 12, 11, 0.6));
+}
+
+/* Gilt: pale where the light catches the top, deepening to bronze. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .themeMain {
+    background: linear-gradient(to bottom, #fff3da 0%, #f2d6a2 35%, #deaa62 68%, #b87a38 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Tier 3: the date, set as a line of type between two rules. */
+.dates {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t3) * 0.5);
+  max-width: none;
+  margin-top: var(--t4);
+  font-family: var(--f-sport);
+  font-size: calc(var(--t3) / 0.716);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-200);
+}
+
+.dates::before,
+.dates::after {
+  content: "";
+  width: calc(var(--t3) * 1.2);
+  height: max(2px, calc(var(--t3) * 0.06));
+  background: var(--crimson-600);
+}
+
+.dates span {
+  color: var(--bone-50);
+}
+
+/* Tier 4: who hosts it, and which edition it is. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t4) * 0.75);
+  max-width: none;
+  margin-top: var(--t5);
+  font-family: var(--f-caps);
+  font-size: calc(var(--t4) / 0.7);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist-400);
+}
+
+.kicker i {
+  width: calc(var(--t4) * 0.32);
+  aspect-ratio: 1;
+  background: var(--crimson-600);
+  transform: rotate(45deg);
+}
+
+/* --- Flames -------------------------------------------------------------- */
+
+.flames {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 42%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: calc(0.2 + var(--lit) * 0.55);
+}
+
+/* --- Actions -------------------------------------------------------------- */
+
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 0.75rem;
   justify-content: center;
-  padding: var(--space-5) var(--spacing-container) var(--space-6);
-  background: var(--char-900);
 }
 
-@media (min-width: 769px) {
-  .actions {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: clamp(1.5rem, 4vw, 3.5rem);
-    background: transparent;
-    padding-block: 0;
-  }
-}
+/* --- Scroll cue ----------------------------------------------------------- */
 
-.primary,
-.secondary {
-  font-family: var(--f-caps);
-  font-size: var(--fs-small);
-  font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  padding: 0.875rem 1.5rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  min-height: 44px;
-  display: inline-flex;
+.cue {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  opacity: 0;
-  transform: translateY(16px);
-  animation: cta-enter 700ms var(--ease) forwards;
-  transition: background var(--t-state) var(--ease),
-    color var(--t-state) var(--ease), border-color var(--t-state) var(--ease),
-    transform var(--t-state) var(--ease), box-shadow var(--t-state) var(--ease);
+  gap: 0.5rem;
+  font-family: var(--f-caps);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
+  text-transform: uppercase;
+  color: var(--mist-400);
+  opacity: calc(1 - var(--progress, 0) * 12);
 }
 
-.primary {
-  animation-delay: 900ms;
+.cue i {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(var(--mist-400), transparent);
 }
 
-.secondary {
-  animation-delay: 1050ms;
-}
-
-@keyframes cta-enter {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Short screens: the lockup needs the room, and the page plainly scrolls. */
+@media (max-height: 760px) {
+  .cue {
+    display: none;
   }
 }
 
-.primary {
-  background: var(--crimson-700);
-  color: var(--bone-100);
-  border-color: var(--crimson-700);
+/* --- Tablets and phones: the lockup over the top, the giant below ------- */
+
+@media (max-width: 1023px) {
+  .scrim {
+    background:
+      linear-gradient(to bottom, var(--abyss-950) 0%, rgba(14, 12, 11, 0.75) 26%, rgba(14, 12, 11, 0) 46%),
+      linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%);
+  }
 }
 
-.primary:hover {
-  background: var(--crimson-600);
-  border-color: var(--crimson-600);
-  color: var(--bone-50);
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 4px rgba(212, 98, 47, 0.22), 0 8px 20px rgba(36, 31, 30, 0.25);
+@media (min-width: 641px) and (max-width: 1023px) {
+  .copy {
+    --t1: min(7.2vw, 9.8svh);
+  }
 }
 
-.secondary:hover {
-  transform: translateY(-2px);
+/* --- Desktop: the lockup centred over the giant ------------------------- */
+
+@media (min-width: 1024px) {
+  .hero {
+    --stage-h: 1;
+    --stage-w: 1;
+    --fx: 0.5;
+    --at-x: 50%;
+    --at-y: 0%;
+  }
+
+  .stage {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 12%);
+  }
+
+  /* The dark gathers behind the lockup rather than coming in from a side. */
+  .scrim {
+    background:
+      radial-gradient(ellipse 44% 50% at 50% 50%, rgba(14, 12, 11, 0.66), rgba(14, 12, 11, 0.3) 58%, rgba(14, 12, 11, 0) 100%),
+      linear-gradient(to bottom, rgba(14, 12, 11, 0) 70%, var(--abyss-950) 100%);
+  }
+
+  .copy {
+    --t1: clamp(2.5rem, min(6vw, 9.8svh), 5.75rem);
+    justify-content: center;
+    gap: var(--t2);
+  }
 }
 
-.secondary {
-  background: rgba(27, 23, 21, 0.55);
-  color: var(--bone-100);
-  border-color: var(--bone-300);
-  backdrop-filter: blur(6px);
+/* --- Phones -------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .hero {
+    --hero-h: max(100svh, 620px);
+    --hero-run: 60vh;
+    --stage-h: 0.95;
+    --stage-w: 0;
+    --at-y: 30%;
+  }
+
+  .copy {
+    top: calc(var(--navbar-h) + 4vh);
+    bottom: 4rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .cue {
+    display: none;
+  }
 }
 
-.secondary:hover {
-  background: var(--bone-100);
-  color: var(--char-900);
-}
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    --lit: 1;
+  }
 
-.primary:focus-visible,
-.secondary:focus-visible {
-  outline: 2px solid var(--ember-300);
-  outline-offset: 3px;
+  .stage,
+  .core,
+  .titleBlock,
+  .actions {
+    animation: none;
+  }
 }

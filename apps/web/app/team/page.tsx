@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserCircle } from "lucide-react";
 
 import PublicLayout from "@/components/layout/public-layout";
-import Card from "@/components/ui/card";
+import PageHead from "@/components/layout/page-head";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
+import page from "@/components/layout/page.module.css";
 import styles from "./team.module.css";
 
 interface TeamMember {
@@ -22,6 +22,15 @@ interface Department {
     department: string;
     members: TeamMember[];
 }
+
+// Until a photo is uploaded, the portrait shows the member's initials.
+const initials = (name: string) =>
+    name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word[0]!.toUpperCase())
+        .join("");
 
 export default function TeamPage() {
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -48,50 +57,50 @@ export default function TeamPage() {
 
     return (
         <PublicLayout>
-            <header className={styles.header}>
-                <p className="eyebrow">Who runs it</p>
-                <h1 className={`${styles.pageTitle} glow`}>Team</h1>
-                <p className={styles.pageSubtitle}>
-                    The people behind Infinito 2K26.
-                </p>
-            </header>
+            <PageHead eyebrow="Who runs it" title="Team">
+                <p className={page.lede}>The people behind Infinito 2K26.</p>
+            </PageHead>
 
-            {isLoading ? (
-                <SectionSpinner message="Loading team..." />
-            ) : error ? (
-                <ErrorState description={error} onRetry={fetchTeam} />
-            ) : departments.length === 0 ? (
-                <EmptyState
-                    title="Team not published yet"
-                    description="Check back soon."
-                />
-            ) : (
-                departments.map((dept) => (
-                    <section key={dept.department} className={styles.section}>
-                        <h2 className={styles.deptTitle}>{dept.department}</h2>
-                        <div className={styles.grid}>
-                            {dept.members.map((member) => (
-                                <Card key={member.id} className={styles.memberCard}>
-                                    <div className={styles.photoWrap}>
-                                        {member.photoUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={member.photoUrl}
-                                                alt={member.name}
-                                                className={styles.photo}
-                                            />
-                                        ) : (
-                                            <UserCircle size={40} className={styles.photoFallback} />
-                                        )}
-                                    </div>
-                                    <p className={styles.memberName}>{member.name}</p>
-                                    {member.role && <p className={styles.memberRole}>{member.role}</p>}
-                                </Card>
-                            ))}
-                        </div>
-                    </section>
-                ))
-            )}
+            <div className={page.body}>
+                {isLoading ? (
+                    <SectionSpinner message="Loading team..." />
+                ) : error ? (
+                    <ErrorState description={error} onRetry={fetchTeam} />
+                ) : departments.length === 0 ? (
+                    <EmptyState
+                        title="Team not published yet"
+                        description="Check back soon."
+                    />
+                ) : (
+                    departments.map((dept) => (
+                        <section key={dept.department} className={styles.section}>
+                            <h2 className={page.groupLabel}>{dept.department}</h2>
+                            <ul className={styles.roster}>
+                                {dept.members.map((member) => (
+                                    <li key={member.id} className={styles.member}>
+                                        <div className={styles.portrait}>
+                                            {member.photoUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={member.photoUrl}
+                                                    alt={member.name}
+                                                    className={styles.photo}
+                                                />
+                                            ) : (
+                                                <span className={styles.initials} aria-hidden="true">
+                                                    {initials(member.name)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className={styles.memberName}>{member.name}</p>
+                                        {member.role && <p className={styles.memberRole}>{member.role}</p>}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    ))
+                )}
+            </div>
         </PublicLayout>
     );
 }

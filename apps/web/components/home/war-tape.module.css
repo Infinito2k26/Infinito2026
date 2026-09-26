@@ -1,0 +1,41 @@
+/* A straight band between the hero and the numbers. Stone on the abyss, the
+   names in the broadcast face, crimson only in the small separators. It moves
+   with the scroll and not otherwise. */
+
+.tape {
+  position: relative;
+  overflow: hidden;
+  padding: 0.9375rem 0 0.8125rem;
+  background: var(--char-800);
+  border-block: 1px solid var(--char-700);
+  pointer-events: none;
+}
+
+.run {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  font-family: var(--f-sport);
+  font-size: clamp(1.125rem, 1.7vw, 1.4375rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mist-400);
+  transform: translateX(calc(-6% - var(--progress, 0) * 16%));
+}
+
+.run span {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.375rem;
+  padding-right: 1.375rem;
+}
+
+/* Sits on the cap height's midline, not the baseline. */
+.run i {
+  width: 5px;
+  height: 5px;
+  margin-top: -0.12em;
+  background: var(--crimson-600);
+  transform: rotate(45deg);
+}

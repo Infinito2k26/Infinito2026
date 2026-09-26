@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import PublicLayout from "@/components/layout/public-layout";
+import PageHead from "@/components/layout/page-head";
 import SportsGrid from "@/components/sports/sports-grid";
 import { SPORTS } from "@/lib/sports";
-import styles from "./sports.module.css";
+import page from "@/components/layout/page.module.css";
 
 export const metadata: Metadata = {
     title: "Sports",
@@ -13,14 +14,12 @@ export const metadata: Metadata = {
 export default function SportsPage() {
     return (
         <PublicLayout>
-            <header className={styles.header}>
-                <p className="eyebrow">The battlefield awaits</p>
-                <h1 className={`${styles.title} glow`}>Choose your sport</h1>
-                <p className={styles.description}>
+            <PageHead eyebrow="The battlefield awaits" title="Choose your sport">
+                <p className={page.lede}>
                     Team and individual events across three categories. Pick your
                     ground, gather your side, and register before entries close.
                 </p>
-            </header>
+            </PageHead>
 
             <SportsGrid sports={SPORTS} />
         </PublicLayout>

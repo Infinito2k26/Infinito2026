@@ -3,9 +3,10 @@
    ----------------------------------------------------------------------------
    Every colour here is sampled from the official key art in /public. The art is
    LIGHT: a bone sky with charcoal figures, crimson blackletter, and an ember-lit
-   band of ruin along the bottom. So the site is light-themed throughout, and
-   dark is only ever used as a deliberate band (footer, credential pass, gate
-   scanner). There is no dark mode and no theme toggle — do not add one.
+   band of ruin along the bottom. The app (dashboard, admin) is bone. The
+   public site is the ruins after dark: everything inside PublicLayout sits in
+   the `.ruins` scope below, which redefines the role tokens. There is no dark
+   mode and no theme toggle — do not add one.
 
    Plan: .claude/plans/ui-design-ruins-of-ragnarok.md
    ========================================================================== */
@@ -36,11 +37,24 @@
   --char-700: #38302c;
   --char-500: #6b5f56;
 
+  /* --- Ruin: the public site's dark ground (`.ruins`). Deeper than
+     char-900 so the charcoal slabs read as stone laid on the abyss. ------- */
+  --abyss-950: #0e0c0b;
+  --char-750: #2e2724;
+  --stone-600: #4f443d;
+
   /* --- Semantic text ----------------------------------------------------- */
   --text: var(--char-800);
   --text-muted: var(--char-500);
   --text-faint: var(--mist-400);
   --text-on-dark: var(--bone-100);
+
+  /* --- Roles. Headings, links and focus by what they do rather than their
+     colour; `.ruins` points them at the dark palette. -------------------- */
+  --heading: var(--crimson-800);
+  --link: var(--crimson-700);
+  --link-hover: var(--crimson-600);
+  --focus: var(--crimson-700);
 
   /* --- Status. Desaturated so they sit inside the palette. --------------- */
   --ok: #4a6b3f;
@@ -61,6 +75,9 @@
   --f-display: var(--font-display), "Grenze Gotisch", Georgia, serif;
   --f-caps: var(--font-caps), "Cinzel", Georgia, serif;
   --f-ui: var(--font-ui), "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+  /* Condensed sans for sport data only — numbers, countdown, sport names.
+     Myth stays blackletter; the fixtures read like a broadcast. */
+  --f-sport: var(--font-sport), "Bebas Neue", "Oswald", Impact, sans-serif;
 
   --fs-display: clamp(2.25rem, 7vw, 4.5rem);
   --fs-h1: clamp(1.75rem, 4.6vw, 3rem);
@@ -205,7 +222,7 @@ h6 {
 h1,
 h2 {
   font-family: var(--f-display);
-  color: var(--crimson-800);
+  color: var(--heading);
   line-height: var(--lh-tight);
 }
 
@@ -222,7 +239,7 @@ h3 {
   font-size: var(--fs-h3);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--crimson-800);
+  color: var(--heading);
 }
 
 h4,
@@ -240,13 +257,13 @@ p {
 }
 
 a {
-  color: var(--crimson-700);
+  color: var(--link);
   text-decoration: none;
   transition: color var(--t-state) var(--ease);
 }
 
 a:hover {
-  color: var(--crimson-600);
+  color: var(--link-hover);
 }
 
 button,
@@ -295,7 +312,7 @@ table {
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--crimson-700);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -343,6 +360,71 @@ table {
 /* The halo behind the blackletter in the source art. */
 .glow {
   text-shadow: 0 0 20px var(--glow-200), 0 0 48px rgba(247, 217, 184, 0.65);
+}
+
+/* ============================================================================
+   The ruins — the public site's dark ground (applied by PublicLayout).
+
+   Redefines the role and alias tokens for everything inside it, so shared
+   components that read them (empty and error states, spinners, hairlines,
+   status colours) come out right on stone. Components that use raw bone and
+   charcoal carry their own `:global(.ruins)` overrides in their modules. The
+   dashboard and admin never enter this scope.
+   ========================================================================== */
+
+.ruins {
+  --text: var(--bone-100);
+  --text-muted: var(--mist-400);
+  --text-faint: var(--char-500);
+  --heading: var(--bone-100);
+  --link: var(--ember-300);
+  --link-hover: var(--glow-200);
+  --focus: var(--ember-300);
+
+  --hairline: 1px solid var(--char-700);
+  --shadow-sm: none;
+  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.45);
+
+  /* Status, lifted to read on stone. */
+  --ok: #93b482;
+  --ok-bg: rgba(74, 107, 63, 0.2);
+  --warn: #e3b567;
+  --warn-bg: rgba(163, 112, 28, 0.2);
+  --err: #e46c62;
+  --err-bg: rgba(163, 39, 42, 0.22);
+  --info: #a3b8c6;
+  --info-bg: rgba(63, 90, 107, 0.25);
+
+  --color-bg-primary: var(--char-900);
+  --color-bg-secondary: var(--char-750);
+  --color-surface: var(--char-800);
+  --color-text-primary: var(--bone-100);
+  --color-text-secondary: var(--mist-400);
+  --color-border: var(--char-700);
+  --color-danger: #e46c62;
+  --color-error: #e46c62;
+  --color-bg-secondary-rgb: 46, 39, 36;
+
+  /* Native controls — select menus, number spinners, scrollbars — in dark. */
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--char-900);
+}
+
+/* The bone halo only makes sense on bone; on stone the eyebrow needs the
+   lighter ember to hold its contrast. */
+.ruins .glow {
+  text-shadow: none;
+}
+
+.ruins .eyebrow {
+  color: var(--ember-300);
+}
+
+.ruins ::selection {
+  background: var(--crimson-700);
+  color: var(--bone-50);
 }
 
 /* ============================================================================

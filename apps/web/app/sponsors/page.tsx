@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 
 import PublicLayout from "@/components/layout/public-layout";
-import Card from "@/components/ui/card";
-import Badge from "@/components/ui/badge";
+import PageHead from "@/components/layout/page-head";
 import { SectionSpinner } from "@/components/ui/section-spinner";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
+import page from "@/components/layout/page.module.css";
 import styles from "./sponsors.module.css";
 
 type SponsorTier = "TITLE" | "GOLD" | "SILVER" | "BRONZE" | "ASSOCIATE";
@@ -53,45 +53,47 @@ export default function SponsorsPage() {
 
     return (
         <PublicLayout>
-            <header className={styles.header}>
-                <p className="eyebrow">Made possible by</p>
-                <h1 className={`${styles.pageTitle} glow`}>Sponsors</h1>
-                <p className={styles.pageSubtitle}>
-                    Infinito 2K26 is made possible by our sponsors.
-                </p>
-            </header>
+            <PageHead eyebrow="Made possible by" title="Sponsors">
+                <p className={page.lede}>Infinito 2K26 is made possible by our sponsors.</p>
+            </PageHead>
 
-            {isLoading ? (
-                <SectionSpinner message="Loading sponsors..." />
-            ) : error ? (
-                <ErrorState description={error} onRetry={fetchSponsors} />
-            ) : sponsors.length === 0 ? (
-                <EmptyState
-                    title="Sponsors coming soon"
-                    description="Check back soon."
-                />
-            ) : (
-                <div className={styles.grid}>
-                    {sponsors.map((sponsor) => (
-                        <Card key={sponsor.id} className={styles.sponsorCard}>
-                            <Badge variant="info">{TIER_LABEL[sponsor.tier]}</Badge>
-                            <div className={styles.logoWrap}>
-                                {sponsor.logoUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={sponsor.logoUrl}
-                                        alt={sponsor.name}
-                                        className={styles.logo}
-                                    />
-                                ) : (
-                                    <span className={styles.logoFallback}>{sponsor.name}</span>
-                                )}
-                            </div>
-                            <p className={styles.sponsorName}>{sponsor.name}</p>
-                        </Card>
-                    ))}
-                </div>
-            )}
+            <div className={page.body}>
+                {isLoading ? (
+                    <SectionSpinner message="Loading sponsors..." />
+                ) : error ? (
+                    <ErrorState description={error} onRetry={fetchSponsors} />
+                ) : sponsors.length === 0 ? (
+                    <EmptyState
+                        title="Sponsors coming soon"
+                        description="Check back soon."
+                    />
+                ) : (
+                    <ul className={styles.grid}>
+                        {sponsors.map((sponsor) => (
+                            <li key={sponsor.id} className={styles.sponsor}>
+                                <p
+                                    className={`${styles.tier} ${sponsor.tier === "TITLE" ? styles.tierTitle : ""}`}
+                                >
+                                    {TIER_LABEL[sponsor.tier]}
+                                </p>
+                                <div className={styles.plate}>
+                                    {sponsor.logoUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={sponsor.logoUrl}
+                                            alt={sponsor.name}
+                                            className={styles.logo}
+                                        />
+                                    ) : (
+                                        <span className={styles.logoFallback}>{sponsor.name}</span>
+                                    )}
+                                </div>
+                                <p className={styles.sponsorName}>{sponsor.name}</p>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </PublicLayout>
     );
 }

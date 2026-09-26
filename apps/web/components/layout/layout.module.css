@@ -558,3 +558,123 @@
   text-transform: uppercase;
   color: var(--char-500);
 }
+
+/* ------------------------------------------------ Dark tone (public site) -- */
+/* Every public page. On the landing page the hero runs up under a transparent
+   navbar, which turns to solid stone once the reader scrolls; elsewhere the
+   navbar is solid from the start. */
+
+.publicShellDark {
+  background: var(--char-900);
+}
+
+.publicMainLanding {
+  padding-top: 0;
+}
+
+.navbarDark {
+  border-bottom-color: transparent;
+  transition: border-color var(--t-reveal) var(--ease);
+}
+
+.navbarDark .navbar_inner {
+  max-width: none;
+  padding-inline: clamp(1rem, 3.4vw, 3rem);
+  background: linear-gradient(to bottom, rgba(14, 12, 11, 0.85), rgba(14, 12, 11, 0));
+  backdrop-filter: none;
+  transition: background var(--t-reveal) var(--ease);
+}
+
+.navbarDarkSolid {
+  border-bottom-color: var(--char-700);
+}
+
+/* Near-opaque, so a blur behind it would be invisible work. */
+.navbarDarkSolid .navbar_inner {
+  background: rgba(14, 12, 11, 0.96);
+}
+
+.navbarDark .brand {
+  color: var(--bone-100);
+}
+
+.navbarDark .brandSub {
+  color: var(--ember-300);
+}
+
+.navbarDark .navbar_item {
+  color: var(--mist-400);
+}
+
+.navbarDark .navbar_item:hover,
+.navbarDark .navbar_item_active {
+  color: var(--bone-100);
+}
+
+.navbarDark .navbar_item_active::after {
+  left: 50%;
+  right: auto;
+  width: 22px;
+  transform: translateX(-50%) skewX(-24deg);
+}
+
+.navbarDark .navbar_signup {
+  border: 1px solid var(--crimson-600);
+}
+
+.navbarDark .navbar_item:focus-visible,
+.navbarDark .navbar_signup:focus-visible,
+.navbarDark .brand:focus-visible {
+  outline: 2px solid var(--ember-300);
+  outline-offset: 4px;
+}
+
+.navbarDark .hamburger span {
+  background-color: var(--bone-100);
+}
+
+@media (max-width: 1100px) {
+  .navbarDark .mobile_menu_active {
+    background: var(--abyss-950);
+    border-top-color: var(--char-700);
+  }
+
+  .navbarDark .mobile_menu_item {
+    color: var(--bone-200);
+    border-bottom-color: var(--char-700);
+  }
+
+  .navbarDark .mobile_menu_item_active {
+    color: var(--bone-50);
+  }
+
+  .navbarDark .mobile_menu_login {
+    border-color: var(--stone-600);
+    color: var(--bone-100);
+  }
+}
+
+.footerDark {
+  background: var(--abyss-950);
+  border-top: 1px solid var(--char-700);
+}
+
+/* On a dark page the skyline is the footer's own abyss rising into the page;
+   it replaces the footer's top rule rather than sitting on it. */
+.footerRidgeDark {
+  color: var(--abyss-950);
+}
+
+.footerDark:has(.footerRidgeDark) {
+  border-top-color: transparent;
+}
+
+.footerDark .footer_bottom {
+  border-top-color: var(--char-700);
+}
+
+/* The sign-off: a line of caps like the rest of the bar, one step lighter
+   than the links rather than a crimson that fails contrast at this size. */
+.footerDark .footer_bottom_text:last-child {
+  color: var(--mist-400);
+}

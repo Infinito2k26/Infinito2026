@@ -1,17 +1,18 @@
 import React from 'react';
 
 import PublicLayout from '@/components/layout/public-layout';
+import PageHead from '@/components/layout/page-head';
+import page from '@/components/layout/page.module.css';
 
 import styles from '../privacy-policy/privacy-policy.module.css';
 
 export default function RegistrationGuidelinesPage() {
     return (
         <PublicLayout>
-            <div className={styles.pageWrapper}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Registration Guidelines</h1>
-                    <p className={styles.updated}>Infinito 2K26 — IIT Patna</p>
-                </div>
+            <PageHead title="Registration Guidelines">
+                <p className={page.lede}>Infinito 2K26 — IIT Patna</p>
+            </PageHead>
+            <div className={page.body}>
                 <div className={styles.content}>
                     <p>
                         Registration fees for participants for Infinito 2026 are mentioned in the brochure.

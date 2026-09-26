@@ -84,3 +84,37 @@
   font-size: var(--fs-small);
   color: var(--char-500);
 }
+
+/* --- On the dark ground (`.ruins`): a well cut into the stone ------------- */
+
+:global(.ruins) .label {
+  color: var(--mist-400);
+}
+
+:global(.ruins) .input {
+  color: var(--bone-100);
+  background: var(--abyss-950);
+  border-color: var(--char-700);
+}
+
+:global(.ruins) .input::placeholder {
+  color: var(--char-500);
+}
+
+:global(.ruins) .input:hover:not(:disabled) {
+  border-color: var(--stone-600);
+}
+
+:global(.ruins) .input:focus {
+  border-color: var(--ember-500);
+  box-shadow: 0 0 0 3px rgba(212, 98, 47, 0.18);
+}
+
+:global(.ruins) .input:disabled {
+  background: var(--char-800);
+  color: var(--mist-400);
+}
+
+:global(.ruins) .hint {
+  color: var(--mist-400);
+}

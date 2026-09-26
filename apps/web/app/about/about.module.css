@@ -1,72 +1,96 @@
-.header {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: var(--space-8) var(--spacing-container) var(--space-4);
-    text-align: center;
-}
-
-.title {
-    margin-top: var(--space-2);
-}
+/* About: the numbers on a ruled strip (as on the landing page), then the
+   story as a single readable column on the page's content edge. */
 
 .stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-5) var(--space-4);
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: var(--space-5) var(--spacing-container);
-}
-
-@media (min-width: 640px) {
-    .stats {
-        grid-template-columns: repeat(4, 1fr);
-    }
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 1px solid var(--char-700);
+    margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
 }
 
 .stat {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-1);
-    text-align: center;
+    gap: 0.75rem;
+    padding: clamp(1.25rem, 2.6vw, 2rem) clamp(1rem, 2.4vw, 2rem);
+}
+
+.stat:nth-child(odd) {
+    padding-left: 0;
+}
+
+.stat:nth-child(even) {
+    border-left: 1px solid var(--char-700);
+}
+
+.stat:nth-child(n + 3) {
+    border-top: 1px solid var(--char-700);
+}
+
+@media (min-width: 640px) {
+    .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat:nth-child(odd) {
+        padding-left: clamp(1rem, 2.4vw, 2rem);
+    }
+
+    .stat:first-child {
+        padding-left: 0;
+    }
+
+    .stat:nth-child(n + 2) {
+        border-left: 1px solid var(--char-700);
+    }
+
+    .stat:nth-child(n + 3) {
+        border-top: none;
+    }
 }
 
 .statValue {
-    font-family: var(--f-display);
-    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
-    font-weight: 700;
-    line-height: 1;
-    color: var(--crimson-800);
-    font-variant-numeric: tabular-nums;
+    font-family: var(--f-sport);
+    font-size: clamp(3rem, 6vw, 4.75rem);
+    line-height: 0.85;
+    letter-spacing: 0.01em;
+    color: var(--bone-100);
 }
 
 .statLabel {
     font-family: var(--f-caps);
     font-size: var(--fs-micro);
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: var(--track-micro);
     text-transform: uppercase;
-    color: var(--char-500);
+    color: var(--mist-400);
 }
 
 .rule {
     max-width: 420px;
-    margin: 0 auto var(--space-7);
-    color: var(--char-500);
+    margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
+/* The story: one column at a reading measure, a touch dimmer than the
+   headings so long paragraphs don't glare on the dark. */
 .prose {
     max-width: var(--measure);
-    margin: 0 auto;
-    padding: 0 var(--spacing-container) var(--space-9);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    color: var(--char-800);
-    line-height: var(--lh-body);
+    gap: 1.125rem;
+    font-size: clamp(1rem, 1.15vw, 1.0625rem);
+    line-height: 1.75;
+    color: var(--bone-300);
 }
 
 .prose h2 {
-    margin-top: var(--space-3);
+    margin-top: 1.5rem;
+    font-size: clamp(1.75rem, 3vw, 2.375rem);
+    line-height: 1.05;
+    color: var(--bone-100);
+}
+
+.prose strong {
+    font-weight: 600;
+    color: var(--bone-50);
 }

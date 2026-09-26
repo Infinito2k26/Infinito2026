@@ -1,36 +1,10 @@
-.header {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: var(--space-8) var(--spacing-container) var(--space-5);
-}
-
-.title {
-    margin-top: var(--space-2);
-}
-
-.description {
-    margin-top: var(--space-3);
-    color: var(--text-muted);
-    max-width: 52ch;
-}
-
-.controls {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: 0 var(--spacing-container) var(--space-4);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--bone-300);
-    margin-bottom: var(--space-5);
-}
+/* The events wall. Page chrome (head, column, toolbar, chips) comes from
+   components/layout/page.module.css. */
 
 .search {
     position: relative;
     flex: 1 1 240px;
-    max-width: 320px;
+    max-width: 340px;
 }
 
 .searchIcon {
@@ -46,73 +20,43 @@
     padding-left: 2.5rem;
 }
 
-.filterGroup {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.filter {
-    font-family: var(--f-caps);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--char-500);
-    background: transparent;
-    border: 1px solid var(--bone-300);
-    border-radius: var(--radius-full);
-    padding: 0.5rem 0.9375rem;
-    min-height: 36px;
-    transition: color var(--t-state) var(--ease),
-        border-color var(--t-state) var(--ease),
-        background var(--t-state) var(--ease);
-}
-
-.filter:hover {
-    color: var(--char-800);
-    border-color: var(--mist-400);
-}
-
-.filterActive {
-    background: var(--crimson-700);
-    border-color: var(--crimson-700);
-    color: var(--bone-100);
-}
-
-.filterActive:hover {
-    color: var(--bone-50);
-    border-color: var(--crimson-600);
-    background: var(--crimson-600);
-}
-
 .grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: 0 var(--spacing-container) var(--space-9);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-    gap: var(--space-4);
+    gap: clamp(0.875rem, 1.6vw, 1.25rem);
+    margin-top: var(--space-5);
 }
 
-/* Fallback card for events whose sport has no poster art yet — a bone card
-   with the sport's engraved icon standing in, same base-strip structure as
-   PosterCard so it doesn't look like a broken tile in the grid. */
+/* Two to a row on a phone, like the landing page's bills. */
+@media (max-width: 559px) {
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* For an event whose sport has no poster yet: the same card, the sport's
+   engraved icon standing in for the art, so it reads as a card still to be
+   printed rather than a broken tile. */
 .fallbackCard {
     display: flex;
     flex-direction: column;
-    border: var(--hairline);
-    border-radius: var(--radius-sm);
     overflow: hidden;
-    background: var(--bone-50);
-    box-shadow: var(--shadow-sm);
     color: inherit;
-    transition: box-shadow var(--t-enter) var(--ease),
-        transform var(--t-enter) var(--ease);
+    background: var(--char-800);
+    border: 1px solid var(--char-700);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--t-state) var(--ease), box-shadow var(--t-state) var(--ease);
 }
 
 .fallbackCard:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    color: inherit;
+    border-color: var(--ember-500);
+    box-shadow: 0 0 0 1px var(--ember-500);
+}
+
+.fallbackCard:focus-visible {
+    outline: 2px solid var(--ember-300);
+    outline-offset: 3px;
 }
 
 .fallbackArt {
@@ -120,8 +64,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bone-200);
-    color: var(--char-500);
+    color: var(--stone-600);
+    background:
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(193, 68, 42, 0.14), transparent 70%),
+        var(--abyss-950);
 }
 
 .strip {
@@ -129,8 +75,8 @@
     flex-direction: column;
     gap: var(--space-2);
     padding: 0.75rem 0.875rem 0.875rem;
-    background: var(--char-900);
-    border-top: 2px solid transparent;
+    background: var(--abyss-950);
+    border-top: 1px solid var(--char-700);
     transition: border-color var(--t-state) var(--ease);
 }
 

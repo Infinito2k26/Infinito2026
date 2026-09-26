@@ -1,63 +1,98 @@
+/* The countdown under the stats: broadcast numerals in plain stone blocks.
+   The unit that's actually moving (minutes) is set in ember; when a value
+   changes it settles in with a short fade, which is the only motion here. */
+
 .countdown {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--bone-300);
+  gap: var(--space-5);
   width: 100%;
 }
 
 .label {
   font-family: var(--f-caps);
   font-size: var(--fs-micro);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--char-500);
+  color: var(--ember-300);
 }
 
 .parts {
+  --gap: clamp(0.875rem, 3vw, 2rem);
   display: flex;
-  gap: var(--space-5);
+  align-items: flex-start;
+  gap: var(--gap);
 }
 
 .part {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: 0.75rem;
+}
+
+/* Colon between blocks, on the numerals' midline. */
+.part + .part::before {
+  content: ":";
+  position: absolute;
+  left: calc(var(--gap) / -2);
+  top: clamp(1rem, 3vw, 1.875rem);
+  transform: translateX(-50%);
+  font-family: var(--f-sport);
+  font-size: clamp(1.5rem, 3.4vw, 2.25rem);
+  line-height: 1;
+  color: var(--stone-600);
+}
+
+.block {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 2.1ch;
+  padding: clamp(0.75rem, 1.8vw, 1.125rem) clamp(0.875rem, 2vw, 1.5rem)
+    clamp(0.375rem, 1vw, 0.625rem);
+  background: var(--char-800);
+  border: 1px solid var(--char-700);
 }
 
 .value {
   display: inline-block;
-  font-family: var(--f-display);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--crimson-800);
+  font-family: var(--f-sport);
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  color: var(--bone-100);
   font-variant-numeric: tabular-nums;
-  animation: tick-in 500ms var(--ease);
+  animation: settle 300ms var(--ease);
 }
 
-@keyframes tick-in {
-  0% {
-    opacity: 0.3;
-    transform: translateY(-10px);
-    text-shadow: 0 0 18px var(--glow-200);
+@keyframes settle {
+  from {
+    opacity: 0.35;
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    text-shadow: 0 0 0 transparent;
-  }
+}
+
+.live .block {
+  border-color: rgba(212, 98, 47, 0.5);
+}
+
+.live .value {
+  color: var(--ember-300);
 }
 
 .unit {
   font-family: var(--f-caps);
   font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--char-500);
+  color: var(--mist-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value {
+    animation: none;
+  }
 }

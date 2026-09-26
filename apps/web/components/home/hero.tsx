@@ -1,79 +1,124 @@
 import { getImageProps } from "next/image";
 import Link from "next/link";
+import ScrollScene from "@/components/ui/scroll-scene";
+import FireCanvas from "@/components/home/fire-canvas";
+import buttons from "./buttons.module.css";
 import styles from "./hero.module.css";
 
 /**
- * The landing hero.
+ * The landing hero — Surtr, the fire giant, igniting.
  *
- * Three things about the supplied art drive this component:
+ * One painting, drawn twice: once as smouldering embers (dark, desaturated)
+ * and once at full fire, masked to an ellipse that grows from the giant's
+ * blazing sword as the reader scrolls. The scene is pinned
+ * (sticky) while that happens, then scrolls away. All of it is CSS reading
+ * --progress from ScrollScene; see hero.module.css.
  *
- * 1. `main-desktop` (2.4:1), `main-tablet` (2.4:1) and `main-mobile` (4:5) are
- *    three different compositions, not one image at three sizes. Scaling a
- *    single file crops the dragon out on desktop or letterboxes on a phone, so
- *    they ship through a real <picture> with `media` queries. `getImageProps`
- *    keeps Next's AVIF/WebP optimisation while letting us do that.
+ * Layers, back to front: embers → fire (masked) → core glow → scrim →
+ * canvas flames → copy.
  *
- * 2. The art already contains the wordmark, the theme title, and the dates. So
- *    nothing is overlaid on it — the page's <h1> is rendered visually hidden for
- *    search engines and screen readers, and the alt text carries the words that
- *    otherwise exist only as pixels.
+ * `hero-ragnarok.jpg` was generated for Infinito with ChatGPT (September
+ * 2026): the giant stands right of centre, hands on his planted sword.
  *
- * 3. Every crop ends in a dark band of ruin. That band is where the actions sit,
- *    because it's the one region of the image with guaranteed contrast.
+ * Over it, centred, the fest's lockup from the Infinito_ui Figma file: the
+ * dragon-infinity crest (`infinito-logo.png`) and the INFINITO 26 lettering
+ * (`infinito-wordmark.png`, just the letters: the small print that sits
+ * around them in the file is set below as real text).
  */
 
 const ALT =
-  "Infinito 2026, 11th edition, presented by IIT Patna. Ruins of Ragnarok, 9th to 11th October 2026. Warriors with hammer and spear face a wolf and a fire giant across a battlefield of ruins beneath a pale sky.";
+  "Surtr, the horned fire giant of Ragnarök, resting both hands on a blazing sword while a Norse hall burns and a tiny army stands at his feet.";
 
-const COMMON = {
-  alt: ALT,
-  sizes: "100vw",
-  priority: true,
-  quality: 82,
-} as const;
-
-export default function Hero() {
-  const {
-    props: { srcSet: desktop },
-  } = getImageProps({ ...COMMON, src: "/main-desktop.png", width: 2592, height: 1080 });
-
-  const {
-    props: { srcSet: tablet },
-  } = getImageProps({ ...COMMON, src: "/main-tablet.png", width: 1584, height: 660 });
-
-  const {
-    props: { srcSet: mobile, ...rest },
-  } = getImageProps({ ...COMMON, src: "/main-mobile.png", width: 1080, height: 1350 });
+export default function Hero({ underNav = false }: { underNav?: boolean }) {
+  const { props: art } = getImageProps({
+    src: "/hero-ragnarok.jpg",
+    alt: ALT,
+    width: 1672,
+    height: 941,
+    // Matches the stage: ~3.6× the viewport wide on phones (centred on the
+    // giant), 1.6× on tablets, full-bleed on desktop.
+    sizes: "(max-width: 768px) 360vw, (max-width: 1023px) 160vw, 110vw",
+    preload: true,
+    quality: 75,
+  });
+  // The lettering is ~8.6 × --t1 wide (see hero.module.css): the column on
+  // phones, about half the screen on desktop.
+  const { props: wordmark } = getImageProps({
+    src: "/infinito-wordmark.png",
+    alt: "Infinito 2026",
+    width: 3399,
+    height: 513,
+    sizes: "(max-width: 768px) 92vw, (max-width: 1023px) 64vw, 54vw",
+    preload: true,
+    quality: 75,
+  });
+  const { props: crest } = getImageProps({
+    src: "/infinito-logo.png",
+    alt: "",
+    width: 909,
+    height: 501,
+    sizes: "(max-width: 768px) 32vw, 18vw",
+    loading: "eager",
+    quality: 75,
+  });
 
   return (
-    <section className={styles.hero}>
-      <h1 className="srOnly">
-        Infinito 2026 — Ruins of Ragnarok, IIT Patna, 9–11 October 2026
-      </h1>
+    <ScrollScene
+      mode="exit"
+      className={`${styles.hero} ${underNav ? "" : styles.belowNav}`}
+    >
+      <div className={styles.pin}>
+        <div className={styles.artWrap}>
+          <div className={styles.stage}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+            <img {...art} alt={ALT} className={styles.art} />
+            {/* eslint-disable-next-line @next/next/no-img-element -- same image, the lit pass */}
+            <img {...art} alt="" aria-hidden="true" className={styles.lit} />
+            <span className={styles.core} aria-hidden="true" />
+          </div>
+          <div className={styles.scrim} aria-hidden="true" />
+        </div>
 
-      <div className={styles.artWrap}>
-        <picture>
-          <source media="(min-width: 1280px)" srcSet={desktop} />
-          <source media="(min-width: 769px)" srcSet={tablet} />
-          <source media="(max-width: 768px)" srcSet={mobile} />
-          <img {...rest} alt={ALT} className={styles.art} />
-        </picture>
+        <FireCanvas className={styles.flames} density={1.1} />
+        <div className={styles.copy}>
+          <div className={styles.titleBlock}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+            <img {...crest} alt="" aria-hidden="true" className={styles.crest} />
+            <h1 className={styles.title}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- srcSet from getImageProps */}
+              <img {...wordmark} alt="Infinito 2026" className={styles.wordmark} />
+              <span className={styles.theme}>
+                <span className={styles.themeLead}>
+                  <span>Ruins of</span>
+                </span>{" "}
+                <span className={styles.themeMain}>Ragnarök</span>
+              </span>
+            </h1>
+            <p className={styles.dates}>
+              <span>9–11</span> October 2026
+            </p>
+            <p className={styles.kicker}>
+              <span>IIT Patna</span>
+              <i aria-hidden="true" />
+              <span>11th edition</span>
+            </p>
+          </div>
 
-        <div className={styles.embers} aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span key={i} className={styles.ember} />
-          ))}
+          <div className={styles.actions}>
+            <Link href="/signup" className={buttons.primary}>
+              Enter the battlefield <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/sports" className={buttons.secondary}>
+              Choose your sport <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className={styles.cue} aria-hidden="true">
+          <span>Scroll</span>
+          <i />
         </div>
       </div>
-
-      <div className={styles.actions}>
-        <Link href="/signup" className={styles.primary}>
-          Enter the battlefield
-        </Link>
-        <Link href="/sports" className={styles.secondary}>
-          Choose your sport
-        </Link>
-      </div>
-    </section>
+    </ScrollScene>
   );
 }

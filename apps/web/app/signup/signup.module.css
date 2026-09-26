@@ -29,7 +29,7 @@
   font-weight: 600;
   letter-spacing: var(--track-micro);
   text-transform: uppercase;
-  color: var(--char-700);
+  color: var(--mist-400);
 }
 
 /* --- Password strength meter ---------------------------------------------- */
@@ -44,7 +44,7 @@
   flex: 1;
   height: 3px;
   border-radius: var(--radius-full);
-  background: var(--bone-300);
+  background: var(--char-700);
   transition: background var(--t-state) var(--ease);
 }
 
@@ -92,7 +92,7 @@
 .footer {
   margin-top: var(--space-6);
   text-align: center;
-  border-top: 1px solid var(--bone-300);
+  border-top: 1px solid var(--char-700);
   padding-top: var(--space-5);
 }
 
@@ -102,12 +102,12 @@
 }
 
 .link {
-  color: var(--crimson-700);
+  color: var(--ember-300);
   font-weight: 600;
 }
 
 .link:hover {
-  color: var(--crimson-600);
+  color: var(--glow-200);
   text-decoration: underline;
 }
 

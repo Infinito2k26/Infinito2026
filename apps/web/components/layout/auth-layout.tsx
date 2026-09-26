@@ -1,28 +1,29 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import AshEmbers from "@/components/home/ash-embers";
+import { ASH_EMBERS } from "./effects";
 import Navbar from "./navbar";
 import styles from "./auth-layout.module.css";
 
 /**
- * The shared split layout for login, signup, and forgot-password: form on
- * bone at left, a cropped poster at right that collapses to a slim banner
- * above the form on mobile.
+ * The shared split layout for login, signup, and forgot-password: the form on
+ * stone at left, the landing hero's fire giant at right, collapsing to a slim
+ * banner above the form on mobile. Inside the `.ruins` scope like the rest of
+ * the public site, so the inputs and buttons come out dark.
  *
- * `main-mobile.png` is reused here rather than a sport poster — its 4:5
- * portrait crop fills a tall side panel cleanly, and like the landing hero it
- * already carries the wordmark and dates as pixels, so nothing is ever drawn
- * over it.
+ * The art is decorative here (the navbar carries the name), so it has no alt.
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={styles.shell}>
-      <Navbar />
+    <div className={`${styles.shell} ruins`}>
+      <Navbar tone="dark" />
       <div className={styles.artPanel}>
         <Image
-          src="/main-mobile.png"
-          alt="Infinito 2026, Ruins of Ragnarok, IIT Patna, 9–11 October 2026"
+          src="/hero-ragnarok.jpg"
+          alt=""
           fill
           sizes="(max-width: 899px) 100vw, 42vw"
+          quality={75}
           className={styles.art}
           priority
         />
@@ -31,6 +32,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className={styles.formPanel}>
         <div className={styles.formSlot}>{children}</div>
       </div>
+      {ASH_EMBERS && <AshEmbers />}
     </div>
   );
 }
