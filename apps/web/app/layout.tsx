@@ -74,6 +74,7 @@ export const viewport = {
 };
 
 export default function RootLayout({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ponytail: unused during the maintenance takeover below, restore {children} to bring the site back
   children,
 }: Readonly<{
   children: React.ReactNode;

@@ -147,6 +147,7 @@ describe('AuthService', () => {
         email: 'new@infinito.dev',
         password: 'plaintext-password',
         name: 'New User',
+        phone: '9876543210',
       });
 
       const createdData = prisma.user.create.mock.calls[0][0].data;
@@ -168,6 +169,7 @@ describe('AuthService', () => {
           email: baseUser.email,
           password: 'plaintext-password',
           name: 'Dup User',
+          phone: '9876543210',
         }),
       ).rejects.toBeInstanceOf(ConflictException);
     });
@@ -187,6 +189,7 @@ describe('AuthService', () => {
         email: baseUser.email,
         password: 'plaintext-password',
         name: 'Re-registering User',
+        phone: '9876543210',
       });
 
       expect(prisma.emailVerificationToken.deleteMany).toHaveBeenCalledWith({
@@ -214,6 +217,7 @@ describe('AuthService', () => {
           email: baseUser.email,
           password: 'plaintext-password',
           name: 'Re-registering User',
+          phone: '9876543210',
         }),
       ).rejects.toBeInstanceOf(ConflictException);
 

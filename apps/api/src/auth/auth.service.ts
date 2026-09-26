@@ -37,6 +37,8 @@ import { RegisterDto } from './dto/register.dto';
 
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
+import { UpdateProfileDto } from './dto/update-profile.dto';
+
 import { VerifyEmailDto } from './dto/verify-email.dto';
 
 import { REFRESH_TOKEN_STORE } from './refresh-token-store.interface';
@@ -54,6 +56,7 @@ export interface UserProfile {
   role: User['role'];
   isEmailVerified: boolean;
   college: string | null;
+  phone: string | null;
   customRole?: {
     id: string;
     name: string;
@@ -80,6 +83,7 @@ function toProfile(user: User): UserProfile {
     role: user.role,
     isEmailVerified: user.isEmailVerified,
     college: user.college,
+    phone: user.phone,
   };
 }
 
@@ -444,6 +448,22 @@ export class AuthService {
             }
           : null,
     };
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<UserProfile> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: dto.name,
+        phone: dto.phone,
+        college: dto.college,
+      },
+    });
+
+    return toProfile(user);
   }
 
   private async issueTokens(user: User): Promise<TokenPair> {

@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -19,9 +20,11 @@ export class RegisterDto {
   @IsNotEmpty()
   name!: string;
 
-  @IsOptional()
   @IsString()
-  phone?: string;
+  @Matches(/^[0-9+\-\s]{10,15}$/, {
+    message: 'Please enter a valid phone number',
+  })
+  phone!: string;
 
   @IsOptional()
   @IsString()
