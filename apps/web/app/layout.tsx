@@ -116,6 +116,32 @@ export default function RootLayout({
           >
             Continue to Google Forms
           </a>
+          <h1
+            className="font-display"
+            style={{
+              fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+              maxWidth: "40rem",
+            }}
+          >
+            For ProNight, use this link
+          </h1>
+
+          <a
+            href="https://forms.gle/GV9WLZ4dV3ZTNBxb6"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: "0.75rem 2rem",
+              borderRadius: "0.5rem",
+              background: "#1a1a1a",
+              color: "#f5ede2",
+              textDecoration: "none",
+              fontFamily: "var(--font-caps)",
+              letterSpacing: "0.05em",
+            }}
+          >
+            ProNight Registration
+          </a>
         </main>
         <div id="modal-root" />
       </body>
